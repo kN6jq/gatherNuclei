@@ -101,6 +101,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             }
         });
 
+        popupMenu.add(copyRowItem);
         return popupMenu;
     }
 
