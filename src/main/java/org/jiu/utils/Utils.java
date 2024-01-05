@@ -7,5 +7,7 @@ public class Utils {
     public static String fofaKey = "";
     public static String hunterUrl = "";
     public static String hunterKey = "";
+    public static String zoneUrl = "";
+    public static String zoneKey = "";
 
 }

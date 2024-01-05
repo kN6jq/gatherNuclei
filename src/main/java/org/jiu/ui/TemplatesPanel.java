@@ -278,7 +278,9 @@ public class TemplatesPanel extends JPanel {
         searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
         searchField.registerKeyboardAction(e -> {
                     String searchKeyWord = searchField.getText().strip();
-                    sorter.setRowFilter(RowFilter.regexFilter(searchKeyWord));
+                    // 忽略大小写
+                    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchKeyWord));
+//                    sorter.setRowFilter(RowFilter.regexFilter(searchKeyWord));
                 },
                 KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false),
                 JComponent.WHEN_FOCUSED

@@ -59,8 +59,6 @@ public class ConfigPanel extends JPanel {
         JLabel hunterkeyLabel = new JLabel("hunterkey");
         JPasswordField hunterkeyTextField = new JPasswordField();
         hunterkeyTextField.setColumns(30);
-        // 模糊显示
-
         JButton hunterButton = new JButton("选择");
         hunterPanel.add(hunterurlLabel);
         hunterPanel.add(hunterurlTextField);
@@ -68,12 +66,29 @@ public class ConfigPanel extends JPanel {
         hunterPanel.add(hunterkeyTextField);
         hunterPanel.add(hunterButton);
 
+        // zone
+        JPanel zonePanel = new JPanel();
+        JLabel zoneurlLabel = new JLabel("zoneurl");
+        JTextField zoneurlTextField = new JTextField();
+        zoneurlTextField.setColumns(20);
+        JLabel zonekeyLabel = new JLabel("zonekey");
+        JPasswordField zonekeyTextField = new JPasswordField();
+        zonekeyTextField.setColumns(20);
+        JButton zoneButton = new JButton("选择");
+        zonePanel.add(zoneurlLabel);
+        zonePanel.add(zoneurlTextField);
+        zonePanel.add(zonekeyLabel);
+        zonePanel.add(zonekeyTextField);
+        zonePanel.add(zoneButton);
+
+
         // 添加组件
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(templatePanel);
         panel.add(fofaPanel);
         panel.add(hunterPanel);
+        panel.add(zonePanel);
         this.add(panel, BorderLayout.NORTH);
 
 
@@ -111,6 +126,18 @@ public class ConfigPanel extends JPanel {
                 templatesPanel.filterData();
             }
         });
+        zoneButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String zoneurlTextFieldText = zoneurlTextField.getText();
+                String zonekeyTextFieldText = zonekeyTextField.getText();
+                Utils.zoneUrl = zoneurlTextFieldText;
+                Utils.zoneKey = zonekeyTextFieldText;
+                YamlUtils.modifyYaml("zoneurl", zoneurlTextFieldText);
+                YamlUtils.modifyYaml("zonekey", zonekeyTextFieldText);
+                templatesPanel.filterData();
+            }
+        });
         // 初始化数据
         templateTextField.setText(Utils.templatePath);
         fofaurlTextField.setText(Utils.fofaUrl);
@@ -118,6 +145,8 @@ public class ConfigPanel extends JPanel {
         fofakeyTextField.setText(Utils.fofaKey);
         hunterurlTextField.setText(Utils.hunterUrl);
         hunterkeyTextField.setText(Utils.hunterKey);
+        zoneurlTextField.setText(Utils.zoneUrl);
+        zonekeyTextField.setText(Utils.zoneKey);
 
     }
 

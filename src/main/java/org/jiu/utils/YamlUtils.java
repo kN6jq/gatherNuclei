@@ -40,6 +40,9 @@ public class YamlUtils {
             Utils.fofaKey = data.get("fofa").get("fofakey");
             Utils.hunterUrl = data.get("hunter").get("hunterurl");
             Utils.hunterKey = data.get("hunter").get("hunterkey");
+            Utils.zoneUrl = data.get("zone").get("zoneurl");
+            Utils.zoneKey = data.get("zone").get("zonekey");
+
         }
     }
 
@@ -60,6 +63,10 @@ public class YamlUtils {
                 data.get("hunter").put("hunterurl", value);
             } else if ("hunterkey".equals(type)) {
                 data.get("hunter").put("hunterkey", value);
+            }else if ("zoneurl".equals(type)) {
+                data.get("zone").put("zoneurl", value);
+            }else if ("zonekey".equals(type)) {
+                data.get("zone").put("zonekey", value);
             }
             String currentPath = System.getProperty("user.dir");
             String yamlFilePath = currentPath + File.separator + "gatherConfig.yaml";
@@ -92,15 +99,19 @@ public class YamlUtils {
                 LinkedHashMap<String, Object> nuclei = new LinkedHashMap<>();
                 LinkedHashMap<String, Object> fofa = new LinkedHashMap<>();
                 LinkedHashMap<String, Object> hunter = new LinkedHashMap<>();
+                LinkedHashMap<String, Object> zone = new LinkedHashMap<>();
                 nuclei.put("nucleipath", "");
                 fofa.put("fofaurl", "");
                 fofa.put("fofaemail", "");
                 fofa.put("fofakey", "");
                 hunter.put("hunterurl", "");
                 hunter.put("hunterkey", "");
+                zone.put("zoneurl", "");
+                zone.put("zonekey", "");
                 data.put("nuclei", nuclei);
                 data.put("fofa", fofa);
                 data.put("hunter", hunter);
+                data.put("zone", zone);
                 yaml.dump(data, fileWriter);
             } catch (IOException e) {
                 e.printStackTrace();
