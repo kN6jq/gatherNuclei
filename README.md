@@ -36,7 +36,7 @@
 ![img.png](image/hunter.png)
 ### otx
 ![img.png](image/otx.png)
-### zone
+### 0zone
 ![img.png](image/0zone.png)
 
 
