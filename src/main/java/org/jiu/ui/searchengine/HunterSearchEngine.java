@@ -1,6 +1,7 @@
 package org.jiu.ui.searchengine;
 
-import cn.hutool.core.codec.Base64;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -25,9 +26,11 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Queue;
 
 public class HunterSearchEngine extends JPanel implements SearchEngine {
     private static JComboBox searchTypeComboBox = new JComboBox();
@@ -309,8 +312,8 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         } else if (i == 2) {
             data = "ip=\"" + inputField.getText() + "\"";
         }
-        String qbase64 = Base64.encode(data);
 
+        String qbase64 = Base64.getUrlEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
         new Thread(() -> {
             try {
                 jsonObject = JSONUtil.parseObj(HunterCore.getData(qbase64, p, 100, type, start_time, end_time));
