@@ -100,8 +100,40 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
             }
         });
+        // 复制选中行ip
+        JMenuItem copyRowIpItem = new JMenuItem("复制当前选中行IP");
+        copyRowIpItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int selectedRow : selectedRows) {
+                    stringBuilder.append(table.getValueAt(selectedRow, 1)).append("\n");
+                }
+                StringSelection stringSelection = new StringSelection(stringBuilder.toString());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+            }
+        });
+        // 复制选中行url
+        JMenuItem copyRowUrlItem = new JMenuItem("复制当前选中行URL");
+        copyRowUrlItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int selectedRow : selectedRows) {
+                    stringBuilder.append(table.getValueAt(selectedRow, 3)).append("\n");
+                }
+                StringSelection stringSelection = new StringSelection(stringBuilder.toString());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+            }
+        });
 
         popupMenu.add(copyRowItem);
+        popupMenu.add(copyRowIpItem);
+        popupMenu.add(copyRowUrlItem);
         return popupMenu;
     }
 

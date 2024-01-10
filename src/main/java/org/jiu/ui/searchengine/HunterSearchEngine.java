@@ -172,8 +172,41 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
+        // 复制选中行的ip
+        JMenuItem copyIpItem = new JMenuItem("复制选中行的ip");
+        copyIpItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int selectedRow : selectedRows) {
+                    stringBuilder.append(table.getValueAt(selectedRow, 1)).append("\n");
+                }
+                StringSelection stringSelection = new StringSelection(stringBuilder.toString());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+            }
+        });
+
+        // 复制选中行的url
+        JMenuItem copyUrlItem = new JMenuItem("复制选中行的url");
+        copyUrlItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int selectedRow : selectedRows) {
+                    stringBuilder.append(table.getValueAt(selectedRow, 2)).append("\n");
+                }
+                StringSelection stringSelection = new StringSelection(stringBuilder.toString());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+            }
+        });
 
         popupMenu.add(copyRowItem);
+        popupMenu.add(copyIpItem);
+        popupMenu.add(copyUrlItem);
         popupMenu.add(openBrowserItem);
         popupMenu.add(telnetItem);
 
