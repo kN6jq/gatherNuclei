@@ -11,18 +11,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ShodanCore {
-    public static Set<String> getData(Set<String> ips){
+    public static Set<String> getData(String ip){
+        String url = "https://internetdb.shodan.io/";
+        JSONArray jsonArray = JSONUtil.parseObj(HttpRequest.get(url + ip)
+                .header(Header.USER_AGENT, "Hutool http")//头信息，多个头信息多次调用此方法即可
+                .timeout(20000)//超时，毫秒
+                .execute().body()).getJSONArray("ports");
         Set<String> ipports = new HashSet<>();
-        ips.forEach(ip->{
-            String url = "https://internetdb.shodan.io/";
-            JSONArray jsonArray = JSONUtil.parseObj(HttpRequest.get(url + ip)
-                    .header(Header.USER_AGENT, "Hutool http")//头信息，多个头信息多次调用此方法即可
-                    .timeout(20000)//超时，毫秒
-                    .execute().body()).getJSONArray("ports");
-            jsonArray.forEach(port->{
-                ipports.add(ip+":"+port);
-            });
-        });
+        for (int i = 0; i < jsonArray.size(); i++) {
+            ipports.add(ip+":"+jsonArray.get(i));
+        }
         return ipports;
     }
 

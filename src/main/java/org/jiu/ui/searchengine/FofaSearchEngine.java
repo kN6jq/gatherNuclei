@@ -364,55 +364,31 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
             }
         });
-
-        // shodan端口扫描
-        JMenuItem shodanScanItem = new JMenuItem("shodan端口扫描");
-        shodanScanItem.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int[] selectedRows = table.getSelectedRows();
-                if (selectedRows.length == 0) {
-                    JOptionPane.showMessageDialog(null, "请先选择数据");
-                }else {
-                    // todo 不重复的列表
-                    Set<String> ips = new HashSet<>();
-                    for (int selectedRow : selectedRows) {
-                        String ip = (String) table.getValueAt(selectedRow, 1);
-                        ips.add(ip);
-                    }
-                    // 如果ip大于10个,则提示
-                    if (ips.size() > 5 && ips.size() < 15) {
-                        JOptionPane.showMessageDialog(null, "ip数量大于5个,等待时间过长,请耐心等待");
-                    }else if (ips.size() >15 ){
-                        JOptionPane.showMessageDialog(null, "ip数量大于15个,请重新选择");
-                        return;
-                    }
-                    ArrayList<String> arrayList = new ArrayList<>();
-                    CompletableFuture.supplyAsync(()->{
-                        arrayList.addAll(ShodanCore.getData(ips));
-                        StringBuilder stringBuilder = new StringBuilder();
-                        for (String s : arrayList) {
-                            stringBuilder.append(s).append("\n");
-                        }
-                        // 弹出Dialog显示数据,并且可以复制
-                        String[] options = {"确定", "复制"};
-                        int optionDialog = JOptionPane.showOptionDialog(null, stringBuilder.toString(), "shodan端口扫描结果", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, null);
-                        if (optionDialog == 1) {
-                            StringSelection stringSelection = new StringSelection(stringBuilder.toString());
-                            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
-                        }
-                        return arrayList;
-                    });
+        // 将选中的ip发送到shodan
+        JMenuItem sendToShodanItem = new JMenuItem("使用shodan扫描选中的ip");
+        sendToShodanItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                Set<String> ips = new HashSet<>();
+                for (int selectedRow : selectedRows) {
+                    String ip = (String) table.getValueAt(selectedRow, 1);
+                    ips.add(ip);
                 }
+                ShodanPortSearchEngine.inputArea.setText("");
+                ShodanPortSearchEngine.inputArea.setText(String.join("\n", ips));
+                ShodanPortSearchEngine.searchBtn.doClick();
             }
         });
+
 
         popupMenu.add(copyRowItem);
         popupMenu.add(copyIpItem);
         popupMenu.add(copyUrlItem);
         popupMenu.add(openUrlItem);
         popupMenu.add(telnetItem);
-        popupMenu.add(shodanScanItem);
+        popupMenu.add(sendToShodanItem);
         return popupMenu;
     }
 
