@@ -37,7 +37,11 @@ public class TemplatesCore {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".yaml")) {
-                    templates.add(getTemplateInfoFromPath(file.toString()));
+                    try{
+                        templates.add(getTemplateInfoFromPath(file.toString()));
+                    }catch (Exception e ){
+
+                    }
                 }
                 return FileVisitResult.CONTINUE;
             }
