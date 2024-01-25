@@ -128,8 +128,7 @@ public class TemplatesPanel extends JPanel {
                 String tags = templateInfo.get("tags");
                 tableModel.addRow(new String[]{String.valueOf(count), id, name, severity, tags, author, description, reference});
             }
-
-            jLabel.setText("模板已成功加载: " + tableModel.getRowCount() + "个");
+            jLabel.setText("模板已成功加载: " + (count-1) + "个");
         }).start();
     }
 

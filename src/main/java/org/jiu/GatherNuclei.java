@@ -29,7 +29,13 @@ public class GatherNuclei extends JFrame {
         InitUI.initMenuBar(jFrame);
         InitUI.initToolBar(jFrame);
         InitUI.initTabbedPane(jFrame);
+        JLabel jlLabel = new JLabel("本工具只用于授权测试,禁止未授权渗透");
+        JLabel jrLabel = new JLabel("Code by Xm17");
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(jlLabel, BorderLayout.WEST);
+        bottomPanel.add(jrLabel, BorderLayout.EAST);
 
+        jFrame.add(bottomPanel, BorderLayout.SOUTH);
         jFrame.setVisible(true);
     }
 
