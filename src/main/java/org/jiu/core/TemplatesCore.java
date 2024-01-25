@@ -20,7 +20,7 @@ public class TemplatesCore {
 //        }
 
         // custom template
-        if (Files.exists(Path.of(path))) {
+        if (Files.exists(Paths.get(path))) {
             try {
                 walkFiles(path);
             } catch (IOException e) {
@@ -32,15 +32,15 @@ public class TemplatesCore {
     }
 
     private static void walkFiles(String path) throws IOException {
-        Files.walkFileTree(Paths.get(path), new SimpleFileVisitor<>() {
+        Files.walkFileTree(Paths.get(path), new SimpleFileVisitor<Path>() {
             // 访问文件时触发
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".yaml")) {
-                    try{
+                    try {
                         templates.add(getTemplateInfoFromPath(file.toString()));
-                    }catch (Exception e ){
-
+                    } catch (Exception e) {
+                        // 处理异常
                     }
                 }
                 return FileVisitResult.CONTINUE;
@@ -83,9 +83,9 @@ public class TemplatesCore {
     }
 
     public static LinkedHashMap getMapFromYaml(String path) {
-        if (!Files.exists(Path.of(path))) {
+        if (!Files.exists(Paths.get(path))) {
             try {
-                Files.createFile(Path.of(path));
+                Files.createFile(Paths.get(path));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

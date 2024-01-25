@@ -276,7 +276,7 @@ public class TemplatesPanel extends JPanel {
         searchField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search, Enter");
         searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
         searchField.registerKeyboardAction(e -> {
-                    String searchKeyWord = searchField.getText().strip();
+                    String searchKeyWord = searchField.getText().trim();
                     // 忽略大小写
                     sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchKeyWord));
 //                    sorter.setRowFilter(RowFilter.regexFilter(searchKeyWord));
