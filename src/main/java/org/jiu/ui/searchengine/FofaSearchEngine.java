@@ -263,6 +263,10 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         for (Object obj : jsonArray) {
             JSONArray array = (JSONArray) obj;
             array.add(0, String.valueOf(num));
+            String url = (String) array.get(2);
+            if (!url.startsWith("http")){
+                array.set(2,"http://"+url);
+            }
             tableModel.addRow(array.toArray());
             num++;
         }
@@ -342,7 +346,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             } else {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (int selectedRow : selectedRows) {
-                    stringBuilder.append(table.getValueAt(selectedRow, 0)).append("\n");
+                    stringBuilder.append(table.getValueAt(selectedRow, 1)).append("\n");
                 }
                 StringSelection stringSelection = new StringSelection(stringBuilder.toString());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
