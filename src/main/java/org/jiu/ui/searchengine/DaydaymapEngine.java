@@ -22,8 +22,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -129,23 +127,7 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
             }
         });
-        // 通过浏览器打开当前选中行第三列数据
-        JMenuItem openBrowserItem = new JMenuItem("浏览器打开");
-        openBrowserItem.addActionListener(e -> {
-            int[] selectedRows = table.getSelectedRows();
-            if (selectedRows.length == 0) {
-                JOptionPane.showMessageDialog(null, "请先选择数据");
-            } else {
-                for (int selectedRow : selectedRows) {
-                    String url = (String) table.getValueAt(selectedRow, 2);
-                    try {
-                        Desktop.getDesktop().browse(new URI(url));
-                    } catch (IOException | URISyntaxException ioException) {
-                        ioException.printStackTrace();
-                    }
-                }
-            }
-        });
+
 
         // telnet端口测试
         JMenuItem telnetItem = new JMenuItem("telnet端口测试");
@@ -156,7 +138,7 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
             } else {
                 for (int selectedRow : selectedRows) {
                     String ip = (String) table.getValueAt(selectedRow, 1);
-                    String port = (String) table.getValueAt(selectedRow, 3);
+                    String port = (String) table.getValueAt(selectedRow, 2);
                     try {
                         TelnetUtils.telnet(ip, port);
                     } catch (IOException ioException) {
@@ -182,21 +164,7 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
             }
         });
 
-        // 复制选中行的url
-        JMenuItem copyUrlItem = new JMenuItem("复制选中行的url");
-        copyUrlItem.addActionListener(e -> {
-            int[] selectedRows = table.getSelectedRows();
-            if (selectedRows.length == 0) {
-                JOptionPane.showMessageDialog(null, "请先选择数据");
-            } else {
-                StringBuilder stringBuilder = new StringBuilder();
-                for (int selectedRow : selectedRows) {
-                    stringBuilder.append(table.getValueAt(selectedRow, 2)).append("\n");
-                }
-                StringSelection stringSelection = new StringSelection(stringBuilder.toString());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
-            }
-        });
+
         // 将选中的ip发送到shodan
         JMenuItem sendToShodanItem = new JMenuItem("使用shodan扫描选中的ip");
         sendToShodanItem.addActionListener(e -> {
@@ -216,8 +184,6 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
         });
         popupMenu.add(copyRowItem);
         popupMenu.add(copyIpItem);
-        popupMenu.add(copyUrlItem);
-        popupMenu.add(openBrowserItem);
         popupMenu.add(telnetItem);
         popupMenu.add(sendToShodanItem);
         return popupMenu;
