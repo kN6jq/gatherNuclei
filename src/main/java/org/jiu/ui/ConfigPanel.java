@@ -81,6 +81,21 @@ public class ConfigPanel extends JPanel {
         zonePanel.add(zonekeyTextField);
         zonePanel.add(zoneButton);
 
+        // daydaymap
+        JPanel daydaymapPanel = new JPanel();
+        JLabel daydaymapurlLabel = new JLabel("daydaymapurl");
+        JTextField daydaymapurlTextField = new JTextField();
+        daydaymapurlTextField.setColumns(20);
+        JLabel daydaymapkeyLabel = new JLabel("daydaymapkey");
+        JPasswordField daydaymapkeyTextField = new JPasswordField();
+        daydaymapkeyTextField.setColumns(20);
+        JButton daydaymapButton = new JButton("选择");
+        daydaymapPanel.add(daydaymapurlLabel);
+        daydaymapPanel.add(daydaymapurlTextField);
+        daydaymapPanel.add(daydaymapkeyLabel);
+        daydaymapPanel.add(daydaymapkeyTextField);
+        daydaymapPanel.add(daydaymapButton);
+
 
         // 添加组件
         JPanel panel = new JPanel();
@@ -89,6 +104,7 @@ public class ConfigPanel extends JPanel {
         panel.add(fofaPanel);
         panel.add(hunterPanel);
         panel.add(zonePanel);
+        panel.add(daydaymapPanel);
         this.add(panel, BorderLayout.NORTH);
 
 
@@ -138,6 +154,18 @@ public class ConfigPanel extends JPanel {
                 templatesPanel.filterData();
             }
         });
+        daydaymapButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String daydaymapurlTextFieldText = daydaymapurlTextField.getText();
+                String daydaymapkeyTextFieldText = daydaymapkeyTextField.getText();
+                Utils.daydaymapUrl = daydaymapurlTextFieldText;
+                Utils.daydaymapKey = daydaymapkeyTextFieldText;
+                YamlUtils.modifyYaml("daydaymapurl", daydaymapurlTextFieldText);
+                YamlUtils.modifyYaml("daydaymapkey", daydaymapkeyTextFieldText);
+                templatesPanel.filterData();
+            }
+        });
         // 初始化数据
         templateTextField.setText(Utils.templatePath);
         fofaurlTextField.setText(Utils.fofaUrl);
@@ -147,6 +175,9 @@ public class ConfigPanel extends JPanel {
         hunterkeyTextField.setText(Utils.hunterKey);
         zoneurlTextField.setText(Utils.zoneUrl);
         zonekeyTextField.setText(Utils.zoneKey);
+        daydaymapurlTextField.setText(Utils.daydaymapUrl);
+        daydaymapkeyTextField.setText(Utils.daydaymapKey);
+
 
     }
 

@@ -42,6 +42,8 @@ public class YamlUtils {
             Utils.hunterKey = data.get("hunter").get("hunterkey");
             Utils.zoneUrl = data.get("zone").get("zoneurl");
             Utils.zoneKey = data.get("zone").get("zonekey");
+            Utils.daydaymapUrl = data.get("daydaymap").get("daydaymapurl");
+            Utils.daydaymapKey = data.get("daydaymap").get("daydaymapkey");
 
         }
     }
@@ -67,6 +69,10 @@ public class YamlUtils {
                 data.get("zone").put("zoneurl", value);
             }else if ("zonekey".equals(type)) {
                 data.get("zone").put("zonekey", value);
+            }else if ("daydaymapurl".equals(type)) {
+                data.get("daydaymap").put("daydaymapurl", value);
+            }else if ("daydaymapkey".equals(type)) {
+                data.get("daydaymap").put("daydaymapkey", value);
             }
             String currentPath = System.getProperty("user.dir");
             String yamlFilePath = currentPath + File.separator + "gatherConfig.yaml";
@@ -100,18 +106,23 @@ public class YamlUtils {
                 LinkedHashMap<String, Object> fofa = new LinkedHashMap<>();
                 LinkedHashMap<String, Object> hunter = new LinkedHashMap<>();
                 LinkedHashMap<String, Object> zone = new LinkedHashMap<>();
+                LinkedHashMap<String, Object> daydaymap = new LinkedHashMap<>();
                 nuclei.put("nucleipath", "");
                 fofa.put("fofaurl", "");
                 fofa.put("fofaemail", "");
                 fofa.put("fofakey", "");
                 hunter.put("hunterurl", "");
                 hunter.put("hunterkey", "");
+                daydaymap.put("daydaymapurl", "");
+                daydaymap.put("daydaymapkey", "");
                 zone.put("zoneurl", "");
                 zone.put("zonekey", "");
                 data.put("nuclei", nuclei);
                 data.put("fofa", fofa);
                 data.put("hunter", hunter);
                 data.put("zone", zone);
+                data.put("daydaymap", daydaymap);
+
                 yaml.dump(data, fileWriter);
             } catch (IOException e) {
                 e.printStackTrace();

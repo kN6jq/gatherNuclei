@@ -9,5 +9,7 @@ public class Utils {
     public static String hunterKey = "";
     public static String zoneUrl = "";
     public static String zoneKey = "";
+    public static String daydaymapUrl = "";
+    public static String daydaymapKey = "";
 
 }
