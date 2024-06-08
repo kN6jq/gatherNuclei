@@ -1,6 +1,6 @@
 package org.jiu.ui.searchengine;
 
-import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.codec.Base64;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -22,14 +22,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
  * @Author Xm17
  * @Date 2024-06-02 21:52
  */
-public class DaydaymapEngine  extends JPanel implements SearchEngine{
+public class DaydaymapEngine extends JPanel implements SearchEngine {
     private static JComboBox searchTypeComboBox = new JComboBox();
     private static MultiComboBox comboxstatus;
     private final JTextField inputField = new JTextField();
@@ -190,7 +189,6 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
     }
 
 
-
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
         inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "DayDayMap Search... & Enter");
@@ -198,7 +196,7 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
         searchBtn.setText("搜索");
         statusBtn.setToolTipText("搜素状态提示灯");
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
-        String[] values = new String[]{"全选","header", "server", "service", "tags", "cert","icp_reg_name"};
+        String[] values = new String[]{"全选", "header", "server", "service", "tags", "cert", "icp_reg_name"};
         comboxstatus = new MultiComboBox(values);
 
         predBtn.setSelected(true);
@@ -247,8 +245,6 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
         });
 
 
-
-
         // 添加组件
         toolBar.add(inputField);
         toolBar.add(searchBtn);
@@ -265,6 +261,7 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
         this.add(toolBar, BorderLayout.NORTH);
 
     }
+
     private void search(int p) {
         int i = searchTypeComboBox.getSelectedIndex();
         String data = "";
@@ -276,7 +273,7 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
             data = "ip=\"" + inputField.getText() + "\"";
         }
 
-        String qbase64 = Base64.getUrlEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
+        String qbase64 = Base64.encode(data);
         new Thread(() -> {
             try {
                 jsonObject = JSONUtil.parseObj(DaydaymapCore.getData(qbase64, p, 100));
@@ -295,16 +292,15 @@ public class DaydaymapEngine  extends JPanel implements SearchEngine{
         }).start();
 
 
-
     }
 
     private void resetTableRows(JSONArray jsonArray) {
         Object[] selectedValues = comboxstatus.getSelectedValues();
-        Object[] originalArray = new Object[]{"ip", "port", "domain","title"};
+        Object[] originalArray = new Object[]{"ip", "port", "domain", "title"};
         Object[] result = new Object[]{};
         // 根据selectedValues的值来获取对应的jsonObject的值
         if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "port", "domain","title"};
+            result = new Object[]{"ip", "port", "domain", "title"};
         } else {
             // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
             result = new Object[selectedValues.length + originalArray.length];

@@ -19,5 +19,6 @@ public class DaydaymapCore {
                 .body("{\"keyword\":\""+qbase64+"\",\"page\":"+page+",\"page_size\":"+size+"}")
                 .timeout(20000)//超时，毫秒
                 .execute().body();
+
     }
 }
