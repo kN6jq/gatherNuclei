@@ -35,6 +35,7 @@ public class YamlUtils {
         if (data != null) {
             // 获取值
             Utils.templatePath = data.get("nuclei").get("nucleipath");
+            Utils.templateArg = data.get("nuclei").get("nucleiarg");
             Utils.fofaUrl = data.get("fofa").get("fofaurl");
             Utils.fofaEmail = data.get("fofa").get("fofaemail");
             Utils.fofaKey = data.get("fofa").get("fofakey");
@@ -55,6 +56,8 @@ public class YamlUtils {
             // 获取值
             if ("nucleipath".equals(type)) {
                 data.get("nuclei").put("nucleipath", value);
+            } else if ("nucleiarg".equals(type)) {
+                data.get("nuclei").put("nucleiarg", value);
             } else if ("fofaurl".equals(type)) {
                 data.get("fofa").put("fofaurl", value);
             } else if ("fofaemail".equals(type)) {
@@ -108,6 +111,7 @@ public class YamlUtils {
                 LinkedHashMap<String, Object> zone = new LinkedHashMap<>();
                 LinkedHashMap<String, Object> daydaymap = new LinkedHashMap<>();
                 nuclei.put("nucleipath", "");
+                nuclei.put("nucleiarg", "");
                 fofa.put("fofaurl", "");
                 fofa.put("fofaemail", "");
                 fofa.put("fofakey", "");

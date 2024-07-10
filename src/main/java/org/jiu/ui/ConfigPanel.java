@@ -27,8 +27,15 @@ public class ConfigPanel extends JPanel {
         JTextField templateTextField = new JTextField();
         templateTextField.setColumns(30);
         JButton templateButton = new JButton("选择");
+
+        JLabel templateArgLabel = new JLabel("nuclei参数");
+        JTextField templateArgTextField = new JTextField();
+        templateArgTextField.setColumns(30);
+
         templatePanel.add(templateLabel);
         templatePanel.add(templateTextField);
+        templatePanel.add(templateArgLabel);
+        templatePanel.add(templateArgTextField);
         templatePanel.add(templateButton);
 
         // fofa
@@ -111,8 +118,11 @@ public class ConfigPanel extends JPanel {
         // 事件
         templateButton.addActionListener(e -> {
             String templateTextFieldText = templateTextField.getText();
+            String templateArgTextFieldText = templateArgTextField.getText();
             YamlUtils.modifyYaml("nucleipath", templateTextFieldText);
+            YamlUtils.modifyYaml("nucleiarg", templateArgTextFieldText);
             Utils.templatePath = templateTextFieldText;
+            Utils.templateArg = templateArgTextFieldText;
             templatesPanel.filterData();
         });
         fofaButton.addActionListener(new AbstractAction() {
@@ -168,6 +178,7 @@ public class ConfigPanel extends JPanel {
         });
         // 初始化数据
         templateTextField.setText(Utils.templatePath);
+        templateArgTextField.setText(Utils.templateArg);
         fofaurlTextField.setText(Utils.fofaUrl);
         fofaemailTextField.setText(Utils.fofaEmail);
         fofakeyTextField.setText(Utils.fofaKey);

@@ -1,5 +1,7 @@
 package org.jiu.ui;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileReader;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.TemplatesCore;
@@ -11,6 +13,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -21,6 +24,7 @@ import java.util.LinkedList;
 
 import static org.jiu.core.TemplatesCore.generateNucleiConfigFile;
 import static org.jiu.core.TemplatesCore.templates;
+import static org.jiu.ui.InitUI.yamlPanel;
 
 public class TemplatesPanel extends JPanel {
     private final JLabel jLabel = new JLabel();
@@ -66,6 +70,26 @@ public class TemplatesPanel extends JPanel {
         tableModel.setColumnIdentifiers(columnNames);
         templatesTable.setModel(tableModel);
 
+
+        // 创建一个自定义的单元格渲染器
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(JLabel.CENTER);
+                label.setHorizontalTextPosition(JLabel.CENTER);
+                label.setIconTextGap(0);
+                label.setMaximumSize(new Dimension(Integer.MAX_VALUE, label.getPreferredSize().height));
+                label.setToolTipText((String) value); // 设置鼠标悬停时显示的提示文本
+                return label;
+            }
+        };
+
+        // 设置自定义渲染器到表格的每一列
+        for (int i = 0; i < templatesTable.getColumnCount(); i++) {
+            templatesTable.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
+
         JScrollPane tableScroll = new JScrollPane(templatesTable);
         tableScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
@@ -97,7 +121,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     // 刷新数据
-    private void refreshDataForTable() {
+    public void refreshDataForTable() {
         // 搜索功能
         sorter = new TableRowSorter<>(tableModel);
         templatesTable.setRowSorter(sorter);
@@ -153,8 +177,58 @@ public class TemplatesPanel extends JPanel {
         refreshDataForTable();
     }
 
+
     private JPopupMenu createTablePopMenu() {
         JPopupMenu popupMenu = new JPopupMenu();
+
+        // 编辑
+        JMenuItem editItem = new JMenuItem("编辑选中模板");
+        editItem.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 当编辑被点击获取到该模板的路径并发送到YamlPanel中
+                // 获取选中的模板,提取path参数
+                String path = "";
+                int[] selectedRows = templatesTable.getSelectedRows();
+                for (int selectedRow : selectedRows) {
+                    String id = (String) templatesTable.getValueAt(selectedRow, 0);
+                    path= templates.get(Integer.parseInt(id) - 1).get("path");
+                }
+                if (!path.isEmpty()) {
+                    try {
+                        // 默认UTF-8编码，可以在构造中传入第二个参数做为编码
+                        FileReader fileReader = new FileReader(path);
+                        YamlPanel.textArea.setText("");
+                        YamlPanel.absolutePath = path;
+                        YamlPanel.textArea.setText(fileReader.readString());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // 删除模板
+        JMenuItem deleteItem = new JMenuItem("删除选中模板");
+        deleteItem.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String path = "";
+                int[] selectedRows = templatesTable.getSelectedRows();
+                for (int selectedRow : selectedRows) {
+                    String id = (String) templatesTable.getValueAt(selectedRow, 0);
+                    path= templates.get(Integer.parseInt(id) - 1).get("path");
+                }
+                if (!path.isEmpty()) {
+                    FileUtil.del(path);
+                    JOptionPane.showMessageDialog(null, "删除成功", "提示", JOptionPane.INFORMATION_MESSAGE);
+                    refreshDataForTable();
+                }else {
+                    JOptionPane.showMessageDialog(null, "删除失败", "提示", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
         // 获取选中的模板数量
         JMenuItem openItem = new JMenuItem("已选中POC数量: " + templatesTable.getSelectedRowCount());
 
@@ -191,7 +265,7 @@ public class TemplatesPanel extends JPanel {
                 workflows.add(templates.get(Integer.parseInt(id) - 1).get("path"));
             }
             String nucleiConfigFile = generateNucleiConfigFile("", workflows);
-            String tipsNote = "nuclei -config " + nucleiConfigFile + " -u ";
+            String tipsNote = "nuclei -config " + nucleiConfigFile+" " + Utils.templateArg + " -u ";
 
             // 复制到剪切板
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(tipsNote), null);
@@ -221,7 +295,7 @@ public class TemplatesPanel extends JPanel {
 
 
             String nucleiConfigFile = generateNucleiConfigFile(engineName, workflows);
-            String tipsNote = "nuclei -config " + nucleiConfigFile + " -u ";
+            String tipsNote = "nuclei -config " + nucleiConfigFile+" "  + Utils.templateArg + " -u ";
             // 复制到剪切板
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(tipsNote), null);
             // 弹窗提示创建成功
@@ -229,6 +303,8 @@ public class TemplatesPanel extends JPanel {
         });
 
 
+        popupMenu.add(editItem);
+        popupMenu.add(deleteItem);
         popupMenu.add(openItem);
         popupMenu.add(openFolderItem);
         popupMenu.add(createProjectItem);

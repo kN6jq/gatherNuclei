@@ -242,7 +242,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             case "site":
                 tableModel.setColumnIdentifiers(sitecolumnNames);
                 table.setModel(tableModel);
-                String sitedata = String.format("(company==%s)||(title==%s)||(banner==%s)||(html_banner==%s)||(component==%s)||(ssl_info.detail==%s)", input, input, input, input, input, input);
+                String sitedata = String.format("(company==%s)||(title==%s)||(banner==%s)||(component==%s)||(ssl_info.detail==%s)", input, input, input, input, input, input);
                 new Thread(() -> {
                     JSONObject jsonObject = new JSONObject();
                     try {

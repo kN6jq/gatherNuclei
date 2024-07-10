@@ -8,6 +8,7 @@ public class InitUI {
     public static final TemplatesPanel templatesPanel = new TemplatesPanel();
     public static final SearchPanel searchPanel = new SearchPanel();
     public static final ConfigPanel configPanel = new ConfigPanel();
+    public static final YamlPanel yamlPanel = new YamlPanel();
 
     /**
      * 菜单栏
@@ -31,23 +32,23 @@ public class InitUI {
         shellItem.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-// 如果是windows系统,打开cmd，如果是mac系统，打开终端
-                String os = System.getProperty("os.name");
-                if (os.toLowerCase().startsWith("win")) {
-                    try {
-                        Runtime.getRuntime().exec("cmd /c start cmd");
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                } else if (os.toLowerCase().startsWith("mac")) {
-                    try {
-                        Runtime.getRuntime().exec("open -a Terminal");
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(null, "暂不支持该系统", "提示", JOptionPane.INFORMATION_MESSAGE);
+        // 如果是windows系统,打开cmd，如果是mac系统，打开终端
+            String os = System.getProperty("os.name");
+            if (os.toLowerCase().startsWith("win")) {
+                try {
+                    Runtime.getRuntime().exec("cmd /c start cmd");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
+            } else if (os.toLowerCase().startsWith("mac")) {
+                try {
+                    Runtime.getRuntime().exec("open -a Terminal");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "暂不支持该系统", "提示", JOptionPane.INFORMATION_MESSAGE);
+            }
             }
         });
         aboutMenu.add(aboutItem);
@@ -77,6 +78,7 @@ public class InitUI {
         jTabbedPane.addTab("仓库", templatesPanel);
         jTabbedPane.addTab("搜索", searchPanel);
         jTabbedPane.addTab("配置", configPanel);
+        jTabbedPane.addTab("模板编辑", yamlPanel);
         jFrame.add(jTabbedPane, BorderLayout.CENTER);
     }
 

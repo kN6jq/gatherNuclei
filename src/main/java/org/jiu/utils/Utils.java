@@ -2,6 +2,7 @@ package org.jiu.utils;
 
 public class Utils {
     public static String templatePath = "";
+    public static String templateArg = "";
     public static String fofaUrl = "";
     public static String fofaEmail = "";
     public static String fofaKey = "";
