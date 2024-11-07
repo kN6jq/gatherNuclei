@@ -362,7 +362,12 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             } else {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (int selectedRow : selectedRows) {
-                    stringBuilder.append(table.getValueAt(selectedRow, 2)).append("\n");
+                    // 获取单元格的值
+                    Object cellValue = table.getValueAt(selectedRow, 2);
+                    // 检查值是否为空或空字符串
+                    if (cellValue != null && !cellValue.toString().trim().isEmpty()) {
+                        stringBuilder.append(cellValue).append("\n");
+                    }
                 }
                 StringSelection stringSelection = new StringSelection(stringBuilder.toString());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
