@@ -4,195 +4,342 @@ import org.jiu.utils.Utils;
 import org.jiu.utils.YamlUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.jiu.ui.InitUI.templatesPanel;
 
 public class ConfigPanel extends JPanel {
+    // 面板组件
+    private final JPanel mainPanel;
+    private final Map<String, JTextField> textFields;
 
-    private final FlowLayout flowLayout = new FlowLayout();
+    // Nuclei配置组件
+    private JTextField templatePathField;
+    private JTextField templateArgField;
+
+    // Fofa配置组件
+    private JTextField fofaUrlField;
+    private JPasswordField fofaEmailField;
+    private JPasswordField fofaKeyField;
+
+    // Hunter配置组件
+    private JTextField hunterUrlField;
+    private JPasswordField hunterKeyField;
+
+    // Zone配置组件
+    private JTextField zoneUrlField;
+    private JPasswordField zoneKeyField;
+
+    // DayDayMap配置组件
+    private JTextField daydaymapUrlField;
+    private JPasswordField daydaymapKeyField;
 
     public ConfigPanel() {
-        flowLayout.setAlignment(FlowLayout.LEFT);
-        initToolBar();
-        initTable();
+        setLayout(new BorderLayout());
+        setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+
+        textFields = new HashMap<>();
+
+        initializeComponents();
+        loadSavedConfig();
+
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void initTable() {
-        this.setLayout(new BorderLayout());
-        // 模板路径
-        JPanel templatePanel = new JPanel();
-        JLabel templateLabel = new JLabel("模板路径");
-        JTextField templateTextField = new JTextField();
-        templateTextField.setColumns(30);
-        JButton templateButton = new JButton("选择");
+    private void initializeComponents() {
+        // Nuclei配置部分
+        mainPanel.add(createNucleiConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
 
-        JLabel templateArgLabel = new JLabel("nuclei参数");
-        JTextField templateArgTextField = new JTextField();
-        templateArgTextField.setColumns(30);
+        // Fofa配置部分
+        mainPanel.add(createFofaConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
 
-        templatePanel.add(templateLabel);
-        templatePanel.add(templateTextField);
-        templatePanel.add(templateArgLabel);
-        templatePanel.add(templateArgTextField);
-        templatePanel.add(templateButton);
+        // Hunter配置部分
+        mainPanel.add(createHunterConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
 
-        // fofa
-        JPanel fofaPanel = new JPanel();
-        JLabel fofaurlLabel = new JLabel("fofaurl");
-        JTextField fofaurlTextField = new JTextField();
-        fofaurlTextField.setColumns(20);
-        JLabel fofaemailLabel = new JLabel("fofaemail");
-        JPasswordField fofaemailTextField = new JPasswordField();
-        fofaemailTextField.setColumns(10);
-        JLabel fofakeyLabel = new JLabel("fofakey");
-        JPasswordField fofakeyTextField = new JPasswordField();
-        fofakeyTextField.setColumns(10);
-        JButton fofaButton = new JButton("选择");
-        fofaPanel.add(fofaurlLabel);
-        fofaPanel.add(fofaurlTextField);
-        fofaPanel.add(fofaemailLabel);
-        fofaPanel.add(fofaemailTextField);
-        fofaPanel.add(fofakeyLabel);
-        fofaPanel.add(fofakeyTextField);
-        fofaPanel.add(fofaButton);
+        // Zone配置部分
+        mainPanel.add(createZoneConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
 
-        // hunter
-        JPanel hunterPanel = new JPanel();
-        JLabel hunterurlLabel = new JLabel("hunterurl");
-        JTextField hunterurlTextField = new JTextField();
-        hunterurlTextField.setColumns(20);
-        JLabel hunterkeyLabel = new JLabel("hunterkey");
-        JPasswordField hunterkeyTextField = new JPasswordField();
-        hunterkeyTextField.setColumns(30);
-        JButton hunterButton = new JButton("选择");
-        hunterPanel.add(hunterurlLabel);
-        hunterPanel.add(hunterurlTextField);
-        hunterPanel.add(hunterkeyLabel);
-        hunterPanel.add(hunterkeyTextField);
-        hunterPanel.add(hunterButton);
-
-        // zone
-        JPanel zonePanel = new JPanel();
-        JLabel zoneurlLabel = new JLabel("zoneurl");
-        JTextField zoneurlTextField = new JTextField();
-        zoneurlTextField.setColumns(20);
-        JLabel zonekeyLabel = new JLabel("zonekey");
-        JPasswordField zonekeyTextField = new JPasswordField();
-        zonekeyTextField.setColumns(20);
-        JButton zoneButton = new JButton("选择");
-        zonePanel.add(zoneurlLabel);
-        zonePanel.add(zoneurlTextField);
-        zonePanel.add(zonekeyLabel);
-        zonePanel.add(zonekeyTextField);
-        zonePanel.add(zoneButton);
-
-        // daydaymap
-        JPanel daydaymapPanel = new JPanel();
-        JLabel daydaymapurlLabel = new JLabel("daydaymapurl");
-        JTextField daydaymapurlTextField = new JTextField();
-        daydaymapurlTextField.setColumns(20);
-        JLabel daydaymapkeyLabel = new JLabel("daydaymapkey");
-        JPasswordField daydaymapkeyTextField = new JPasswordField();
-        daydaymapkeyTextField.setColumns(20);
-        JButton daydaymapButton = new JButton("选择");
-        daydaymapPanel.add(daydaymapurlLabel);
-        daydaymapPanel.add(daydaymapurlTextField);
-        daydaymapPanel.add(daydaymapkeyLabel);
-        daydaymapPanel.add(daydaymapkeyTextField);
-        daydaymapPanel.add(daydaymapButton);
-
-
-        // 添加组件
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(templatePanel);
-        panel.add(fofaPanel);
-        panel.add(hunterPanel);
-        panel.add(zonePanel);
-        panel.add(daydaymapPanel);
-        this.add(panel, BorderLayout.NORTH);
-
-
-        // 事件
-        templateButton.addActionListener(e -> {
-            String templateTextFieldText = templateTextField.getText();
-            String templateArgTextFieldText = templateArgTextField.getText();
-            YamlUtils.modifyYaml("nucleipath", templateTextFieldText);
-            YamlUtils.modifyYaml("nucleiarg", templateArgTextFieldText);
-            Utils.templatePath = templateTextFieldText;
-            Utils.templateArg = templateArgTextFieldText;
-            templatesPanel.filterData();
-        });
-        fofaButton.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String fofaurlTextFieldText = fofaurlTextField.getText();
-                String fofaemailTextFieldText = fofaemailTextField.getText();
-                String fofakeyTextFieldText = fofakeyTextField.getText();
-                Utils.fofaUrl = fofaurlTextFieldText;
-                Utils.fofaEmail = fofaemailTextFieldText;
-                Utils.fofaKey = fofakeyTextFieldText;
-                YamlUtils.modifyYaml("fofaurl", fofaurlTextFieldText);
-                YamlUtils.modifyYaml("fofaemail", fofaemailTextFieldText);
-                YamlUtils.modifyYaml("fofakey", fofakeyTextFieldText);
-                templatesPanel.filterData();
-            }
-        });
-        hunterButton.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String hunterurlTextFieldText = hunterurlTextField.getText();
-                String hunterkeyTextFieldText = hunterkeyTextField.getText();
-                Utils.hunterUrl = hunterurlTextFieldText;
-                Utils.hunterKey = hunterkeyTextFieldText;
-                YamlUtils.modifyYaml("hunterurl", hunterurlTextFieldText);
-                YamlUtils.modifyYaml("hunterkey", hunterkeyTextFieldText);
-                templatesPanel.filterData();
-            }
-        });
-        zoneButton.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String zoneurlTextFieldText = zoneurlTextField.getText();
-                String zonekeyTextFieldText = zonekeyTextField.getText();
-                Utils.zoneUrl = zoneurlTextFieldText;
-                Utils.zoneKey = zonekeyTextFieldText;
-                YamlUtils.modifyYaml("zoneurl", zoneurlTextFieldText);
-                YamlUtils.modifyYaml("zonekey", zonekeyTextFieldText);
-                templatesPanel.filterData();
-            }
-        });
-        daydaymapButton.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String daydaymapurlTextFieldText = daydaymapurlTextField.getText();
-                String daydaymapkeyTextFieldText = daydaymapkeyTextField.getText();
-                Utils.daydaymapUrl = daydaymapurlTextFieldText;
-                Utils.daydaymapKey = daydaymapkeyTextFieldText;
-                YamlUtils.modifyYaml("daydaymapurl", daydaymapurlTextFieldText);
-                YamlUtils.modifyYaml("daydaymapkey", daydaymapkeyTextFieldText);
-                templatesPanel.filterData();
-            }
-        });
-        // 初始化数据
-        templateTextField.setText(Utils.templatePath);
-        templateArgTextField.setText(Utils.templateArg);
-        fofaurlTextField.setText(Utils.fofaUrl);
-        fofaemailTextField.setText(Utils.fofaEmail);
-        fofakeyTextField.setText(Utils.fofaKey);
-        hunterurlTextField.setText(Utils.hunterUrl);
-        hunterkeyTextField.setText(Utils.hunterKey);
-        zoneurlTextField.setText(Utils.zoneUrl);
-        zonekeyTextField.setText(Utils.zoneKey);
-        daydaymapurlTextField.setText(Utils.daydaymapUrl);
-        daydaymapkeyTextField.setText(Utils.daydaymapKey);
-
-
+        // DayDayMap配置部分
+        mainPanel.add(createDayDayMapConfigPanel());
     }
 
-    private void initToolBar() {
+    private JPanel createNucleiConfigPanel() {
+        JPanel panel = createConfigPanel("Nuclei 配置");
 
+        // 模板路径配置
+        templatePathField = addConfigField(panel, "模板路径:", 30);
+        textFields.put("nucleipath", templatePathField);
+
+        // 参数配置
+        templateArgField = addConfigField(panel, "Nuclei参数:", 30);
+        textFields.put("nucleiarg", templateArgField);
+
+        // 保存按钮
+        JButton saveButton = new JButton("保存");
+        saveButton.addActionListener(e -> saveNucleiConfig());
+        panel.add(saveButton);
+
+        return panel;
+    }
+
+    private JPanel createFofaConfigPanel() {
+        JPanel panel = createConfigPanel("Fofa 配置");
+
+        // URL配置
+        fofaUrlField = addConfigField(panel, "API URL:", 20);
+        textFields.put("fofaurl", fofaUrlField);
+
+        // Email配置
+        fofaEmailField = addPasswordField(panel, "Email:", 10);
+        textFields.put("fofaemail", fofaEmailField);
+
+        // Key配置
+        fofaKeyField = addPasswordField(panel, "API Key:", 10);
+        textFields.put("fofakey", fofaKeyField);
+
+        // 保存按钮
+        JButton saveButton = new JButton("保存");
+        saveButton.addActionListener(e -> saveFofaConfig());
+        panel.add(saveButton);
+
+        return panel;
+    }
+
+    private JPanel createHunterConfigPanel() {
+        JPanel panel = createConfigPanel("Hunter 配置");
+
+        // URL配置
+        hunterUrlField = addConfigField(panel, "API URL:", 20);
+        textFields.put("hunterurl", hunterUrlField);
+
+        // Key配置
+        hunterKeyField = addPasswordField(panel, "API Key:", 30);
+        textFields.put("hunterkey", hunterKeyField);
+
+        // 保存按钮
+        JButton saveButton = new JButton("保存");
+        saveButton.addActionListener(e -> saveHunterConfig());
+        panel.add(saveButton);
+
+        return panel;
+    }
+
+    private JPanel createZoneConfigPanel() {
+        JPanel panel = createConfigPanel("Zone 配置");
+
+        // URL配置
+        zoneUrlField = addConfigField(panel, "API URL:", 20);
+        textFields.put("zoneurl", zoneUrlField);
+
+        // Key配置
+        zoneKeyField = addPasswordField(panel, "API Key:", 20);
+        textFields.put("zonekey", zoneKeyField);
+
+        // 保存按钮
+        JButton saveButton = new JButton("保存");
+        saveButton.addActionListener(e -> saveZoneConfig());
+        panel.add(saveButton);
+
+        return panel;
+    }
+
+    private JPanel createDayDayMapConfigPanel() {
+        JPanel panel = createConfigPanel("DayDayMap 配置");
+
+        // URL配置
+        daydaymapUrlField = addConfigField(panel, "API URL:", 20);
+        textFields.put("daydaymapurl", daydaymapUrlField);
+
+        // Key配置
+        daydaymapKeyField = addPasswordField(panel, "API Key:", 20);
+        textFields.put("daydaymapkey", daydaymapKeyField);
+
+        // 保存按钮
+        JButton saveButton = new JButton("保存");
+        saveButton.addActionListener(e -> saveDayDayMapConfig());
+        panel.add(saveButton);
+
+        return panel;
+    }
+
+    private JPanel createConfigPanel(String title) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                new TitledBorder(title),
+                new EmptyBorder(5, 5, 5, 5)
+        ));
+        return panel;
+    }
+
+    private JTextField addConfigField(JPanel panel, String labelText, int columns) {
+        JLabel label = new JLabel(labelText);
+        label.setPreferredSize(new Dimension(80, 25));
+        panel.add(label);
+
+        JTextField textField = new JTextField(columns);
+        textField.setPreferredSize(new Dimension(textField.getPreferredSize().width, 25));
+        panel.add(textField);
+
+        return textField;
+    }
+
+    private JPasswordField addPasswordField(JPanel panel, String labelText, int columns) {
+        JLabel label = new JLabel(labelText);
+        label.setPreferredSize(new Dimension(80, 25));
+        panel.add(label);
+
+        JPasswordField passwordField = new JPasswordField(columns);
+        passwordField.setPreferredSize(new Dimension(passwordField.getPreferredSize().width, 25));
+        panel.add(passwordField);
+
+        return passwordField;
+    }
+
+    private void loadSavedConfig() {
+        SwingUtilities.invokeLater(() -> {
+            // Nuclei配置
+            templatePathField.setText(Utils.templatePath);
+            templateArgField.setText(Utils.templateArg);
+
+            // Fofa配置
+            fofaUrlField.setText(Utils.fofaUrl);
+            fofaEmailField.setText(Utils.fofaEmail);
+            fofaKeyField.setText(Utils.fofaKey);
+
+            // Hunter配置
+            hunterUrlField.setText(Utils.hunterUrl);
+            hunterKeyField.setText(Utils.hunterKey);
+
+            // Zone配置
+            zoneUrlField.setText(Utils.zoneUrl);
+            zoneKeyField.setText(Utils.zoneKey);
+
+            // DayDayMap配置
+            daydaymapUrlField.setText(Utils.daydaymapUrl);
+            daydaymapKeyField.setText(Utils.daydaymapKey);
+        });
+    }
+
+    private void saveNucleiConfig() {
+        String path = templatePathField.getText().trim();
+        String arg = templateArgField.getText().trim();
+
+        saveConfig("nucleipath", path);
+        saveConfig("nucleiarg", arg);
+
+        Utils.templatePath = path;
+        Utils.templateArg = arg;
+
+        refreshTemplates();
+    }
+
+    private void saveFofaConfig() {
+        String url = fofaUrlField.getText().trim();
+        String email = new String(fofaEmailField.getPassword());
+        String key = new String(fofaKeyField.getPassword());
+
+        saveConfig("fofaurl", url);
+        saveConfig("fofaemail", email);
+        saveConfig("fofakey", key);
+
+        Utils.fofaUrl = url;
+        Utils.fofaEmail = email;
+        Utils.fofaKey = key;
+
+        showSaveSuccess();
+    }
+
+    private void saveHunterConfig() {
+        String url = hunterUrlField.getText().trim();
+        String key = new String(hunterKeyField.getPassword());
+
+        saveConfig("hunterurl", url);
+        saveConfig("hunterkey", key);
+
+        Utils.hunterUrl = url;
+        Utils.hunterKey = key;
+
+        showSaveSuccess();
+    }
+
+    private void saveZoneConfig() {
+        String url = zoneUrlField.getText().trim();
+        String key = new String(zoneKeyField.getPassword());
+
+        saveConfig("zoneurl", url);
+        saveConfig("zonekey", key);
+
+        Utils.zoneUrl = url;
+        Utils.zoneKey = key;
+
+        showSaveSuccess();
+    }
+
+    private void saveDayDayMapConfig() {
+        String url = daydaymapUrlField.getText().trim();
+        String key = new String(daydaymapKeyField.getPassword());
+
+        saveConfig("daydaymapurl", url);
+        saveConfig("daydaymapkey", key);
+
+        Utils.daydaymapUrl = url;
+        Utils.daydaymapKey = key;
+
+        showSaveSuccess();
+    }
+
+    private void saveConfig(String key, String value) {
+        try {
+            YamlUtils.modifyYaml(key, value);
+        } catch (Exception e) {
+            showError("保存配置失败", e);
+        }
+    }
+
+    private void refreshTemplates() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                InitUI.getTemplatesPanel().filterData();
+                showSaveSuccess();
+            } catch (Exception e) {
+                showError("刷新模板失败", e);
+            }
+        });
+    }
+
+    private void showSaveSuccess() {
+        SwingUtilities.invokeLater(() ->
+                JOptionPane.showMessageDialog(
+                        this,
+                        "配置保存成功",
+                        "提示",
+                        JOptionPane.INFORMATION_MESSAGE
+                )
+        );
+    }
+
+    private void showError(String message, Exception e) {
+        e.printStackTrace();
+        SwingUtilities.invokeLater(() ->
+                JOptionPane.showMessageDialog(
+                        this,
+                        message + ": " + e.getMessage(),
+                        "错误",
+                        JOptionPane.ERROR_MESSAGE
+                )
+        );
     }
 }
