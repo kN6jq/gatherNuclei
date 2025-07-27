@@ -314,7 +314,8 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                         break;
                     case "一个月":
                         end_time = today;
-                        start_time = DateUtil.formatDate(DateUtil.offsetMonth(DateUtil.parse(today), -1));
+                        // 修改为固定29天前
+                        start_time = DateUtil.formatDate(DateUtil.offsetDay(DateUtil.parse(today), -29));
                         break;
                 }
             }
