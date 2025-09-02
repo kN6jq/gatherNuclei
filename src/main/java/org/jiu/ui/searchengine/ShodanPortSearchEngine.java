@@ -61,8 +61,15 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine{
                 CompletableFuture.supplyAsync(() -> {
                     Set<String> data = ShodanCore.getData(ip);
                     StringBuilder stringBuilder = new StringBuilder();
+                    int validCount = 0;
                     for (String s : data) {
-                        stringBuilder.append(s).append("\n");
+                        if (s != null && !s.trim().isEmpty()) {
+                            if (validCount > 0) {
+                                stringBuilder.append("\n");
+                            }
+                            stringBuilder.append(s);
+                            validCount++;
+                        }
                     }
                     // 使用SwingUtilities.invokeLater更新界面
                     SwingUtilities.invokeLater(() -> {

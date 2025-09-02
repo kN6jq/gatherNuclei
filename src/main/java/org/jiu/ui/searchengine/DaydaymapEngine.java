@@ -116,11 +116,21 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                 JOptionPane.showMessageDialog(null, "请先选择数据");
             } else {
                 StringBuilder stringBuilder = new StringBuilder();
+                int rowCount = 0;
                 for (int selectedRow : selectedRows) {
-                    for (int i = 0; i < table.getColumnCount(); i++) {
-                        stringBuilder.append(table.getValueAt(selectedRow, i)).append("\t");
+                    if (rowCount > 0) {
+                        stringBuilder.append("\n");
                     }
-                    stringBuilder.append("\n");
+                    for (int i = 0; i < table.getColumnCount(); i++) {
+                        Object cellValue = table.getValueAt(selectedRow, i);
+                        if (cellValue != null) {
+                            stringBuilder.append(cellValue);
+                        }
+                        if (i < table.getColumnCount() - 1) {
+                            stringBuilder.append("\t");
+                        }
+                    }
+                    rowCount++;
                 }
                 StringSelection stringSelection = new StringSelection(stringBuilder.toString());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
@@ -155,8 +165,16 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                 JOptionPane.showMessageDialog(null, "请先选择数据");
             } else {
                 StringBuilder stringBuilder = new StringBuilder();
+                int validCount = 0;
                 for (int selectedRow : selectedRows) {
-                    stringBuilder.append(table.getValueAt(selectedRow, 1)).append("\n");
+                    Object cellValue = table.getValueAt(selectedRow, 1);
+                    if (cellValue != null && !cellValue.toString().trim().isEmpty()) {
+                        if (validCount > 0) {
+                            stringBuilder.append("\n");
+                        }
+                        stringBuilder.append(cellValue);
+                        validCount++;
+                    }
                 }
                 StringSelection stringSelection = new StringSelection(stringBuilder.toString());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
