@@ -23,6 +23,18 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine{
         this.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
+        // 设置按钮样式
+        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        searchBtn.setPreferredSize(new Dimension(80, 25));
+        searchBtn.setBackground(new Color(0, 123, 255));
+        searchBtn.setForeground(Color.WHITE);
+        searchBtn.setFocusPainted(false);
+
+        clearBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        clearBtn.setPreferredSize(new Dimension(80, 25));
+        clearBtn.setBackground(new Color(220, 53, 69));
+        clearBtn.setForeground(Color.WHITE);
+        clearBtn.setFocusPainted(false);
 
         Gbc gbcinputArea = new Gbc(0, 0,1,2);
         gbcinputArea.weightx = 1;
@@ -56,6 +68,9 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine{
             input = input.replaceAll("\r\n", "\n");
             String[] lines = input.split("\n");
             Set<String> ips = new HashSet<>(Arrays.asList(lines));
+
+            // 清空输出区域
+            outputArea.setText("");
 
             for (String ip : ips) {
                 CompletableFuture.supplyAsync(() -> {

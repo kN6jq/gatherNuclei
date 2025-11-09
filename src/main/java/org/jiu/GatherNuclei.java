@@ -46,11 +46,14 @@ public class GatherNuclei extends JFrame {
         GatherNuclei frame = new GatherNuclei();
 
         try {
+            // 设置菜单栏
+            frame.setJMenuBar(createMenuBar());
+            
             // 初始化所有UI组件
             InitUI.initializeUI(frame);
 
-            // 添加底部面板
-            frame.add(createBottomPanel(), BorderLayout.SOUTH);
+            // 添加底部状态栏
+            frame.add(createStatusBar(), BorderLayout.SOUTH);
 
             // 显示窗口
             frame.setVisible(true);
@@ -71,25 +74,52 @@ public class GatherNuclei extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 
-    private static JPanel createBottomPanel() {
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBorder(new EmptyBorder(5, 10, 5, 10));
-
-        // 创建标签
-        JLabel leftLabel = createLabel("本工具只用于授权测试,禁止未授权渗透", SwingConstants.LEFT);
-        JLabel rightLabel = createLabel("Code by Xm17", SwingConstants.RIGHT);
-
-        // 添加标签
-        bottomPanel.add(leftLabel, BorderLayout.WEST);
-        bottomPanel.add(rightLabel, BorderLayout.EAST);
-
-        return bottomPanel;
+    private static JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        
+        // 文件菜单
+        JMenu fileMenu = new JMenu("文件");
+        fileMenu.add(new JMenuItem("打开模板目录"));
+        fileMenu.add(new JMenuItem("导入模板"));
+        fileMenu.add(new JMenuItem("导出模板"));
+        fileMenu.addSeparator();
+        fileMenu.add(new JMenuItem("退出"));
+        
+        // 工具菜单
+        JMenu toolsMenu = new JMenu("工具");
+        toolsMenu.add(new JMenuItem("模板验证"));
+        toolsMenu.add(new JMenuItem("批量处理"));
+        
+        // 帮助菜单
+        JMenu helpMenu = new JMenu("帮助");
+        helpMenu.add(new JMenuItem("使用说明"));
+        helpMenu.add(new JMenuItem("关于"));
+        
+        menuBar.add(fileMenu);
+        menuBar.add(toolsMenu);
+        menuBar.add(helpMenu);
+        
+        return menuBar;
     }
 
-    private static JLabel createLabel(String text, int alignment) {
-        JLabel label = new JLabel(text);
-        label.setHorizontalAlignment(alignment);
-        return label;
+    private static JPanel createStatusBar() {
+        JPanel statusBar = new JPanel(new BorderLayout());
+        statusBar.setBorder(BorderFactory.createLoweredSoftBevelBorder());
+        
+        // 左侧信息
+        JLabel leftLabel = new JLabel("就绪");
+        leftLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+        leftLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        
+        // 右侧信息
+        JLabel rightLabel = new JLabel("gatherNuclei v0.0.1");
+        rightLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+        rightLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        
+        statusBar.add(leftLabel, BorderLayout.WEST);
+        statusBar.add(rightLabel, BorderLayout.EAST);
+        
+        return statusBar;
     }
 
     private static void showError(Component parent, String message, Exception e) {

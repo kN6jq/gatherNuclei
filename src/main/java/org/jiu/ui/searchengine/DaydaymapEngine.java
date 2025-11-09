@@ -8,6 +8,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.DaydaymapCore;
+import org.jiu.ui.SearchPanel;
 import org.jiu.ui.component.MultiComboBox;
 import org.jiu.utils.TelnetUtils;
 
@@ -23,6 +24,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author Xm17
@@ -44,30 +46,31 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
             "Company",
             "City"
     };
-    private JButton predBtn = new JButton("上一页");
-    private JButton nextBtn = new JButton("下一页");
     private JButton searchBtn = new JButton("搜索");
-    private JButton pageCurrentLabel = new JButton("1");
-    private JButton pageTotalLabel = new JButton("总页");
-    private JButton sizeLabel = new JButton("总数");
-    private int currentPage = 1;
-    private int totalPage = 0;
-    private int sizePage = 0; // 查询总数量
-    private JTable table;
-    private JPopupMenu popupMenu; // 表格右键组
-    private DefaultTableModel tableModel;
-    private TableRowSorter<DefaultTableModel> sorter;
-    private JSONObject jsonObject;
+    private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
+    private AtomicInteger tabCounter = new AtomicInteger(0); // 标签页计数器
 
     public DaydaymapEngine() {
         this.setLayout(new BorderLayout());
         initToolBar();
-        initTable();
+        initTabbedPane();
     }
 
-    private void initTable() {
-        table = new JTable();
-        tableModel = new DefaultTableModel() {
+    /**
+     * 初始化标签页容器
+     */
+    private void initTabbedPane() {
+        resultsTabbedPane = new JTabbedPane();
+        add(resultsTabbedPane, BorderLayout.CENTER);
+        addWelcomePanel();
+    }
+
+    /**
+     * 初始化表格
+     */
+    private JTable createTable() {
+        JTable table = new JTable();
+        DefaultTableModel tableModel = new DefaultTableModel() {
             // 可编辑
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -95,16 +98,16 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == 3) {
                     // 模板面板右键功能
-                    popupMenu = createPopupMenu();
+                    JPopupMenu popupMenu = createPopupMenu(table);
                     popupMenu.show(table, e.getX(), e.getY());
                 }
             }
         });
 
-        this.add(scrollPane, BorderLayout.CENTER);
+        return table;
     }
 
-    private JPopupMenu createPopupMenu() {
+    private JPopupMenu createPopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
 
 
@@ -194,9 +197,9 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                     String ip = (String) table.getValueAt(selectedRow, 1);
                     ips.add(ip);
                 }
-                ShodanPortSearchEngine.inputArea.setText("");
                 ShodanPortSearchEngine.inputArea.setText(String.join("\n", ips));
-                ShodanPortSearchEngine.searchBtn.doClick();
+                // 切换到ShodanPort标签页
+                SearchPanel.switchToShodanPort();
             }
         });
         popupMenu.add(copyRowItem);
@@ -212,23 +215,15 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "DayDayMap Search... & Enter");
         inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
         searchBtn.setText("搜索");
-        statusBtn.setToolTipText("搜素状态提示灯");
+        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        searchBtn.setPreferredSize(new Dimension(80, 25));
+        searchBtn.setBackground(new Color(0, 123, 255));
+        searchBtn.setForeground(Color.WHITE);
+        searchBtn.setFocusPainted(false);
+        statusBtn.setToolTipText("搜索状态提示灯");
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
         String[] values = new String[]{"全选", "header", "server", "service", "tags", "cert", "icp_reg_name"};
         comboxstatus = new MultiComboBox(values);
-
-        predBtn.setSelected(true);
-        pageCurrentLabel.setEnabled(false);
-        pageCurrentLabel.setSelected(true);
-        pageCurrentLabel.setToolTipText("当前页 " + currentPage);
-        pageTotalLabel.setEnabled(false);
-        pageTotalLabel.setSelected(true);
-        pageTotalLabel.setToolTipText("总页 " + totalPage);
-        sizeLabel.setEnabled(false);
-        sizeLabel.setSelected(true);
-        sizeLabel.setToolTipText("总数 " + sizePage);
-        nextBtn.setSelected(true);
-
 
         // 回车搜索事件
         inputField.registerKeyboardAction(e -> {
@@ -243,26 +238,6 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 上一页
-        predBtn.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (currentPage > 1) {
-                    search(currentPage - 1);
-                }
-            }
-        });
-        // 下一页
-        nextBtn.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (currentPage < totalPage) {
-                    search(currentPage + 1);
-                }
-            }
-        });
-
-
         // 添加组件
         toolBar.add(inputField);
         toolBar.add(searchBtn);
@@ -271,16 +246,64 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         toolBar.add(comboxstatus);
         toolBar.addSeparator();
         toolBar.add(statusBtn);
-        toolBar.add(predBtn);
-        toolBar.add(pageCurrentLabel);
-        toolBar.add(pageTotalLabel);
-        toolBar.add(sizeLabel);
-        toolBar.add(nextBtn);
         this.add(toolBar, BorderLayout.NORTH);
-
     }
 
     private void search(int p) {
+        String searchData = inputField.getText().trim();
+        if (searchData.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "请输入搜索内容");
+            return;
+        }
+
+        // 创建新的标签页和表格
+        JTable newTable = createTable();
+        JScrollPane scrollPane = new JScrollPane(newTable);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        // 生成标签页标题
+        String tabTitle = searchData.substring(0, Math.min(searchData.length(), 20)) + (searchData.length() > 20 ? "..." : "");
+        int tabNumber = tabCounter.incrementAndGet();
+        tabTitle = "[" + tabNumber + "] " + tabTitle;
+
+        // 创建分页状态Holder
+        final PageState pageState = new PageState();
+        pageState.lastQuery[0] = searchData;
+
+        // 创建包含表格和分页控件的面板
+        JPanel contentPanel = new JPanel(new BorderLayout());
+
+        // 创建分页面板，传递分页状态
+        JPanel pagingPanel = createPagingPanel(newTable, searchData, tabTitle, pageState);
+
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        contentPanel.add(pagingPanel, BorderLayout.SOUTH);
+        
+        // 添加到标签页
+        resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先添加标签页
+        
+        // 添加自定义标签
+        JButton closeButton = new JButton("×");
+        closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
+        closeButton.setPreferredSize(new Dimension(20, 20));
+        closeButton.setBorderPainted(false);
+        closeButton.setContentAreaFilled(false);
+        // 获取当前tab索引
+        int currentTabIndex = resultsTabbedPane.getTabCount() - 1;
+        closeButton.addActionListener(e -> {
+            // 移除当前tab
+            resultsTabbedPane.removeTabAt(currentTabIndex);
+        });
+        
+        JPanel tabWithCloseButton = new JPanel(new BorderLayout());
+        tabWithCloseButton.add(new JLabel(tabTitle), BorderLayout.CENTER);
+        tabWithCloseButton.add(closeButton, BorderLayout.EAST);
+        resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
+        resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
+
+        // 获取当前标签页上的表格和模型
+        DefaultTableModel tableModel = (DefaultTableModel) newTable.getModel();
+
         int i = searchTypeComboBox.getSelectedIndex();
         String data = "";
         if (i == 0) {
@@ -294,17 +317,30 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         String qbase64 = Base64.encode(data);
         new Thread(() -> {
             try {
-                jsonObject = JSONUtil.parseObj(DaydaymapCore.getData(qbase64, p, 100));
-                JSONObject jsonObject1 = jsonObject.getJSONObject("data");
-                sizePage = jsonObject1.getInt("total");
+                JSONObject responseJson = JSONUtil.parseObj(DaydaymapCore.getData(qbase64, p, 100));
+                JSONObject jsonObject1 = responseJson.getJSONObject("data");
+                int sizePage = jsonObject1.getInt("total");
                 JSONArray results = jsonObject1.getJSONArray("list");
                 if (results != null) {
-                    currentPage = p;    // 当前页
-                    totalPage = (int) Math.ceil((double) sizePage / 100); // 总页数
-                    resetTableRows(results);
+                    int currentPage = p;    // 当前页
+                    int totalPage = (int) Math.ceil((double) sizePage / 100); // 总页数
+                    SwingUtilities.invokeLater(() -> {
+                        resetTableRows(results, tableModel, pagingPanel, currentPage, totalPage, sizePage, pageState);
+                    });
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(null, responseJson.getStr("msg"));
+                        // 移除空的标签页
+                        resultsTabbedPane.removeTabAt(currentTabIndex);
+                    });
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, jsonObject.getStr("msg"));
+                JSONObject errorJson = JSONUtil.parseObj("{\"msg\":\"请求失败: " + e.getMessage() + "\"}");
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, errorJson.getStr("msg"));
+                    // 移除空的标签页
+                    resultsTabbedPane.removeTabAt(currentTabIndex);
+                });
             }
 
         }).start();
@@ -312,7 +348,108 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
 
     }
 
-    private void resetTableRows(JSONArray jsonArray) {
+    /**
+     * 创建分页面板
+     */
+    private JPanel createPagingPanel(JTable table, String searchData, String tabTitle, PageState pageState) {
+        JPanel pagingPanel = new JPanel();
+        pagingPanel.setLayout(new FlowLayout());
+        
+        JButton predBtn = new JButton("上一页");
+        JButton nextBtn = new JButton("下一页");
+        JButton pageCurrentLabel = new JButton("1");
+        JButton pageTotalLabel = new JButton("总页");
+        JButton sizeLabel = new JButton("总数");
+
+        // 设置按钮的固定标识符
+        pageCurrentLabel.setName("pageCurrentLabel");
+        pageTotalLabel.setName("pageTotalLabel");
+        sizeLabel.setName("sizeLabel");
+
+        // 初始化分页组件
+        predBtn.setSelected(true);
+        pageCurrentLabel.setEnabled(false);
+        pageCurrentLabel.setSelected(true);
+        pageCurrentLabel.setToolTipText("当前页 1");
+        pageTotalLabel.setToolTipText("总页 1");
+        pageTotalLabel.setEnabled(false);
+        pageTotalLabel.setSelected(true);
+        sizeLabel.setEnabled(false);
+        sizeLabel.setSelected(true);
+        nextBtn.setSelected(true);
+        
+        pagingPanel.add(predBtn);
+        pagingPanel.add(pageCurrentLabel);
+        pagingPanel.add(pageTotalLabel);
+        pagingPanel.add(sizeLabel);
+        pagingPanel.add(nextBtn);
+
+        // 为分页按钮添加事件，使用传入的pageState
+        predBtn.addActionListener(e -> {
+            if (pageState.currentPage[0] > 1) {
+                int newPage = pageState.currentPage[0] - 1;
+                performPagingSearch(table, pageState.lastQuery[0], newPage, pageState.totalPages[0], pageState.currentPage, pageState.totalPages, pagingPanel, pageState);
+            }
+        });
+
+        nextBtn.addActionListener(e -> {
+            if (pageState.currentPage[0] < pageState.totalPages[0]) {
+                int newPage = pageState.currentPage[0] + 1;
+                performPagingSearch(table, pageState.lastQuery[0], newPage, pageState.totalPages[0], pageState.currentPage, pageState.totalPages, pagingPanel, pageState);
+            }
+        });
+
+        return pagingPanel;
+    }
+
+    /**
+     * 执行分页搜索
+     */
+    private void performPagingSearch(JTable table, String searchData, int page, int totalPages, int[] currentPageRef, int[] totalPagesRef, JPanel pagingPanel, PageState pageState) {
+        String data = searchData;
+        int i = searchTypeComboBox.getSelectedIndex();
+        if (i == 1) {
+            data = "domain=\"" + searchData + "\"";
+        } else if (i == 2) {
+            data = "ip=\"" + searchData + "\"";
+        }
+        
+        String qbase64 = Base64.encode(data);
+        
+        new Thread(() -> {
+            try {
+                JSONObject responseJson = JSONUtil.parseObj(DaydaymapCore.getData(qbase64, page, 100));
+                JSONObject jsonObject1 = responseJson.getJSONObject("data");
+                int sizePage = jsonObject1.getInt("total");
+                JSONArray results = jsonObject1.getJSONArray("list");
+                if (results != null) {
+                    SwingUtilities.invokeLater(() -> {
+                        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+                        resetTableRowsForPaging(results, tableModel, pagingPanel, page, totalPages, sizePage, pageState, table);
+                        currentPageRef[0] = page;
+                        totalPagesRef[0] = (int) Math.ceil((double) sizePage / 100);
+                    });
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(null, responseJson.getStr("msg"));
+                    });
+                }
+            } catch (Exception e) {
+                JSONObject errorJson = JSONUtil.parseObj("{\"msg\":\"请求失败: " + e.getMessage() + "\"}");
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, errorJson.getStr("msg"));
+                });
+            }
+        }).start();
+    }
+    
+    /**
+     * 为分页搜索重置表格行
+     */
+    private void resetTableRowsForPaging(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState, JTable table) {
+        // 清空现有数据
+        tableModel.setRowCount(0);
+
         Object[] selectedValues = comboxstatus.getSelectedValues();
         Object[] originalArray = new Object[]{"ip", "port", "domain", "title"};
         Object[] result = new Object[]{};
@@ -333,10 +470,7 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         System.arraycopy(result, 0, newArray, 1, result.length);
 
         tableModel.setColumnIdentifiers(newArray);
-        table.setModel(tableModel);
-        sorter = new TableRowSorter<>(tableModel);
-        table.setRowSorter(sorter);
-        tableModel.setRowCount(0);
+
         int num = 1;
         if (jsonArray != null) {
             for (Object obj : jsonArray) {
@@ -355,14 +489,177 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                 num++;
             }
         }
-        pageCurrentLabel.setText(String.valueOf(currentPage)); // 显示当前页
-        pageTotalLabel.setText(String.valueOf(totalPage)); // 显示总页数
-        sizeLabel.setText(String.valueOf(sizePage)); // 显示总数量
-        pageCurrentLabel.setToolTipText("当前页 " + currentPage);
-        pageTotalLabel.setToolTipText("总页 " + totalPage);
-        sizeLabel.setToolTipText("总数 " + sizePage);
+
+        // 更新分页组件
+        Component[] components = pagingPanel.getComponents();
+        JButton pageCurrentLabel = null;
+        JButton pageTotalLabel = null;
+        JButton sizeLabel = null;
+
+        for (Component comp : components) {
+            if (comp instanceof JButton) {
+                JButton btn = (JButton) comp;
+                String name = btn.getName();
+                if (name != null) {
+                    if (name.equals("pageCurrentLabel")) {
+                        pageCurrentLabel = btn;
+                    } else if (name.equals("pageTotalLabel")) {
+                        pageTotalLabel = btn;
+                    } else if (name.equals("sizeLabel")) {
+                        sizeLabel = btn;
+                    }
+                }
+            }
+        }
+
+        if (pageCurrentLabel != null) {
+            pageCurrentLabel.setText(String.valueOf(currentPage)); // 显示当前页
+            pageCurrentLabel.setToolTipText("当前页 " + currentPage);
+        }
+        if (pageTotalLabel != null) {
+            pageTotalLabel.setText(String.valueOf(totalPage)); // 显示总页数
+            pageTotalLabel.setToolTipText("总页 " + totalPage);
+        }
+        if (sizeLabel != null) {
+            sizeLabel.setText(String.valueOf(sizePage)); // 显示总数量
+            sizeLabel.setToolTipText("总数 " + sizePage);
+
+        // 更新分页状态
+        if (pageState != null) {
+            pageState.currentPage[0] = currentPage;
+            pageState.totalPages[0] = totalPage;
+        }
+        }
+
+        // 滚动到顶部
+        SwingUtilities.invokeLater(() -> {
+            JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, table);
+            if (scrollPane != null) {
+                scrollPane.getVerticalScrollBar().setValue(0);
+            }
+        });
+    }
+    
+    private void resetTableRows(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState) {
+        // 清空现有数据
+        tableModel.setRowCount(0);
+        
+        Object[] selectedValues = comboxstatus.getSelectedValues();
+        Object[] originalArray = new Object[]{"ip", "port", "domain", "title"};
+        Object[] result = new Object[]{};
+        // 根据selectedValues的值来获取对应的jsonObject的值
+        if (selectedValues.length == 0) {
+            result = new Object[]{"ip", "port", "domain", "title"};
+        } else {
+            // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
+            result = new Object[selectedValues.length + originalArray.length];
+            System.arraycopy(originalArray, 0, result, 0, originalArray.length);
+            System.arraycopy(selectedValues, 0, result, originalArray.length, selectedValues.length);
+        }
+
+        // 给result最开始插入一个#号
+        Object newValueId = "#";
+        Object[] newArray = new Object[result.length + 1];
+        newArray[0] = newValueId;
+        System.arraycopy(result, 0, newArray, 1, result.length);
+
+        tableModel.setColumnIdentifiers(newArray);
+
+        int num = 1;
+        if (jsonArray != null) {
+            for (Object obj : jsonArray) {
+                JSONObject jsonObject = (JSONObject) obj;
+                String[] values = new String[]{};
+                ArrayList<String> tempList = new ArrayList<>(Arrays.asList(values));
+                // 给vuales赋值
+                tempList.add(String.valueOf(num));
+                // 给selectedValues插入值
+
+                for (Object o : result) {
+                    tempList.add(jsonObject.getStr((String) o));
+                }
+                values = tempList.toArray(new String[0]);
+                tableModel.addRow(values);
+                num++;
+            }
+        }
+        
+        // 更新分页组件
+        Component[] components = pagingPanel.getComponents();
+        JButton pageCurrentLabel = null;
+        JButton pageTotalLabel = null;
+        JButton sizeLabel = null;
+        
+        for (Component comp : components) {
+            if (comp instanceof JButton) {
+                JButton btn = (JButton) comp;
+                String name = btn.getName();
+                if (name != null) {
+                    if (name.equals("pageCurrentLabel")) {
+                        pageCurrentLabel = btn;
+                    } else if (name.equals("pageTotalLabel")) {
+                        pageTotalLabel = btn;
+                    } else if (name.equals("sizeLabel")) {
+                        sizeLabel = btn;
+                    }
+                }
+            }
+        }
+        
+        if (pageCurrentLabel != null) {
+            pageCurrentLabel.setText(String.valueOf(currentPage)); // 显示当前页
+            pageCurrentLabel.setToolTipText("当前页 " + currentPage);
+        }
+        if (pageTotalLabel != null) {
+            pageTotalLabel.setText(String.valueOf(totalPage)); // 显示总页数
+            pageTotalLabel.setToolTipText("总页 " + totalPage);
+        }
+        if (sizeLabel != null) {
+            sizeLabel.setText(String.valueOf(sizePage)); // 显示总数量
+            sizeLabel.setToolTipText("总数 " + sizePage);
+
+        // 更新分页状态
+        if (pageState != null) {
+            pageState.currentPage[0] = currentPage;
+            pageState.totalPages[0] = totalPage;
+        }
+        }
+
+        // 更新分页状态
+        if (pageState != null) {
+            pageState.currentPage[0] = currentPage;
+            pageState.totalPages[0] = totalPage;
+        }
     }
 
+
+    /**
+     * 添加欢迎面板
+     */
+    private void addWelcomePanel() {
+        JPanel welcomePanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        JLabel welcomeLabel = new JLabel("欢迎使用搜索引擎");
+        welcomeLabel.setFont(new Font("Dialog", Font.BOLD, 24));
+        welcomePanel.add(welcomeLabel, gbc);
+
+        gbc.gridy++;
+        JLabel instructionLabel = new JLabel("在上方工具栏中输入搜索关键词，然后按回车或点击搜索按钮");
+        instructionLabel.setFont(new Font("Dialog", Font.PLAIN, 14));
+        welcomePanel.add(instructionLabel, gbc);
+
+        gbc.gridy++;
+        JLabel exampleLabel = new JLabel("示例: 输入域名或关键词");
+        exampleLabel.setFont(new Font("Dialog", Font.ITALIC, 12));
+        exampleLabel.setForeground(Color.GRAY);
+        welcomePanel.add(exampleLabel, gbc);
+
+        resultsTabbedPane.addTab("欢迎", welcomePanel);
+    }
     @Override
     public String getTitle() {
         return "daydaymap";

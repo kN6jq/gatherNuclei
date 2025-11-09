@@ -136,12 +136,17 @@ public class TemplatesPanel extends JPanel {
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
+        table.setRowHeight(25);
+        table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
 
         // 设置表格渲染器
         DefaultTableCellRenderer centerRenderer = createCenterRenderer();
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
+        
+        // 为严重程度列设置特殊渲染器
+        table.getColumnModel().getColumn(3).setCellRenderer(createSeverityRenderer());
 
         // 设置列宽
         configureColumnWidths(table);
@@ -171,19 +176,74 @@ public class TemplatesPanel extends JPanel {
             }
         };
     }
+    
+    /**
+     * 创建严重程度渲染器
+     */
+    private DefaultTableCellRenderer createSeverityRenderer() {
+        return new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                if (!isSelected) {
+                    String severity = (String) value;
+                    if (severity != null) {
+                        switch (severity.toLowerCase()) {
+                            case "critical":
+                                label.setBackground(new Color(220, 53, 69));
+                                label.setForeground(Color.WHITE);
+                                break;
+                            case "high":
+                                label.setBackground(new Color(255, 193, 7));
+                                label.setForeground(Color.BLACK);
+                                break;
+                            case "medium":
+                                label.setBackground(new Color(255, 133, 27));
+                                label.setForeground(Color.WHITE);
+                                break;
+                            case "low":
+                                label.setBackground(new Color(40, 167, 69));
+                                label.setForeground(Color.WHITE);
+                                break;
+                            case "info":
+                                label.setBackground(new Color(108, 117, 125));
+                                label.setForeground(Color.WHITE);
+                                break;
+                            default:
+                                label.setBackground(null);
+                                label.setForeground(null);
+                        }
+                    }
+                }
+                
+                label.setHorizontalAlignment(JLabel.CENTER);
+                if (value != null) {
+                    label.setToolTipText(value.toString());
+                }
+                
+                return label;
+            }
+        };
+    }
 
     /**
      * 配置表格列宽
      */
     private void configureColumnWidths(JTable table) {
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);  // #
-        table.getColumnModel().getColumn(1).setPreferredWidth(100); // ID
-        table.getColumnModel().getColumn(2).setPreferredWidth(150); // Name
-        table.getColumnModel().getColumn(3).setPreferredWidth(100); // Severity
-        table.getColumnModel().getColumn(4).setPreferredWidth(150); // Tags
-        table.getColumnModel().getColumn(5).setPreferredWidth(100); // Author
-        table.getColumnModel().getColumn(6).setPreferredWidth(300); // Description
-        table.getColumnModel().getColumn(7).setPreferredWidth(200); // Reference
+        // 设置表格行高和字体
+        table.setRowHeight(25);
+        table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        
+        // 设置列宽
+        table.getColumnModel().getColumn(0).setPreferredWidth(40);   // #
+        table.getColumnModel().getColumn(1).setPreferredWidth(120);  // ID
+        table.getColumnModel().getColumn(2).setPreferredWidth(200);  // Name
+        table.getColumnModel().getColumn(3).setPreferredWidth(60);   // Severity - 使用颜色标识
+        table.getColumnModel().getColumn(4).setPreferredWidth(150);  // Tags
+        table.getColumnModel().getColumn(5).setPreferredWidth(80);   // Author
+        table.getColumnModel().getColumn(6).setPreferredWidth(250);  // Description
+        table.getColumnModel().getColumn(7).setPreferredWidth(180);  // Reference
     }
 
     /**
@@ -204,6 +264,29 @@ public class TemplatesPanel extends JPanel {
         button.setSelected(true);
         button.setToolTipText(severity + "级别模板");
         button.addActionListener(e -> filterTemplates());
+
+        // 根据严重级别设置颜色
+        Color selectedColor = new Color(0, 123, 255); // 默认蓝色
+        Color normalColor = Color.WHITE;
+
+        if ("信息".equals(text)) {
+            selectedColor = new Color(108, 117, 125); // 灰色
+        } else if ("低".equals(text)) {
+            selectedColor = new Color(40, 167, 69); // 绿色
+        } else if ("中".equals(text)) {
+            selectedColor = new Color(255, 193, 7); // 黄色
+        } else if ("高".equals(text)) {
+            selectedColor = new Color(255, 152, 0); // 橙色
+        } else if ("危".equals(text)) {
+            selectedColor = new Color(220, 53, 69); // 红色
+        }
+
+        button.setBackground(normalColor);
+        button.setForeground(Color.BLACK);
+        button.setSelected(true);
+        button.setBackground(selectedColor);
+        button.setForeground(Color.WHITE);
+
         return button;
     }
 
@@ -214,6 +297,9 @@ public class TemplatesPanel extends JPanel {
         JButton button = new JButton("刷新");
         button.setToolTipText("刷新模板列表");
         button.addActionListener(e -> refreshTemplates());
+        button.setBackground(new Color(0, 123, 255));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
         return button;
     }
     /**
@@ -242,64 +328,61 @@ public class TemplatesPanel extends JPanel {
         toolBar.setFloatable(false);
         toolBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // 创建左侧面板（状态标签和过滤按钮）
-        JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.X_AXIS));
-
-        // 状态标签使用固定大小，增加宽度以显示完整信息
-        JPanel statusPanel = new JPanel(new BorderLayout());
-        statusPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-        statusLabel.setPreferredSize(new Dimension(300, 25)); // 增加宽度至300
-        statusLabel.setMinimumSize(new Dimension(300, 25));   // 设置最小宽度
-        statusLabel.setMaximumSize(new Dimension(300, 25));   // 设置最大宽度
-        // 左对齐显示文本
-        statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        statusPanel.add(statusLabel, BorderLayout.CENTER);
-        leftPanel.add(statusPanel);
-
-        // 过滤按钮组
+        // 创建主面板
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        
+        // 左侧控件：状态和过滤器
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        
+        // 状态标签
+        statusLabel.setPreferredSize(new Dimension(200, 25));
+        statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        leftPanel.add(statusLabel);
+        
+        // 分隔符
+        leftPanel.add(Box.createHorizontalStrut(10));
+        
+        // 过滤器按钮
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-        filterPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-
-        // 统一按钮大小和样式
-        Dimension buttonSize = new Dimension(60, 25);
-        Font buttonFont = new Font("Dialog", Font.PLAIN, 12);
-
+        filterPanel.add(new JLabel("过滤:"));
+        
+        // 统一按钮样式
+        Dimension buttonSize = new Dimension(50, 25);
         for (JToggleButton btn : new JToggleButton[]{infoBtn, lowBtn, mediumBtn, highBtn, criticalBtn}) {
             btn.setPreferredSize(buttonSize);
-            btn.setFont(buttonFont);
+            btn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
+            btn.setFocusPainted(false);
             filterPanel.add(btn);
         }
-
+        
         leftPanel.add(filterPanel);
-
+        
         // 刷新按钮
-        refreshBtn.setPreferredSize(new Dimension(80, 25));
-        refreshBtn.setFont(buttonFont);
+        refreshBtn.setPreferredSize(new Dimension(60, 25));
+        refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
+        refreshBtn.setFocusPainted(false);
         leftPanel.add(refreshBtn);
-
-        // 添加垂直分隔线
-        JSeparator separator = new JSeparator(JSeparator.VERTICAL);
-        separator.setPreferredSize(new Dimension(1, 25));
-        leftPanel.add(Box.createHorizontalStrut(10)); // 分隔线前的空间
-        leftPanel.add(separator);
-        leftPanel.add(Box.createHorizontalStrut(10)); // 分隔线后的空间
-
-        // 创建搜索面板
-        JPanel searchPanel = new JPanel(new BorderLayout());
-        searchPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
-
-        // 设置搜索框样式
-        searchField.setFont(new Font("Dialog", Font.PLAIN, 12));
-
-        // 将搜索框添加到搜索面板，使其填充整个剩余空间
-        searchPanel.add(searchField, BorderLayout.CENTER);
-
-        // 使用 BorderLayout 来布局工具栏
-        toolBar.setLayout(new BorderLayout());
-        toolBar.add(leftPanel, BorderLayout.WEST);
-        toolBar.add(searchPanel, BorderLayout.CENTER);
-
+        
+        // 分隔符
+        leftPanel.add(Box.createHorizontalStrut(10));
+        
+        // 右侧控件：搜索框
+        JPanel rightPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        searchField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        searchField.putClientProperty("JTextField.placeholderText", "搜索模板 (Ctrl+F)...");
+        rightPanel.add(searchField, gbc);
+        
+        // 将左右面板添加到主面板
+        mainPanel.add(leftPanel, BorderLayout.WEST);
+        mainPanel.add(rightPanel, BorderLayout.EAST);
+        
+        toolBar.add(mainPanel);
         return toolBar;
     }
 

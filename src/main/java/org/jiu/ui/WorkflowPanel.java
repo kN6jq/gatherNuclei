@@ -12,6 +12,7 @@ import org.jiu.utils.Utils;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -79,18 +80,50 @@ public class WorkflowPanel extends JPanel {
     private JToolBar createToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
+        toolBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        toolBar.add(statusLabel);
-        toolBar.addSeparator();
-
+        // 创建主面板
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        
+        // 左侧控件：状态标签
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        leftPanel.add(statusLabel);
+        
+        // 分隔符
+        leftPanel.add(Box.createHorizontalStrut(10));
+        
+        // 刷新按钮
         JButton refreshBtn = new JButton("刷新");
+        refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
+        refreshBtn.setFocusPainted(false);
+        refreshBtn.setPreferredSize(new Dimension(60, 25));
+        refreshBtn.setBackground(new Color(0, 123, 255));
+        refreshBtn.setForeground(Color.WHITE);
         refreshBtn.addActionListener(e -> loadWorkflows());
-        toolBar.add(refreshBtn);
-        toolBar.addSeparator();
-
-        configureSearchField();
-        toolBar.add(searchField);
-
+        leftPanel.add(refreshBtn);
+        
+        // 分隔符
+        leftPanel.add(Box.createHorizontalStrut(10));
+        
+        // 右侧控件：搜索框
+        JPanel rightPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        searchField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        searchField.putClientProperty("JTextField.placeholderText", "搜索工作流...");
+        searchField.addActionListener(e -> performSearch());
+        rightPanel.add(searchField, gbc);
+        
+        // 将左右面板添加到主面板
+        mainPanel.add(leftPanel, BorderLayout.WEST);
+        mainPanel.add(rightPanel, BorderLayout.EAST);
+        
+        toolBar.add(mainPanel);
         return toolBar;
     }
 
@@ -107,6 +140,12 @@ public class WorkflowPanel extends JPanel {
 
     private JTable createTable() {
         JTable table = new JTable(tableModel);
+        
+        // 设置表格属性
+        table.setRowHeight(25);
+        table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        
+        // 设置表格渲染器
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
 
@@ -114,8 +153,88 @@ public class WorkflowPanel extends JPanel {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
+        // 为严重程度相关列设置特殊渲染器
+        table.getColumnModel().getColumn(4).setCellRenderer(createSeverityRenderer("info")); // info列
+        table.getColumnModel().getColumn(5).setCellRenderer(createSeverityRenderer("low"));  // low列
+        table.getColumnModel().getColumn(6).setCellRenderer(createSeverityRenderer("medium")); // medium列
+        table.getColumnModel().getColumn(7).setCellRenderer(createSeverityRenderer("high")); // high列
+        table.getColumnModel().getColumn(8).setCellRenderer(createSeverityRenderer("critical")); // critical列
+
         table.addMouseListener(new PopupListener(table));
         return table;
+    }
+    
+    /**
+     * 创建严重程度渲染器
+     */
+    private DefaultTableCellRenderer createSeverityRenderer(String severityType) {
+        return new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                if (!isSelected) {
+                    String severity = severityType;
+                    switch (severity) {
+                        case "critical":
+                            if (Integer.parseInt(value.toString()) > 0) {
+                                label.setBackground(new Color(220, 53, 69));
+                                label.setForeground(Color.WHITE);
+                            } else {
+                                label.setBackground(null);
+                                label.setForeground(null);
+                            }
+                            break;
+                        case "high":
+                            if (Integer.parseInt(value.toString()) > 0) {
+                                label.setBackground(new Color(255, 193, 7));
+                                label.setForeground(Color.BLACK);
+                            } else {
+                                label.setBackground(null);
+                                label.setForeground(null);
+                            }
+                            break;
+                        case "medium":
+                            if (Integer.parseInt(value.toString()) > 0) {
+                                label.setBackground(new Color(255, 133, 27));
+                                label.setForeground(Color.WHITE);
+                            } else {
+                                label.setBackground(null);
+                                label.setForeground(null);
+                            }
+                            break;
+                        case "low":
+                            if (Integer.parseInt(value.toString()) > 0) {
+                                label.setBackground(new Color(40, 167, 69));
+                                label.setForeground(Color.WHITE);
+                            } else {
+                                label.setBackground(null);
+                                label.setForeground(null);
+                            }
+                            break;
+                        case "info":
+                            if (Integer.parseInt(value.toString()) > 0) {
+                                label.setBackground(new Color(108, 117, 125));
+                                label.setForeground(Color.WHITE);
+                            } else {
+                                label.setBackground(null);
+                                label.setForeground(null);
+                            }
+                            break;
+                        default:
+                            label.setBackground(null);
+                            label.setForeground(null);
+                    }
+                }
+                
+                label.setHorizontalAlignment(JLabel.CENTER);
+                if (value != null) {
+                    label.setToolTipText(value.toString());
+                }
+                
+                return label;
+            }
+        };
     }
 
     // 在WorkflowPanel类的loadWorkflows方法中

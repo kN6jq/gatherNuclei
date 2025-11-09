@@ -19,11 +19,9 @@ public class FofaCore {
      */
     public static String getData(String data, String fields, int page, int size, Boolean full) {
         String apiUrl = Utils.fofaUrl + "/api/v1/search/all";
-        String email = Utils.fofaEmail;
         String key = Utils.fofaKey;
         String url = apiUrl +
-                "?email=" + email +
-                "&key=" + key +
+                "?key=" + key +
                 "&qbase64=" + data +
                 "&fields=" + fields +
                 "&page=" + page +

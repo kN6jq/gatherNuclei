@@ -131,14 +131,15 @@ public class InitUI {
         SwingUtilities.invokeLater(() -> {
             try {
                 mainTabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
+                mainTabbedPane.setFont(new Font("微软雅黑", Font.PLAIN, 12));
 
-                // 添加标签页
-                addTab("仓库", templatesPanel);
+                // 添加标签页 - 使用更兼容的标签
+                addTab("模板管理", templatesPanel);
                 addTab("工作流", workflowPanel);
-                addTab("搜索", searchPanel);
+                addTab("搜索引擎", searchPanel);
                 addTab("配置", configPanel);
                 addTab("新建模板", yamlPanel);
-                addTab("Nuclei模板", nucleiTemplatePanel);
+                addTab("Nuclei", nucleiTemplatePanel);
 
                 frame.add(mainTabbedPane, BorderLayout.CENTER);
                 frame.revalidate();

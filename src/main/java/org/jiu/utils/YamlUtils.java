@@ -47,7 +47,6 @@ public class YamlUtils {
         Map<String, String> fofaConfig = data.get("fofa");
         if (fofaConfig != null) {
             Utils.fofaUrl = fofaConfig.getOrDefault("fofaurl", "");
-            Utils.fofaEmail = fofaConfig.getOrDefault("fofaemail", "");
             Utils.fofaKey = fofaConfig.getOrDefault("fofakey", "");
         }
 
@@ -86,7 +85,6 @@ public class YamlUtils {
         configMap.put("nucleipath", "nuclei");
         configMap.put("nucleiarg", "nuclei");
         configMap.put("fofaurl", "fofa");
-        configMap.put("fofaemail", "fofa");
         configMap.put("fofakey", "fofa");
         configMap.put("hunterurl", "hunter");
         configMap.put("hunterkey", "hunter");
@@ -96,8 +94,30 @@ public class YamlUtils {
         configMap.put("daydaymapkey", "daydaymap");
 
         String section = configMap.get(type);
-        if (section != null && data.containsKey(section)) {
+        if (section != null) {
+            // 确保section存在
+            if (!data.containsKey(section)) {
+                data.put(section, new LinkedHashMap<>());
+            }
             data.get(section).put(type, value);
+
+            // 创建新的数据结构，只包含configMap中定义的字段
+            LinkedHashMap<String, Map<String, String>> newData = new LinkedHashMap<>();
+
+            // 遍历configMap，重新组织数据
+            for (Map.Entry<String, String> entry : configMap.entrySet()) {
+                String configType = entry.getKey();
+                String sectionName = entry.getValue();
+
+                if (!newData.containsKey(sectionName)) {
+                    newData.put(sectionName, new LinkedHashMap<>());
+                }
+
+                // 如果原数据中有这个字段，则保留
+                if (data.containsKey(sectionName) && data.get(sectionName).containsKey(configType)) {
+                    newData.get(sectionName).put(configType, data.get(sectionName).get(configType));
+                }
+            }
 
             String currentPath = System.getProperty("user.dir");
             String yamlFilePath = currentPath + File.separator + "gatherConfig.yaml";
@@ -106,7 +126,7 @@ public class YamlUtils {
                 DumperOptions dumperOptions = new DumperOptions();
                 dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
                 Yaml yaml = new Yaml(dumperOptions);
-                yaml.dump(data, fileWriter);
+                yaml.dump(newData, fileWriter);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -129,7 +149,7 @@ public class YamlUtils {
 
                 // 初始化各个配置section
                 data.put("nuclei", createConfigSection("nucleipath", "nucleiarg"));
-                data.put("fofa", createConfigSection("fofaurl", "fofaemail", "fofakey"));
+                data.put("fofa", createConfigSection("fofaurl", "fofakey"));
                 data.put("hunter", createConfigSection("hunterurl", "hunterkey"));
                 data.put("zone", createConfigSection("zoneurl", "zonekey"));
                 data.put("daydaymap", createConfigSection("daydaymapurl", "daydaymapkey"));

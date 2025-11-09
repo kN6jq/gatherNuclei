@@ -31,6 +31,10 @@ public class MultiComboBox extends JComponent implements ActionListener {
         editor.setEditable(false);
         editor.addActionListener(this);
         arrowButton = new JButton("字段▼");
+        arrowButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        arrowButton.setBackground(new Color(0, 123, 255));
+        arrowButton.setForeground(Color.WHITE);
+        arrowButton.setFocusPainted(false);
         arrowButton.addActionListener(this);
         this.add(editor);
         this.add(arrowButton);
@@ -117,9 +121,17 @@ public class MultiComboBox extends JComponent implements ActionListener {
             }
 
             commitButton = new JButton("确定");
+            commitButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+            commitButton.setBackground(new Color(0, 123, 255));
+            commitButton.setForeground(Color.WHITE);
+            commitButton.setFocusPainted(false);
             commitButton.addActionListener(this);
 
             cancelButton = new JButton("取消");
+            cancelButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+            cancelButton.setBackground(new Color(108, 117, 125));
+            cancelButton.setForeground(Color.WHITE);
+            cancelButton.setFocusPainted(false);
             cancelButton.addActionListener(this);
 
             buttonPane.add(commitButton);

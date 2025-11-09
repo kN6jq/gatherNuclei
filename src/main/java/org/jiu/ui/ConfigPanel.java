@@ -20,7 +20,6 @@ public class ConfigPanel extends JPanel {
 
     // Fofa配置组件
     private JTextField fofaUrlField;
-    private JPasswordField fofaEmailField;
     private JPasswordField fofaKeyField;
 
     // Hunter配置组件
@@ -40,7 +39,7 @@ public class ConfigPanel extends JPanel {
         setBorder(new EmptyBorder(15, 15, 15, 15));
 
         mainPanel = new JPanel();
-        mainPanel.setLayout(new GridBagLayout());
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
         textFields = new HashMap<>();
 
@@ -54,41 +53,41 @@ public class ConfigPanel extends JPanel {
     }
 
     private void initializeComponents() {
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(0, 0, 10, 0);
-
-        mainPanel.add(createNucleiConfigPanel(), gbc);
-
-        gbc.gridy++;
-        mainPanel.add(createFofaConfigPanel(), gbc);
-
-        gbc.gridy++;
-        mainPanel.add(createHunterConfigPanel(), gbc);
-
-        gbc.gridy++;
-        mainPanel.add(createZoneConfigPanel(), gbc);
-
-        gbc.gridy++;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        mainPanel.add(createDayDayMapConfigPanel(), gbc);
+        mainPanel.add(createNucleiConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(createFofaConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(createHunterConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(createZoneConfigPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(createDayDayMapConfigPanel());
     }
 
     private JPanel createConfigPanel(String title) {
-        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
+            title,
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            new Font("微软雅黑", Font.BOLD, 14),
+            new Color(50, 50, 50)
+        ));
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), title),
+                panel.getBorder(),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         return panel;
     }
 
     private Component addConfigField(JPanel panel, String labelText, Component field, GridBagConstraints gbc) {
+        gbc.insets = new Insets(5, 10, 5, 10);
+        
         JLabel label = new JLabel(labelText);
-        label.setPreferredSize(new Dimension(100, 28));
+        label.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        label.setPreferredSize(new Dimension(120, 25));
+        label.setHorizontalAlignment(SwingConstants.RIGHT);
 
         gbc.gridx = 0;
         gbc.weightx = 0.0;
@@ -99,9 +98,14 @@ public class ConfigPanel extends JPanel {
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        
         if (field instanceof JTextField) {
-            ((JTextField) field).setPreferredSize(new Dimension(0, 28));
+            ((JTextField) field).setPreferredSize(new Dimension(0, 25));
+        } else if (field instanceof JPasswordField) {
+            ((JPasswordField) field).setPreferredSize(new Dimension(0, 25));
         }
+        
         panel.add(field, gbc);
 
         return field;
@@ -110,135 +114,310 @@ public class ConfigPanel extends JPanel {
     private JPanel createNucleiConfigPanel() {
         JPanel panel = createConfigPanel("Nuclei 配置");
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // 使用GridBagLayout添加配置项
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 0);
-
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // 模板路径
+        JLabel pathLabel = new JLabel("模板路径:");
+        pathLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        pathLabel.setPreferredSize(new Dimension(100, 25));
+        pathLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        inputPanel.add(pathLabel, gbc);
+        
         templatePathField = new JTextField();
-        addConfigField(panel, "模板路径:", templatePathField, gbc);
+        templatePathField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        templatePathField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(templatePathField, gbc);
         textFields.put("nucleipath", templatePathField);
-
-        gbc.gridy++;
+        
+        // Nuclei参数
+        JLabel argLabel = new JLabel("Nuclei参数:");
+        argLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        argLabel.setPreferredSize(new Dimension(100, 25));
+        argLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        inputPanel.add(argLabel, gbc);
+        
         templateArgField = new JTextField();
-        addConfigField(panel, "Nuclei参数:", templateArgField, gbc);
+        templateArgField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        templateArgField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(templateArgField, gbc);
         textFields.put("nucleiarg", templateArgField);
-
-        gbc.gridy++;
-        gbc.insets = new Insets(10, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.EAST;
-        JButton saveButton = new JButton("保存配置");
-        saveButton.setPreferredSize(new Dimension(100, 30));
+        
+        // 保存按钮
+        JButton saveButton = new JButton("保存Nuclei配置");
+        saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        saveButton.setPreferredSize(new Dimension(120, 30));
+        saveButton.setBackground(new Color(0, 123, 255));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
         saveButton.addActionListener(e -> saveNucleiConfig());
-        panel.add(saveButton, gbc);
-
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(saveButton);
+        
+        panel.add(inputPanel, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
         return panel;
     }
 
     private JPanel createFofaConfigPanel() {
         JPanel panel = createConfigPanel("Fofa 配置");
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // 使用GridBagLayout添加配置项
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 0);
-
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // API URL
+        JLabel urlLabel = new JLabel("API URL:");
+        urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        urlLabel.setPreferredSize(new Dimension(100, 25));
+        urlLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        inputPanel.add(urlLabel, gbc);
+        
         fofaUrlField = new JTextField();
-        addConfigField(panel, "API URL:", fofaUrlField, gbc);
+        fofaUrlField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        fofaUrlField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(fofaUrlField, gbc);
         textFields.put("fofaurl", fofaUrlField);
 
-        gbc.gridy++;
-        fofaEmailField = new JPasswordField();
-        addConfigField(panel, "Email:", fofaEmailField, gbc);
-        textFields.put("fofaemail", fofaEmailField);
-
-        gbc.gridy++;
+        // API Key
+        JLabel keyLabel = new JLabel("API Key:");
+        keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        keyLabel.setPreferredSize(new Dimension(100, 25));
+        keyLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        inputPanel.add(keyLabel, gbc);
+        
         fofaKeyField = new JPasswordField();
-        addConfigField(panel, "API Key:", fofaKeyField, gbc);
+        fofaKeyField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        fofaKeyField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(fofaKeyField, gbc);
         textFields.put("fofakey", fofaKeyField);
-
-        gbc.gridy++;
-        gbc.insets = new Insets(10, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.EAST;
-        JButton saveButton = new JButton("保存配置");
-        saveButton.setPreferredSize(new Dimension(100, 30));
+        
+        // 保存按钮
+        JButton saveButton = new JButton("保存FOFA配置");
+        saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        saveButton.setPreferredSize(new Dimension(120, 30));
+        saveButton.setBackground(new Color(0, 123, 255));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
         saveButton.addActionListener(e -> saveFofaConfig());
-        panel.add(saveButton, gbc);
-
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(saveButton);
+        
+        panel.add(inputPanel, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
         return panel;
     }
 
     private JPanel createHunterConfigPanel() {
         JPanel panel = createConfigPanel("Hunter 配置");
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // 使用GridBagLayout添加配置项
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 0);
-
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // API URL
+        JLabel urlLabel = new JLabel("API URL:");
+        urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        urlLabel.setPreferredSize(new Dimension(100, 25));
+        urlLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        inputPanel.add(urlLabel, gbc);
+        
         hunterUrlField = new JTextField();
-        addConfigField(panel, "API URL:", hunterUrlField, gbc);
+        hunterUrlField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        hunterUrlField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(hunterUrlField, gbc);
         textFields.put("hunterurl", hunterUrlField);
-
-        gbc.gridy++;
+        
+        // API Key
+        JLabel keyLabel = new JLabel("API Key:");
+        keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        keyLabel.setPreferredSize(new Dimension(100, 25));
+        keyLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        inputPanel.add(keyLabel, gbc);
+        
         hunterKeyField = new JPasswordField();
-        addConfigField(panel, "API Key:", hunterKeyField, gbc);
+        hunterKeyField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        hunterKeyField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(hunterKeyField, gbc);
         textFields.put("hunterkey", hunterKeyField);
-
-        gbc.gridy++;
-        gbc.insets = new Insets(10, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.EAST;
-        JButton saveButton = new JButton("保存配置");
-        saveButton.setPreferredSize(new Dimension(100, 30));
+        
+        // 保存按钮
+        JButton saveButton = new JButton("保存Hunter配置");
+        saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        saveButton.setPreferredSize(new Dimension(120, 30));
+        saveButton.setBackground(new Color(0, 123, 255));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
         saveButton.addActionListener(e -> saveHunterConfig());
-        panel.add(saveButton, gbc);
-
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(saveButton);
+        
+        panel.add(inputPanel, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
         return panel;
     }
 
     private JPanel createZoneConfigPanel() {
         JPanel panel = createConfigPanel("Zone 配置");
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // 使用GridBagLayout添加配置项
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 0);
-
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // API URL
+        JLabel urlLabel = new JLabel("API URL:");
+        urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        urlLabel.setPreferredSize(new Dimension(100, 25));
+        urlLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        inputPanel.add(urlLabel, gbc);
+        
         zoneUrlField = new JTextField();
-        addConfigField(panel, "API URL:", zoneUrlField, gbc);
+        zoneUrlField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        zoneUrlField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(zoneUrlField, gbc);
         textFields.put("zoneurl", zoneUrlField);
-
-        gbc.gridy++;
+        
+        // API Key
+        JLabel keyLabel = new JLabel("API Key:");
+        keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        keyLabel.setPreferredSize(new Dimension(100, 25));
+        keyLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        inputPanel.add(keyLabel, gbc);
+        
         zoneKeyField = new JPasswordField();
-        addConfigField(panel, "API Key:", zoneKeyField, gbc);
+        zoneKeyField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        zoneKeyField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(zoneKeyField, gbc);
         textFields.put("zonekey", zoneKeyField);
-
-        gbc.gridy++;
-        gbc.insets = new Insets(10, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.EAST;
-        JButton saveButton = new JButton("保存配置");
-        saveButton.setPreferredSize(new Dimension(100, 30));
+        
+        // 保存按钮
+        JButton saveButton = new JButton("保存Zone配置");
+        saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        saveButton.setPreferredSize(new Dimension(120, 30));
+        saveButton.setBackground(new Color(0, 123, 255));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
         saveButton.addActionListener(e -> saveZoneConfig());
-        panel.add(saveButton, gbc);
-
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(saveButton);
+        
+        panel.add(inputPanel, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
         return panel;
     }
 
     private JPanel createDayDayMapConfigPanel() {
         JPanel panel = createConfigPanel("DayDayMap 配置");
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // 使用GridBagLayout添加配置项
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 5, 0);
-
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // API URL
+        JLabel urlLabel = new JLabel("API URL:");
+        urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        urlLabel.setPreferredSize(new Dimension(100, 25));
+        urlLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        inputPanel.add(urlLabel, gbc);
+        
         daydaymapUrlField = new JTextField();
-        addConfigField(panel, "API URL:", daydaymapUrlField, gbc);
+        daydaymapUrlField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        daydaymapUrlField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(daydaymapUrlField, gbc);
         textFields.put("daydaymapurl", daydaymapUrlField);
-
-        gbc.gridy++;
+        
+        // API Key
+        JLabel keyLabel = new JLabel("API Key:");
+        keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        keyLabel.setPreferredSize(new Dimension(100, 25));
+        keyLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        inputPanel.add(keyLabel, gbc);
+        
         daydaymapKeyField = new JPasswordField();
-        addConfigField(panel, "API Key:", daydaymapKeyField, gbc);
+        daydaymapKeyField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        daydaymapKeyField.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(daydaymapKeyField, gbc);
         textFields.put("daydaymapkey", daydaymapKeyField);
-
-        gbc.gridy++;
-        gbc.insets = new Insets(10, 0, 0, 0);
-        gbc.anchor = GridBagConstraints.EAST;
-        JButton saveButton = new JButton("保存配置");
-        saveButton.setPreferredSize(new Dimension(100, 30));
+        
+        // 保存按钮
+        JButton saveButton = new JButton("保存DayDayMap配置");
+        saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        saveButton.setPreferredSize(new Dimension(120, 30));
+        saveButton.setBackground(new Color(0, 123, 255));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
         saveButton.addActionListener(e -> saveDayDayMapConfig());
-        panel.add(saveButton, gbc);
-
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(saveButton);
+        
+        panel.add(inputPanel, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
         return panel;
     }
 
@@ -248,7 +427,6 @@ public class ConfigPanel extends JPanel {
             templateArgField.setText(Utils.templateArg);
 
             fofaUrlField.setText(Utils.fofaUrl);
-            fofaEmailField.setText(Utils.fofaEmail);
             fofaKeyField.setText(Utils.fofaKey);
 
             hunterUrlField.setText(Utils.hunterUrl);
@@ -277,15 +455,12 @@ public class ConfigPanel extends JPanel {
 
     private void saveFofaConfig() {
         String url = fofaUrlField.getText().trim();
-        String email = new String(fofaEmailField.getPassword());
         String key = new String(fofaKeyField.getPassword());
 
         saveConfig("fofaurl", url);
-        saveConfig("fofaemail", email);
         saveConfig("fofakey", key);
 
         Utils.fofaUrl = url;
-        Utils.fofaEmail = email;
         Utils.fofaKey = key;
 
         showSaveSuccess();

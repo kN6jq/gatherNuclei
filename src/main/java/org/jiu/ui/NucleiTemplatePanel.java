@@ -1,6 +1,7 @@
 package org.jiu.ui;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -67,7 +68,18 @@ public class NucleiTemplatePanel extends JPanel {
     private JPanel createBasicInfoPanel() {
         // 使用表格布局使字段对齐
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("基础信息"));
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
+            "基础信息",
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            new Font("微软雅黑", Font.BOLD, 14),
+            new Color(50, 50, 50)
+        ));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                panel.getBorder(),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -76,20 +88,43 @@ public class NucleiTemplatePanel extends JPanel {
 
         // 初始化组件
         idField = new JTextField(20);
+        idField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        idField.setPreferredSize(new Dimension(0, 25));
+        
         nameField = new JTextField(20);
+        nameField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        nameField.setPreferredSize(new Dimension(0, 25));
+        
         authorField = new JTextField(20);
+        authorField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        authorField.setPreferredSize(new Dimension(0, 25));
+        
         tagsField = new JTextField(20);
+        tagsField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        tagsField.setPreferredSize(new Dimension(0, 25));
+        
         severityCombo = new JComboBox<>(new String[]{"critical", "high", "medium", "low"});
+        severityCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        severityCombo.setPreferredSize(new Dimension(0, 25));
+        
         descriptionArea = new JTextArea(4, 20);
+        descriptionArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         descriptionArea.setLineWrap(true);
         descriptionArea.setWrapStyleWord(true);
         JScrollPane descScrollPane = new JScrollPane(descriptionArea);
 
         referenceArea = new JTextArea(3, 20);
+        referenceArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         referenceArea.setLineWrap(true);
         referenceArea.setWrapStyleWord(true);
         JScrollPane refScrollPane = new JScrollPane(referenceArea);
+        
         confirmBasicInfoBtn = new JButton("确认基础信息");
+        confirmBasicInfoBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        confirmBasicInfoBtn.setPreferredSize(new Dimension(120, 30));
+        confirmBasicInfoBtn.setBackground(new Color(0, 123, 255));
+        confirmBasicInfoBtn.setForeground(Color.WHITE);
+        confirmBasicInfoBtn.setFocusPainted(false);
 
         // 添加组件到面板
         addFieldToPanel(panel, "ID:", idField, gbc, 0);
@@ -101,7 +136,9 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 1;
-        panel.add(new JLabel("描述:"), gbc);
+        JLabel descLabel = new JLabel("描述:");
+        descLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        panel.add(descLabel, gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
@@ -110,7 +147,9 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 6;
         gbc.gridwidth = 1;
-        panel.add(new JLabel("参考链接:"), gbc);
+        JLabel refLabel = new JLabel("参考链接:");
+        refLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        panel.add(refLabel, gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
@@ -131,7 +170,18 @@ public class NucleiTemplatePanel extends JPanel {
      */
     private JPanel createMatchersPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder("匹配条件"));
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
+            "匹配条件",
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            new Font("微软雅黑", Font.BOLD, 14),
+            new Color(50, 50, 50)
+        ));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                panel.getBorder(),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
         // 匹配条件输入区域
         JPanel inputPanel = new JPanel(new GridBagLayout());
@@ -141,15 +191,34 @@ public class NucleiTemplatePanel extends JPanel {
 
         // 初始化组件
         matcherConditionCombo = new JComboBox<>(new String[]{"", "and", "or"}); // 添加空选项
+        matcherConditionCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        matcherConditionCombo.setPreferredSize(new Dimension(0, 25));
+        
         matchTypeCombo = new JComboBox<>(new String[]{
                 "body", "header", "status", "regex_body", "regex_header",
                 "time_check", "http_interaction", "dns_interaction"
         });
+        matchTypeCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        matchTypeCombo.setPreferredSize(new Dimension(0, 25));
 
         matchValue1 = new JTextField(15);
+        matchValue1.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        matchValue1.setPreferredSize(new Dimension(0, 25));
+        
         matchValue2 = new JTextField(15);
+        matchValue2.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        matchValue2.setPreferredSize(new Dimension(0, 25));
+        
         matchValue3 = new JTextField(15);
+        matchValue3.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        matchValue3.setPreferredSize(new Dimension(0, 25));
+        
         addMatcherBtn = new JButton("添加匹配条件");
+        addMatcherBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        addMatcherBtn.setPreferredSize(new Dimension(120, 30));
+        addMatcherBtn.setBackground(new Color(40, 167, 69));
+        addMatcherBtn.setForeground(Color.WHITE);
+        addMatcherBtn.setFocusPainted(false);
 
         // 输入框提示文本
         matchValue1.setToolTipText("必填项");
@@ -159,7 +228,10 @@ public class NucleiTemplatePanel extends JPanel {
         // 添加组件
         gbc.gridx = 0;
         gbc.gridy = 0;
-        inputPanel.add(new JLabel("多个结果匹配条件类型:"), gbc);
+        JLabel conditionLabel = new JLabel("多个结果匹配条件类型:");
+        conditionLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        inputPanel.add(conditionLabel, gbc);
+        
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         inputPanel.add(matcherConditionCombo, gbc);
@@ -167,7 +239,10 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.weightx = 0.0;
-        inputPanel.add(new JLabel("匹配类型:"), gbc);
+        JLabel typeLabel = new JLabel("匹配类型:");
+        typeLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        inputPanel.add(typeLabel, gbc);
+        
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         inputPanel.add(matchTypeCombo, gbc);
@@ -190,6 +265,7 @@ public class NucleiTemplatePanel extends JPanel {
 
         // 匹配结果显示区域
         matchersResultArea = new JTextArea(8, 40);
+        matchersResultArea.setFont(new Font("Consolas", Font.PLAIN, 12));
         matchersResultArea.setEditable(false);
 
         panel.add(inputPanel, BorderLayout.NORTH);
@@ -203,9 +279,21 @@ public class NucleiTemplatePanel extends JPanel {
      */
     private JPanel createHttpRequestPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder("HTTP请求"));
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
+            "HTTP请求",
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            new Font("微软雅黑", Font.BOLD, 14),
+            new Color(50, 50, 50)
+        ));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                panel.getBorder(),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
         httpRequestArea = new JTextArea(10, 40);
+        httpRequestArea.setFont(new Font("Consolas", Font.PLAIN, 12));
         panel.add(new JScrollPane(httpRequestArea), BorderLayout.CENTER);
 
         return panel;
@@ -216,20 +304,43 @@ public class NucleiTemplatePanel extends JPanel {
      */
     private JPanel createResultPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder("生成结果"));
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
+            "生成结果",
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            new Font("微软雅黑", Font.BOLD, 14),
+            new Color(50, 50, 50)
+        ));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                panel.getBorder(),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
         // 创建按钮面板
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 0, 5)); // 使用网格布局，2行1列
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5)); // 使用流布局，居中对齐
         resetBtn = new JButton("重新填写");
+        resetBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        resetBtn.setPreferredSize(new Dimension(100, 30));
+        resetBtn.setBackground(new Color(220, 53, 69));
+        resetBtn.setForeground(Color.WHITE);
+        resetBtn.setFocusPainted(false);
+        
         generateBtn = new JButton("生成模板");
+        generateBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        generateBtn.setPreferredSize(new Dimension(100, 30));
+        generateBtn.setBackground(new Color(0, 123, 255));
+        generateBtn.setForeground(Color.WHITE);
+        generateBtn.setFocusPainted(false);
 
         // 按顺序添加按钮
-        buttonPanel.add(resetBtn);
         buttonPanel.add(generateBtn);
+        buttonPanel.add(resetBtn);
 
         panel.add(buttonPanel, BorderLayout.NORTH);
 
         resultArea = new JTextArea(30, 40);
+        resultArea.setFont(new Font("Consolas", Font.PLAIN, 12));
         resultArea.setEditable(false);
         panel.add(new JScrollPane(resultArea), BorderLayout.CENTER);
 

@@ -2,14 +2,12 @@ package org.jiu.utils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import java.io.*;
 
 public class Utils {
     public static String templatePath = "";
     public static String templateArg = "";
     public static String fofaUrl = "";
-    public static String fofaEmail = "";
     public static String fofaKey = "";
     public static String hunterUrl = "";
     public static String hunterKey = "";
@@ -26,9 +24,7 @@ public class Utils {
     public static String workflowPath = getRootPath() + File.separator + "workflows";  // 在程序运行目录下创建workflows文件夹
 
     public static void copyToClipboard(String text) {
-        Toolkit.getDefaultToolkit()
-                .getSystemClipboard()
-                .setContents(new StringSelection(text), null);
+        UIUtils.copyToClipboard(text);
         JOptionPane.showMessageDialog(null,
                 "已复制到剪贴板",
                 "提示",
