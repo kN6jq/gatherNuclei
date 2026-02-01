@@ -50,7 +50,12 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             "Domain",
             "ICP",
             "Company",
-            "City"
+            "City",
+            "Province",
+            "Country",
+            "ISP",
+            "Status",
+            "Protocol"
     };
     private JButton searchBtn = new JButton("搜索");
     private int type = 3; // 资产类型，1代表”web资产“，2代表”非web资产“，3代表”全部“
@@ -130,9 +135,12 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         centerRenderer.setHorizontalAlignment(JTextField.CENTER);
         table.getColumn("#").setCellRenderer(centerRenderer);
         table.getColumn("Port").setCellRenderer(centerRenderer);
+        table.getColumn("Status").setCellRenderer(centerRenderer);
 
         table.getColumn("#").setPreferredWidth(10);
         table.getColumn("Port").setPreferredWidth(10);
+        table.getColumn("Status").setPreferredWidth(10);
+        table.getColumn("URL").setPreferredWidth(150);
 
 
         // 添加右键功能
@@ -312,7 +320,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
         typeComboBox.setModel(new DefaultComboBoxModel(new String[]{"全部", "web", "非web"}));
         timeComboBox.setModel(new DefaultComboBoxModel(new String[]{"一年", "半年", "一个月"}));
-        String[] values = new String[]{"全选", "status_code", "web_title", "domain", "protocol", "icp", "company", "number", "city", "updated_at", "isp"};
+        String[] values = new String[]{"全选", "status_code", "web_title", "domain", "protocol", "number", "company", "city", "province", "country", "updated_at", "isp", "header_server", "as_org"};
         comboxstatus = new MultiComboBox(values);
 
         String today = DateUtil.today();
@@ -656,7 +664,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         Object[] result = new Object[]{};
         // 根据selectedValues的值来获取对应的jsonObject的值
         if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "url", "port", "web_title", "domain", "icp", "company", "city"};
+            result = new Object[]{"ip", "url", "port", "web_title", "domain", "number", "company", "city", "province", "country", "isp", "status_code", "protocol"};
         } else {
             // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
             result = new Object[selectedValues.length + originalArray.length];
@@ -755,7 +763,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         Object[] result = new Object[]{};
         // 根据selectedValues的值来获取对应的jsonObject的值
         if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "url", "port", "web_title", "domain", "icp", "company", "city"};
+            result = new Object[]{"ip", "url", "port", "web_title", "domain", "number", "company", "city", "province", "country", "isp", "status_code", "protocol"};
         } else {
             // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
             result = new Object[selectedValues.length + originalArray.length];
