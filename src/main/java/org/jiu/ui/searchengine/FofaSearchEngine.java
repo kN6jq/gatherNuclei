@@ -907,6 +907,14 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                } else if (e.getButton() == MouseEvent.BUTTON1) {
+                    // 左键点击时切换到对应标签页
+                    for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
+                        if (resultsTabbedPane.getTabComponentAt(i) == tabComponent) {
+                            resultsTabbedPane.setSelectedIndex(i);
+                            break;
+                        }
+                    }
                 }
             }
             
