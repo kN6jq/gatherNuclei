@@ -288,16 +288,21 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         closeButton.setPreferredSize(new Dimension(20, 20));
         closeButton.setBorderPainted(false);
         closeButton.setContentAreaFilled(false);
-        // 获取当前tab索引
-        int currentTabIndex = resultsTabbedPane.getTabCount() - 1;
-        closeButton.addActionListener(e -> {
-            // 移除当前tab
-            resultsTabbedPane.removeTabAt(currentTabIndex);
-        });
         
-        JPanel tabWithCloseButton = new JPanel(new BorderLayout());
+        final JPanel tabWithCloseButton = new JPanel(new BorderLayout());
         tabWithCloseButton.add(new JLabel(tabTitle), BorderLayout.CENTER);
         tabWithCloseButton.add(closeButton, BorderLayout.EAST);
+        
+        closeButton.addActionListener(e -> {
+            // 动态获取当前tab的索引
+            for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
+                if (resultsTabbedPane.getTabComponentAt(i) == tabWithCloseButton) {
+                    resultsTabbedPane.removeTabAt(i);
+                    break;
+                }
+            }
+        });
+        
         resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
         resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
 
@@ -331,7 +336,12 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                     SwingUtilities.invokeLater(() -> {
                         JOptionPane.showMessageDialog(null, responseJson.getStr("msg"));
                         // 移除空的标签页
-                        resultsTabbedPane.removeTabAt(currentTabIndex);
+                        for (int idx = 0; idx < resultsTabbedPane.getTabCount(); idx++) {
+                            if (resultsTabbedPane.getTabComponentAt(idx) == tabWithCloseButton) {
+                                resultsTabbedPane.removeTabAt(idx);
+                                break;
+                            }
+                        }
                     });
                 }
             } catch (Exception e) {
@@ -339,7 +349,12 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(null, errorJson.getStr("msg"));
                     // 移除空的标签页
-                    resultsTabbedPane.removeTabAt(currentTabIndex);
+                    for (int idx = 0; idx < resultsTabbedPane.getTabCount(); idx++) {
+                        if (resultsTabbedPane.getTabComponentAt(idx) == tabWithCloseButton) {
+                            resultsTabbedPane.removeTabAt(idx);
+                            break;
+                        }
+                    }
                 });
             }
 
