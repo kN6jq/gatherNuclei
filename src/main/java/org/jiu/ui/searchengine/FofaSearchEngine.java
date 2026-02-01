@@ -269,6 +269,9 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             }
         });
         
+        // 为标签页添加右键菜单
+        addTabPopupMenu(tabWithCloseButton);
+        
         resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
         resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
 
@@ -857,5 +860,62 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
     @Override
     public String getTips() {
         return "fofa空间搜索引擎";
+    }
+
+    /**
+     * 为标签页添加右键菜单
+     */
+    private void addTabPopupMenu(JPanel tabComponent) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        
+        // 关闭当前
+        JMenuItem closeCurrentItem = new JMenuItem("关闭当前");
+        closeCurrentItem.addActionListener(e -> {
+            for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
+                if (resultsTabbedPane.getTabComponentAt(i) == tabComponent) {
+                    resultsTabbedPane.removeTabAt(i);
+                    break;
+                }
+            }
+        });
+        
+        // 关闭其他
+        JMenuItem closeOthersItem = new JMenuItem("关闭其他");
+        closeOthersItem.addActionListener(e -> {
+            // 从后向前遍历，避免索引变化问题
+            for (int i = resultsTabbedPane.getTabCount() - 1; i >= 0; i--) {
+                if (resultsTabbedPane.getTabComponentAt(i) != tabComponent) {
+                    resultsTabbedPane.removeTabAt(i);
+                }
+            }
+        });
+        
+        // 关闭所有
+        JMenuItem closeAllItem = new JMenuItem("关闭所有");
+        closeAllItem.addActionListener(e -> {
+            resultsTabbedPane.removeAll();
+        });
+        
+        popupMenu.add(closeCurrentItem);
+        popupMenu.add(closeOthersItem);
+        popupMenu.addSeparator();
+        popupMenu.add(closeAllItem);
+        
+        // 为标签页组件添加鼠标监听器
+        tabComponent.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
     }
 }
