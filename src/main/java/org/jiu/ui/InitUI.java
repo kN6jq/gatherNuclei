@@ -1,5 +1,7 @@
 package org.jiu.ui;
 
+import org.jiu.ui.dialog.ProxyConfigDialog;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -54,6 +56,7 @@ public class InitUI {
     private static void initMenuBar(JFrame frame) {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(createFileMenu(frame));
+        menuBar.add(createSettingsMenu(frame));
         menuBar.add(createAboutMenu(frame));
         frame.setJMenuBar(menuBar);
     }
@@ -67,6 +70,24 @@ public class InitUI {
         shellItem.addActionListener(e -> SwingUtilities.invokeLater(() -> openSystemShell(frame)));
         fileMenu.add(shellItem);
         return fileMenu;
+    }
+
+    /**
+     * 创建设置菜单
+     */
+    private static JMenu createSettingsMenu(JFrame frame) {
+        JMenu settingsMenu = new JMenu("设置");
+        
+        // 代理配置
+        JMenuItem proxyItem = new JMenuItem("代理配置");
+        proxyItem.setToolTipText("配置 HTTP/SOCKS5 代理");
+        proxyItem.addActionListener(e -> {
+            ProxyConfigDialog dialog = new ProxyConfigDialog(frame);
+            dialog.setVisible(true);
+        });
+        settingsMenu.add(proxyItem);
+        
+        return settingsMenu;
     }
 
     /**

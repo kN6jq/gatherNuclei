@@ -1,7 +1,7 @@
 package org.jiu.core;
 
 import cn.hutool.http.Header;
-import cn.hutool.http.HttpRequest;
+import org.jiu.utils.HttpProxyUtil;
 import org.jiu.utils.Utils;
 
 
@@ -27,7 +27,7 @@ public class FofaCore {
                 "&page=" + page +
                 "&size=" + size +
                 "&full=" + full;
-        return HttpRequest.get(url)
+        return HttpProxyUtil.get(url)
                 .header(Header.USER_AGENT, "Hutool http")//头信息，多个头信息多次调用此方法即可
                 .timeout(20000)//超时，毫秒
                 .execute().body();

@@ -59,7 +59,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
     private MultiComboBox comboxstatus;
     private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
     private AtomicInteger tabCounter = new AtomicInteger(0); // 标签页计数器
-    private String fields = "ip,host,port,title,domain,icp,city";
+    private String fields = "ip,host,port,title,domain,icp,city,protocol,country_name,server,os";
 
     public FofaSearchEngine() {
         this.setLayout(new BorderLayout());
@@ -152,8 +152,20 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         
-        // 初始化多选框 - 这是关键修复
-        String[] values = new String[]{"全选", "title", "domain", "icp", "city", "product", "lastupdatetime"};
+        // 初始化多选框 - 扩展FOFA API支持的所有字段
+        String[] values = new String[]{
+            "全选",
+            // 基础信息
+            "title", "domain", "icp", "city",
+            // 网络信息
+            "protocol", "country_name", "region", "asn", "org",
+            // 技术信息
+            "os", "server", "product", "product_category",
+            // 证书信息
+            "cert", "cert.subject.cn", "cert.issuer.cn", "cert.domain", "cert.not_after",
+            // 响应信息
+            "banner", "header", "jarm"
+        };
         comboxstatus = new MultiComboBox(values);
         
         // 输入框
@@ -277,11 +289,11 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
 
         Object[] selectedValues = comboxstatus.getSelectedValues();
         Object[] originalArray = new Object[]{"ip", "host", "port"};
-        // ip,host,port,title,domain,icp,city
         Object[] result = new Object[]{};
         // 根据selectedValues的值来获取对应的jsonObject的值
         if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city"};
+            // 默认显示字段：基础信息 + 网络信息 + 技术信息
+            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city", "protocol", "country_name", "server", "os"};
         } else {
             // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
             result = new Object[selectedValues.length + originalArray.length];
@@ -406,7 +418,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         Object[] originalArray = new Object[]{"ip", "host", "port"};
         Object[] result = new Object[]{};
         if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city"};
+            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city", "protocol", "country_name", "server", "os"};
         } else {
             result = new Object[selectedValues.length + originalArray.length];
             System.arraycopy(originalArray, 0, result, 0, originalArray.length);
@@ -418,7 +430,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         }
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         String fields = stringBuilder.toString();
-        
+
         int i = searchTypeComboBox.getSelectedIndex();
         String data = "";
         if (i == 0) {
@@ -468,7 +480,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         Object[] originalArray = new Object[]{"ip", "url", "port"};
         Object[] result = new Object[]{};
         if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city"};
+            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city", "protocol", "country_name", "server", "os"};
         } else {
             result = new Object[selectedValues.length + originalArray.length];
             System.arraycopy(originalArray, 0, result, 0, originalArray.length);
@@ -556,7 +568,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         Object[] result = new Object[]{};
         // 根据selectedValues的值来获取对应的jsonObject的值
         if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city"};
+            result = new Object[]{"ip", "host", "port", "title", "domain", "icp", "city", "protocol", "country_name", "server", "os"};
         } else {
             // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
             result = new Object[selectedValues.length + originalArray.length];
