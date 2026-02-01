@@ -63,11 +63,8 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
 
     public FofaSearchEngine() {
         this.setLayout(new BorderLayout());
-        System.out.println("FofaSearchEngine: 开始初始化...");
         initToolBar();
-        System.out.println("FofaSearchEngine: 工具栏已添加");
         initTabbedPane();
-        System.out.println("FofaSearchEngine: 初始化完成，组件数量: " + this.getComponentCount());
     }
 
     /**
@@ -316,8 +313,6 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 if (results != null) {
                     int currentPage = p;
                     int totalPage = (int) Math.ceil((double) sizePage / 100); // 总页数
-                    System.out.println("[FOFA] 第一次搜索完成 - 当前页: " + currentPage + ", 总页: " + totalPage + ", 总数: " + sizePage);
-                    System.out.println("[FOFA] pageState对象: " + pageState);
                     SwingUtilities.invokeLater(() -> {
                         resetTableRows(results, tableModel, pagingPanel, currentPage, totalPage, sizePage, pageState);
                     });
@@ -353,8 +348,6 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
      * 创建分页面板
      */
     private JPanel createPagingPanel(JTable table, String searchData, String tabTitle, PageState pageState) {
-        System.out.println("[FOFA] >>> 进入createPagingPanel方法");
-        System.out.println("[FOFA] pageState: " + pageState);
         JPanel pagingPanel = new JPanel();
         pagingPanel.setLayout(new FlowLayout());
         
@@ -389,27 +382,16 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
 
         // 为分页按钮添加事件，使用传入的pageState
         predBtn.addActionListener(e -> {
-            System.out.println("=== [FOFA] 点击上一页按钮 ===");
-            System.out.println("当前页码: " + pageState.currentPage[0]);
             if (pageState.currentPage[0] > 1) {
                 int newPage = pageState.currentPage[0] - 1;
-                System.out.println("准备翻到页码: " + newPage);
                 performPagingSearch(table, pageState.lastQuery[0], newPage, pageState.totalPages[0], pageState.currentPage, pageState.totalPages, pagingPanel, pageState);
-            } else {
-                System.out.println("已经是第一页，无法上一页");
             }
         });
 
         nextBtn.addActionListener(e -> {
-            System.out.println("=== [FOFA] 点击下一页按钮 ===");
-            System.out.println("当前页码: " + pageState.currentPage[0]);
-            System.out.println("总页码: " + pageState.totalPages[0]);
             if (pageState.currentPage[0] < pageState.totalPages[0]) {
                 int newPage = pageState.currentPage[0] + 1;
-                System.out.println("准备翻到页码: " + newPage);
                 performPagingSearch(table, pageState.lastQuery[0], newPage, pageState.totalPages[0], pageState.currentPage, pageState.totalPages, pagingPanel, pageState);
-            } else {
-                System.out.println("已经是最后一页，无法下一页");
             }
         });
 
@@ -420,9 +402,6 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
      * 执行分页搜索
      */
     private void performPagingSearch(JTable table, String searchData, int page, int totalPages, int[] currentPageRef, int[] totalPagesRef, JPanel pagingPanel, PageState pageState) {
-        System.out.println("\n[FOFA] >>> 进入performPagingSearch方法");
-        System.out.println("[FOFA] 参数: searchData=" + searchData + ", page=" + page + ", totalPages=" + totalPages);
-
         Object[] selectedValues = comboxstatus.getSelectedValues();
         Object[] originalArray = new Object[]{"ip", "host", "port"};
         Object[] result = new Object[]{};
@@ -433,8 +412,6 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             System.arraycopy(originalArray, 0, result, 0, originalArray.length);
             System.arraycopy(selectedValues, 0, result, originalArray.length, selectedValues.length);
         }
-        System.out.println("[FOFA] 查询字段: " + Arrays.toString(result));
-        
         StringBuilder stringBuilder = new StringBuilder();
         for (Object obj : result) {
             stringBuilder.append(obj).append(",");
@@ -452,36 +429,26 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             data = "ip=\"" + searchData + "\"";
         }
         String qbase64 = Base64.encode(data);
-        System.out.println("[FOFA] 搜索类型: " + i + ", 搜索内容: " + data);
-        System.out.println("[FOFA] 发送HTTP请求到Fofa API...");
 
         new Thread(() -> {
             try {
                 JSONObject responseJson = JSONUtil.parseObj(FofaCore.getData(qbase64, fields, page, 100, false));
                 int sizePage = responseJson.getInt("size");
                 JSONArray results = responseJson.getJSONArray("results");
-                System.out.println("[FOFA] <<< HTTP请求完成");
-                System.out.println("[FOFA] 总数量: " + sizePage + ", 数据条数: " + (results != null ? results.size() : 0));
 
                 if (results != null) {
-                    System.out.println("[FOFA] 准备更新表格和分页组件...");
                     SwingUtilities.invokeLater(() -> {
                         DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-                        System.out.println("[FOFA] 调用resetTableRowsForPaging更新表格...");
                         resetTableRowsForPaging(results, tableModel, pagingPanel, page, totalPages, sizePage, pageState, table);
-                        System.out.println("[FOFA] 更新currentPageRef和totalPagesRef");
                         currentPageRef[0] = page;
                         totalPagesRef[0] = (int) Math.ceil((double) sizePage / 100);
-                        System.out.println("[FOFA] 更新完成! 当前页: " + currentPageRef[0] + ", 总页: " + totalPagesRef[0]);
                     });
                 } else {
-                    System.out.println("[FOFA] ERROR: 搜索结果为空 - " + responseJson.getStr("errmsg"));
                     SwingUtilities.invokeLater(() -> {
                         JOptionPane.showMessageDialog(null, responseJson.getStr("errmsg"));
                     });
                 }
             } catch (Exception e) {
-                System.out.println("[FOFA] ERROR: " + e.getMessage());
                 JSONObject errorJson = JSONUtil.parseObj("{\"errmsg\":\"请求失败: " + e.getMessage() + "\"}");
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(null, errorJson.getStr("errmsg"));
@@ -494,13 +461,8 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
      * 为分页搜索重置表格行
      */
     private void resetTableRowsForPaging(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState, JTable table) {
-        System.out.println("\n[FOFA] >>> 进入resetTableRowsForPaging方法");
-        System.out.println("[FOFA] 参数: currentPage=" + currentPage + ", totalPage=" + totalPage + ", sizePage=" + sizePage);
-        System.out.println("[FOFA] 分页面板组件数量: " + pagingPanel.getComponentCount());
-
         // 清空现有数据
         tableModel.setRowCount(0);
-        System.out.println("[FOFA] 已清空表格数据");
 
         Object[] selectedValues = comboxstatus.getSelectedValues();
         Object[] originalArray = new Object[]{"ip", "url", "port"};
@@ -520,10 +482,8 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         System.arraycopy(result, 0, newArray, 1, result.length);
 
         tableModel.setColumnIdentifiers(newArray);
-        System.out.println("[FOFA] 已设置表格列: " + Arrays.toString(newArray));
 
         int num = 1;
-        System.out.println("[FOFA] 开始填充 " + jsonArray.size() + " 行数据");
         for (Object obj : jsonArray) {
             JSONArray array = (JSONArray) obj;
             array.add(0, String.valueOf(num));
@@ -534,10 +494,8 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             tableModel.addRow(array.toArray());
             num++;
         }
-        System.out.println("[FOFA] 表格数据填充完成");
 
         // 更新分页组件
-        System.out.println("[FOFA] 开始查找分页按钮...");
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -550,53 +508,34 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 if (name != null) {
                     if (name.equals("pageCurrentLabel")) {
                         pageCurrentLabel = btn;
-                        System.out.println("[FOFA] 找到pageCurrentLabel按钮: " + btn.getText());
                     } else if (name.equals("pageTotalLabel")) {
                         pageTotalLabel = btn;
-                        System.out.println("[FOFA] 找到pageTotalLabel按钮: " + btn.getText());
                     } else if (name.equals("sizeLabel")) {
                         sizeLabel = btn;
-                        System.out.println("[FOFA] 找到sizeLabel按钮: " + btn.getText());
                     }
                 }
             }
         }
 
-        System.out.println("[FOFA] 按钮查找结果: pageCurrentLabel=" + (pageCurrentLabel != null) +
-                           ", pageTotalLabel=" + (pageTotalLabel != null) +
-                           ", sizeLabel=" + (sizeLabel != null));
-
         if (pageCurrentLabel != null) {
-            String oldText = pageCurrentLabel.getText();
             pageCurrentLabel.setText(String.valueOf(currentPage)); // 当前页
             pageCurrentLabel.setToolTipText("当前页 " + currentPage);
-            System.out.println("[FOFA] 更新pageCurrentLabel: " + oldText + " -> " + currentPage);
-        } else {
-            System.out.println("[FOFA] ERROR: pageCurrentLabel按钮未找到!");
         }
 
         if (pageTotalLabel != null) {
-            String oldText = pageTotalLabel.getText();
             pageTotalLabel.setText(String.valueOf(totalPage)); // 总页数
             pageTotalLabel.setToolTipText("总页 " + totalPage);
-            System.out.println("[FOFA] 更新pageTotalLabel: " + oldText + " -> " + totalPage);
-        } else {
-            System.out.println("[FOFA] ERROR: pageTotalLabel按钮未找到!");
         }
 
         if (sizeLabel != null) {
-            String oldText = sizeLabel.getText();
             sizeLabel.setText(String.valueOf(sizePage)); // 总数量
             sizeLabel.setToolTipText("总数 " + sizePage);
+        }
 
         // 更新分页状态
         if (pageState != null) {
             pageState.currentPage[0] = currentPage;
             pageState.totalPages[0] = totalPage;
-        }
-            System.out.println("[FOFA] 更新sizeLabel: " + oldText + " -> " + sizePage);
-        } else {
-            System.out.println("[FOFA] ERROR: sizeLabel按钮未找到!");
         }
 
         // 滚动到顶部
@@ -606,14 +545,9 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 scrollPane.getVerticalScrollBar().setValue(0);
             }
         });
-
-        System.out.println("[FOFA] <<< resetTableRowsForPaging方法执行完成\n");
     }
 
     private void resetTableRows(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState) {
-        System.out.println("[FOFA] >>> 进入resetTableRows方法 (第一次搜索)");
-        System.out.println("[FOFA] 更新分页状态: currentPage=" + currentPage + ", totalPage=" + totalPage);
-
         // 清空现有数据
         tableModel.setRowCount(0);
         
@@ -695,11 +629,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         if (pageState != null) {
             pageState.currentPage[0] = currentPage;
             pageState.totalPages[0] = totalPage;
-            System.out.println("[FOFA] 分页状态已更新: pageState.currentPage=" + pageState.currentPage[0] + ", pageState.totalPages=" + pageState.totalPages[0]);
-        } else {
-            System.out.println("[FOFA] WARNING: pageState为null");
         }
-        System.out.println("[FOFA] <<< resetTableRows方法执行完成\n");
     }
 
     private JPopupMenu createPopupMenu(JTable table) {

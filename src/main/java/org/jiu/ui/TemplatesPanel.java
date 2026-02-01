@@ -582,8 +582,6 @@ public class TemplatesPanel extends JPanel {
                 stats[0], stats[1], stats[2]));
 
         // 重要：同时检查 stats[2] 和 failedFiles.size()
-        System.out.println("Failed files count: " + failedFiles.size()); // 添加调试信息
-
         if (stats[2] > 0 && !failedFiles.isEmpty()) {
             status.append(" (点击查看失败详情)");
 
@@ -617,9 +615,6 @@ public class TemplatesPanel extends JPanel {
      * 显示失败文件详情对话框
      */
     private void showFailedFilesDialog() {
-        // 添加调试信息
-        System.out.println("当前失败文件数量: " + failedFiles.size());
-
         if (failedFiles.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "没有发现加载失败的文件\n" +
