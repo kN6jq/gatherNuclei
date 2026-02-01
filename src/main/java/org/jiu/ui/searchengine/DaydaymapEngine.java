@@ -23,7 +23,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -38,13 +44,19 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
     private final String[] columnNames = {
             "#",
             "IP",
-            "URL",
             "Port",
+            "URL",
             "Title",
             "Domain",
             "ICP",
-            "Company",
-            "City"
+            "ISP",
+            "Server",
+            "Service",
+            "Product",
+            "Tags",
+            "City",
+            "Province",
+            "Country"
     };
     private JButton searchBtn = new JButton("搜索");
     private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
@@ -110,7 +122,6 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
     private JPopupMenu createPopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
 
-
         // 复制当前选中行数据
         JMenuItem copyRowItem = new JMenuItem("复制当前选中行数据");
         copyRowItem.addActionListener(e -> {
@@ -140,28 +151,8 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
             }
         });
 
-
-        // telnet端口测试
-        JMenuItem telnetItem = new JMenuItem("telnet端口测试");
-        telnetItem.addActionListener(e -> {
-            int[] selectedRows = table.getSelectedRows();
-            if (selectedRows.length == 0) {
-                JOptionPane.showMessageDialog(null, "请先选择数据");
-            } else {
-                for (int selectedRow : selectedRows) {
-                    String ip = (String) table.getValueAt(selectedRow, 1);
-                    String port = (String) table.getValueAt(selectedRow, 2);
-                    try {
-                        TelnetUtils.telnet(ip, port);
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        // 复制选中行的ip
-        JMenuItem copyIpItem = new JMenuItem("复制选中行的ip");
+        // 复制选中行ip
+        JMenuItem copyIpItem = new JMenuItem("复制选中行ip");
         copyIpItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
             if (selectedRows.length == 0) {
@@ -184,6 +175,66 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
             }
         });
 
+        // 复制选中行url
+        JMenuItem copyUrlItem = new JMenuItem("复制选中行url");
+        copyUrlItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                int validCount = 0;
+                for (int selectedRow : selectedRows) {
+                    Object cellValue = table.getValueAt(selectedRow, 3);
+                    if (cellValue != null && !cellValue.toString().trim().isEmpty()) {
+                        if (validCount > 0) {
+                            stringBuilder.append("\n");
+                        }
+                        stringBuilder.append(cellValue);
+                        validCount++;
+                    }
+                }
+                StringSelection stringSelection = new StringSelection(stringBuilder.toString());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+            }
+        });
+
+        // 打开当前行url
+        JMenuItem openUrlItem = new JMenuItem("打开当前行url");
+        openUrlItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                for (int selectedRow : selectedRows) {
+                    String url = (String) table.getValueAt(selectedRow, 3);
+                    try {
+                        Desktop.getDesktop().browse(new URI(url));
+                    } catch (IOException | URISyntaxException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // telnet端口测试
+        JMenuItem telnetItem = new JMenuItem("telnet端口测试");
+        telnetItem.addActionListener(e -> {
+            int[] selectedRows = table.getSelectedRows();
+            if (selectedRows.length == 0) {
+                JOptionPane.showMessageDialog(null, "请先选择数据");
+            } else {
+                for (int selectedRow : selectedRows) {
+                    String ip = (String) table.getValueAt(selectedRow, 1);
+                    String port = (String) table.getValueAt(selectedRow, 2);
+                    try {
+                        TelnetUtils.telnet(ip, port);
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
+            }
+        });
 
         // 将选中的ip发送到shodan
         JMenuItem sendToShodanItem = new JMenuItem("使用shodan扫描选中的ip");
@@ -198,12 +249,14 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                     ips.add(ip);
                 }
                 ShodanPortSearchEngine.inputArea.setText(String.join("\n", ips));
-                // 切换到ShodanPort标签页
                 SearchPanel.switchToShodanPort();
             }
         });
+
         popupMenu.add(copyRowItem);
         popupMenu.add(copyIpItem);
+        popupMenu.add(copyUrlItem);
+        popupMenu.add(openUrlItem);
         popupMenu.add(telnetItem);
         popupMenu.add(sendToShodanItem);
         return popupMenu;
@@ -222,7 +275,7 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         searchBtn.setFocusPainted(false);
         statusBtn.setToolTipText("搜索状态提示灯");
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
-        String[] values = new String[]{"全选", "header", "server", "service", "tags", "cert", "icp_reg_name"};
+        String[] values = new String[]{"全选", "icp_reg_name", "isp", "server", "service", "product", "tags", "city", "province", "country", "banner", "header", "cert", "asn", "asn_org"};
         comboxstatus = new MultiComboBox(values);
 
         // 回车搜索事件
@@ -469,16 +522,26 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         tableModel.setRowCount(0);
 
         Object[] selectedValues = comboxstatus.getSelectedValues();
-        Object[] originalArray = new Object[]{"ip", "port", "domain", "title"};
+        // 默认显示字段：序号、IP、端口、URL、标题
+        Object[] originalArray = new Object[]{"ip", "port", "url", "title"};
         Object[] result = new Object[]{};
         // 根据selectedValues的值来获取对应的jsonObject的值
-        if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "port", "domain", "title"};
+        if (selectedValues.length == 0 || (selectedValues.length == 1 && "全选".equals(selectedValues[0]))) {
+            result = new Object[]{"ip", "port", "url", "title"};
         } else {
-            // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
-            result = new Object[selectedValues.length + originalArray.length];
+            // 过滤掉"全选"选项
+            List<Object> filteredValues = new ArrayList<>();
+            for (Object val : selectedValues) {
+                if (!"全选".equals(val)) {
+                    filteredValues.add(val);
+                }
+            }
+            // 将默认字段和选中字段合并
+            result = new Object[filteredValues.size() + originalArray.length];
             System.arraycopy(originalArray, 0, result, 0, originalArray.length);
-            System.arraycopy(selectedValues, 0, result, originalArray.length, selectedValues.length);
+            for (int i = 0; i < filteredValues.size(); i++) {
+                result[originalArray.length + i] = filteredValues.get(i);
+            }
         }
 
         // 给result最开始插入一个#号
@@ -493,17 +556,17 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         if (jsonArray != null) {
             for (Object obj : jsonArray) {
                 JSONObject jsonObject = (JSONObject) obj;
-                String[] values = new String[]{};
-                ArrayList<String> tempList = new ArrayList<>(Arrays.asList(values));
-                // 给vuales赋值
+                ArrayList<String> tempList = new ArrayList<>();
+                // 给values赋值
                 tempList.add(String.valueOf(num));
+                
                 // 给selectedValues插入值
-
                 for (Object o : result) {
-                    tempList.add(jsonObject.getStr((String) o));
+                    String fieldName = (String) o;
+                    String value = getFieldValue(jsonObject, fieldName);
+                    tempList.add(value);
                 }
-                values = tempList.toArray(new String[0]);
-                tableModel.addRow(values);
+                tableModel.addRow(tempList.toArray(new String[0]));
                 num++;
             }
         }
@@ -563,16 +626,26 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         tableModel.setRowCount(0);
         
         Object[] selectedValues = comboxstatus.getSelectedValues();
-        Object[] originalArray = new Object[]{"ip", "port", "domain", "title"};
+        // 默认显示字段：序号、IP、端口、URL、标题
+        Object[] originalArray = new Object[]{"ip", "port", "url", "title"};
         Object[] result = new Object[]{};
         // 根据selectedValues的值来获取对应的jsonObject的值
-        if (selectedValues.length == 0) {
-            result = new Object[]{"ip", "port", "domain", "title"};
+        if (selectedValues.length == 0 || (selectedValues.length == 1 && "全选".equals(selectedValues[0]))) {
+            result = new Object[]{"ip", "port", "url", "title"};
         } else {
-            // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
-            result = new Object[selectedValues.length + originalArray.length];
+            // 过滤掉"全选"选项
+            List<Object> filteredValues = new ArrayList<>();
+            for (Object val : selectedValues) {
+                if (!"全选".equals(val)) {
+                    filteredValues.add(val);
+                }
+            }
+            // 将默认字段和选中字段合并
+            result = new Object[filteredValues.size() + originalArray.length];
             System.arraycopy(originalArray, 0, result, 0, originalArray.length);
-            System.arraycopy(selectedValues, 0, result, originalArray.length, selectedValues.length);
+            for (int i = 0; i < filteredValues.size(); i++) {
+                result[originalArray.length + i] = filteredValues.get(i);
+            }
         }
 
         // 给result最开始插入一个#号
@@ -587,17 +660,17 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         if (jsonArray != null) {
             for (Object obj : jsonArray) {
                 JSONObject jsonObject = (JSONObject) obj;
-                String[] values = new String[]{};
-                ArrayList<String> tempList = new ArrayList<>(Arrays.asList(values));
-                // 给vuales赋值
+                ArrayList<String> tempList = new ArrayList<>();
+                // 给values赋值
                 tempList.add(String.valueOf(num));
+                
                 // 给selectedValues插入值
-
                 for (Object o : result) {
-                    tempList.add(jsonObject.getStr((String) o));
+                    String fieldName = (String) o;
+                    String value = getFieldValue(jsonObject, fieldName);
+                    tempList.add(value);
                 }
-                values = tempList.toArray(new String[0]);
-                tableModel.addRow(values);
+                tableModel.addRow(tempList.toArray(new String[0]));
                 num++;
             }
         }
@@ -756,5 +829,73 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
                 }
             }
         });
+    }
+
+    /**
+     * 获取字段值，处理特殊类型（数组、null等）
+     */
+    private String getFieldValue(JSONObject jsonObject, String fieldName) {
+        if (jsonObject == null || fieldName == null) {
+            return "";
+        }
+        
+        Object value = jsonObject.get(fieldName);
+        if (value == null) {
+            return "";
+        }
+        
+        // 处理数组类型（product, tags）
+        if (value instanceof JSONArray) {
+            JSONArray array = (JSONArray) value;
+            if (array.isEmpty()) {
+                return "";
+            }
+            // 取前3个元素，用逗号连接
+            StringBuilder sb = new StringBuilder();
+            int maxItems = Math.min(array.size(), 3);
+            for (int i = 0; i < maxItems; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(array.get(i));
+            }
+            if (array.size() > 3) {
+                sb.append("...");
+            }
+            return sb.toString();
+        }
+        
+        // 处理字符串
+        String strValue = value.toString().trim();
+        
+        // 特殊处理：如果是证书字段，提取关键信息
+        if ("cert".equals(fieldName) && strValue.length() > 50) {
+            // 提取 CN= 后面的域名
+            int cnIndex = strValue.indexOf("CN=");
+            if (cnIndex != -1) {
+                int start = cnIndex + 3;
+                int end = strValue.indexOf(",", start);
+                if (end == -1) end = strValue.indexOf(" ", start);
+                if (end == -1) end = Math.min(start + 30, strValue.length());
+                return strValue.substring(start, end);
+            }
+        }
+        
+        // 特殊处理：header 字段，提取 Server 信息
+        if ("header".equals(fieldName) && strValue.length() > 30) {
+            String[] lines = strValue.split("\\r\\n");
+            for (String line : lines) {
+                if (line.toLowerCase().startsWith("server:")) {
+                    return line.substring(7).trim();
+                }
+            }
+            // 如果找不到 Server，返回第一行（HTTP状态）
+            return lines.length > 0 ? lines[0] : strValue.substring(0, Math.min(30, strValue.length()));
+        }
+        
+        // 限制长度，避免表格过宽
+        if (strValue.length() > 100) {
+            strValue = strValue.substring(0, 97) + "...";
+        }
+        
+        return strValue;
     }
 }
