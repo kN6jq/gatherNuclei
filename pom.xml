@@ -4,7 +4,7 @@
 
     <groupId>org.jiu</groupId>
     <artifactId>gatherNuclei</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>v1</version>
     <packaging>jar</packaging>
 
     <name>gatherNuclei</name>

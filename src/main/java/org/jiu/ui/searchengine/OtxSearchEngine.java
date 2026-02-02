@@ -253,11 +253,8 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             // 获取总数
             String full_size = responseJson.getStr("full_size");
             int sizePage = Integer.parseInt(full_size);
-            int totalPage = sizePage / 100;
-            if (sizePage % 100 != 0) {
-                totalPage++;
-            }
-            
+            int totalPage = (int) Math.ceil((double) sizePage / 100);
+
             int finalTotalPage = totalPage;
             int finalSizePage = sizePage;
             SwingUtilities.invokeLater(() -> {
@@ -329,11 +326,8 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             // 获取总数
             String full_size = responseJson.getStr("full_size");
             int sizePage = Integer.parseInt(full_size);
-            int totalPage = sizePage / 100;
-            if (sizePage % 100 != 0) {
-                totalPage++;
-            }
-            
+            int totalPage = (int) Math.ceil((double) sizePage / 100);
+
             int finalTotalPage = totalPage;
             int finalSizePage = sizePage;
             SwingUtilities.invokeLater(() -> {

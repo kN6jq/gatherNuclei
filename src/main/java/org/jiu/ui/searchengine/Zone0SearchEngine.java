@@ -32,8 +32,10 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
     private final JButton statusBtn = new JButton();
     private JButton searchBtn = new JButton("搜索");
     private static JComboBox searchTypeComboBox = new JComboBox();
-    private final String[] sitecolumnNames = {"#", "IP", "Port", "URL", "Title", "city", "operator", "company", "tags"};
-    private final String[] apkcolumnNames = {"#", "title", "type", "company"};
+    // Site (信息系统) - 扩展字段
+    private final String[] sitecolumnNames = {"#", "IP", "Port", "URL", "Title", "Component", "Service", "Protocol", "City", "Operator", "Status", "Company", "Tags"};
+    // APK (移动端应用) - 扩展字段，包含id字段(wechat_id或app_id)
+    private final String[] apkcolumnNames = {"#", "Title", "Type", "ID", "Company/Group", "Introduction"};
     private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
     private AtomicInteger tabCounter = new AtomicInteger(0); // 标签页计数器
 
@@ -315,7 +317,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                     String sitedata = String.format("(company==%s)||(title==%s)||(banner==%s)||(component==%s)||(ssl_info.detail==%s)", input, input, input, input, input, input);
                     responseJson = JSONUtil.parseObj(ZoneCore.getData(sitedata, searchType, p, 100));
                     int sizePage = Integer.parseInt(responseJson.getStr("total"));
-                    int totalPage = sizePage / 100;
+                    int totalPage = (int) Math.ceil((double) sizePage / 100);
                     JSONArray jsonArray = responseJson.getJSONArray("data");
                     SwingUtilities.invokeLater(() -> {
                         resetTableRowsSite(jsonArray, tableModel, pagingPanel, p, totalPage, sizePage, pageState);
@@ -324,7 +326,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                     String apkdata = String.format("(group==%s)||(company==%s)||(title==%s)", input, input, input);
                     responseJson = JSONUtil.parseObj(ZoneCore.getData(apkdata, searchType, p, 100));
                     int sizePage = Integer.parseInt(responseJson.getStr("total"));
-                    int totalPage = sizePage / 100;
+                    int totalPage = (int) Math.ceil((double) sizePage / 100);
                     JSONArray jsonArray = responseJson.getJSONArray("data");
                     SwingUtilities.invokeLater(() -> {
                         resetTableRowsApk(jsonArray, tableModel, pagingPanel, p, totalPage, sizePage, pageState);
@@ -412,7 +414,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                     String sitedata = String.format("(company==%s)||(title==%s)||(banner==%s)||(component==%s)||(ssl_info.detail==%s)", input, input, input, input, input, input);
                     responseJson = JSONUtil.parseObj(ZoneCore.getData(sitedata, searchType, page, 100));
                     int sizePage = Integer.parseInt(responseJson.getStr("total"));
-                    int totalPage = sizePage / 100;
+                    int totalPage = (int) Math.ceil((double) sizePage / 100);
                     JSONArray jsonArray = responseJson.getJSONArray("data");
                     SwingUtilities.invokeLater(() -> {
                         DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
@@ -424,7 +426,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                     String apkdata = String.format("(group==%s)||(company==%s)||(title==%s)", input, input, input);
                     responseJson = JSONUtil.parseObj(ZoneCore.getData(apkdata, searchType, page, 100));
                     int sizePage = Integer.parseInt(responseJson.getStr("total"));
-                    int totalPage = sizePage / 100;
+                    int totalPage = (int) Math.ceil((double) sizePage / 100);
                     JSONArray jsonArray = responseJson.getJSONArray("data");
                     SwingUtilities.invokeLater(() -> {
                         DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
@@ -452,22 +454,28 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String title = jsonObject.getStr("title");
             String city = jsonObject.getStr("city");
             String operator = jsonObject.getStr("operator");
+            String component = jsonObject.getStr("component");
+            String service = jsonObject.getStr("service");
+            String protocol = jsonObject.getStr("protocol");
+            String statusCode = jsonObject.getStr("status_code");
             // company格式 ["111"]
             String company = jsonObject.getStr("company");
             // 删除company前2个字符和后2个字符
-            if (company.length() > 4) {
+            if (company != null && company.length() > 4) {
                 company = company.substring(2, company.length() - 2);
             }
+            // tags处理
             JSONArray tags = jsonObject.getJSONArray("tags");
             StringBuilder tag = new StringBuilder();
-            for (int j = 0; j < tags.size(); j++) {
-                tag.append(tags.getStr(j)).append(",");
+            if (tags != null) {
+                for (int j = 0; j < tags.size(); j++) {
+                    tag.append(tags.getStr(j)).append(",");
+                }
+                if (tag.length() > 0) {
+                    tag.deleteCharAt(tag.length() - 1);
+                }
             }
-            // 去掉最后一个逗号
-            if (tag.length() > 0) {
-                tag.deleteCharAt(tag.length() - 1);
-            }
-            tableModel.addRow(new Object[]{i + 1, ip, port, url, title, city, operator, company, tag.toString()});
+            tableModel.addRow(new Object[]{i + 1, ip, port, url, title, component, service, protocol, city, operator, statusCode, company, tag.toString()});
         }
         
         // 更新分页组件
@@ -525,7 +533,43 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String title = jsonObject.getStr("title");
             String type = jsonObject.getStr("type");
             String company = jsonObject.getStr("company");
-            tableModel.addRow(new Object[]{i + 1, title, type, company});
+            String group = jsonObject.getStr("group");
+            
+            // 合并company和group
+            String companyGroup = "";
+            if (company != null && !company.isEmpty()) {
+                companyGroup = company;
+            }
+            if (group != null && !group.isEmpty() && !group.equals(company)) {
+                if (!companyGroup.isEmpty()) {
+                    companyGroup += " / ";
+                }
+                companyGroup += group;
+            }
+            
+            // 获取msg对象
+            JSONObject msgObj = jsonObject.getJSONObject("msg");
+            String id = "";
+            String introduction = "";
+            
+            if (msgObj != null) {
+                // 根据类型获取不同的ID
+                if ("微信公众号".equals(type) || "微信小程序".equals(type)) {
+                    // 微信公众号/小程序：获取wechat_id
+                    id = msgObj.getStr("wechat_id");
+                    if (id == null || id.isEmpty()) {
+                        id = msgObj.getStr("wechat_fakeid");
+                    }
+                } else if ("iOS".equals(type) || "Android".equals(type)) {
+                    // iOS/Android：获取app_id
+                    id = msgObj.getStr("app_id");
+                }
+                
+                // 获取简介
+                introduction = msgObj.getStr("introduction");
+            }
+            
+            tableModel.addRow(new Object[]{i + 1, title, type, id, companyGroup, introduction});
         }
         
         // 更新分页组件
@@ -586,22 +630,28 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String title = jsonObject.getStr("title");
             String city = jsonObject.getStr("city");
             String operator = jsonObject.getStr("operator");
+            String component = jsonObject.getStr("component");
+            String service = jsonObject.getStr("service");
+            String protocol = jsonObject.getStr("protocol");
+            String statusCode = jsonObject.getStr("status_code");
             // company格式 ["111"]
             String company = jsonObject.getStr("company");
             // 删除company前2个字符和后2个字符
-            if (company.length() > 4) {
+            if (company != null && company.length() > 4) {
                 company = company.substring(2, company.length() - 2);
             }
+            // tags处理
             JSONArray tags = jsonObject.getJSONArray("tags");
             StringBuilder tag = new StringBuilder();
-            for (int j = 0; j < tags.size(); j++) {
-                tag.append(tags.getStr(j)).append(",");
+            if (tags != null) {
+                for (int j = 0; j < tags.size(); j++) {
+                    tag.append(tags.getStr(j)).append(",");
+                }
+                if (tag.length() > 0) {
+                    tag.deleteCharAt(tag.length() - 1);
+                }
             }
-            // 去掉最后一个逗号
-            if (tag.length() > 0) {
-                tag.deleteCharAt(tag.length() - 1);
-            }
-            tableModel.addRow(new Object[]{i + 1, ip, port, url, title, city, operator, company, tag.toString()});
+            tableModel.addRow(new Object[]{i + 1, ip, port, url, title, component, service, protocol, city, operator, statusCode, company, tag.toString()});
         }
 
         // 更新分页组件
@@ -661,7 +711,43 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String title = jsonObject.getStr("title");
             String type = jsonObject.getStr("type");
             String company = jsonObject.getStr("company");
-            tableModel.addRow(new Object[]{i + 1, title, type, company});
+            String group = jsonObject.getStr("group");
+            
+            // 合并company和group
+            String companyGroup = "";
+            if (company != null && !company.isEmpty()) {
+                companyGroup = company;
+            }
+            if (group != null && !group.isEmpty() && !group.equals(company)) {
+                if (!companyGroup.isEmpty()) {
+                    companyGroup += " / ";
+                }
+                companyGroup += group;
+            }
+            
+            // 获取msg对象
+            JSONObject msgObj = jsonObject.getJSONObject("msg");
+            String id = "";
+            String introduction = "";
+            
+            if (msgObj != null) {
+                // 根据类型获取不同的ID
+                if ("微信公众号".equals(type) || "微信小程序".equals(type)) {
+                    // 微信公众号/小程序：获取wechat_id
+                    id = msgObj.getStr("wechat_id");
+                    if (id == null || id.isEmpty()) {
+                        id = msgObj.getStr("wechat_fakeid");
+                    }
+                } else if ("iOS".equals(type) || "Android".equals(type)) {
+                    // iOS/Android：获取app_id
+                    id = msgObj.getStr("app_id");
+                }
+                
+                // 获取简介
+                introduction = msgObj.getStr("introduction");
+            }
+            
+            tableModel.addRow(new Object[]{i + 1, title, type, id, companyGroup, introduction});
         }
 
         // 更新分页组件

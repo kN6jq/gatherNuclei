@@ -112,7 +112,7 @@ public class GatherNuclei extends JFrame {
         leftLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         
         // 右侧信息
-        JLabel rightLabel = new JLabel("gatherNuclei v0.0.1");
+        JLabel rightLabel = new JLabel("gatherNuclei v1");
         rightLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         rightLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         

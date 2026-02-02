@@ -7,8 +7,8 @@ import java.awt.*;
 import java.io.IOException;
 
 public class InitUI {
-    private static final String VERSION = "v0.0.1";
-    private static final String AUTHOR = "xm17";
+    private static final String VERSION = "v1";
+    private static final String AUTHOR = "Xm17";
 
     // UI组件
     private static JTabbedPane mainTabbedPane;
