@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SearchPanel extends JTabbedPane {
+    private RapidDnsSearchEngine rapidDns = new RapidDnsSearchEngine();
     private FofaSearchEngine fofa = new FofaSearchEngine();
     private HunterSearchEngine hunter = new HunterSearchEngine();
     private DaydaymapEngine daydaymap = new DaydaymapEngine();
@@ -17,6 +18,7 @@ public class SearchPanel extends JTabbedPane {
         this.addTab(fofa.getTitle(), fofa.getIcon(), fofa, fofa.getTips());
         this.addTab(hunter.getTitle(), hunter.getIcon(), hunter, hunter.getTips());
         this.addTab(daydaymap.getTitle(), daydaymap.getIcon(), daydaymap, daydaymap.getTips());
+        this.addTab(rapidDns.getTitle(), rapidDns.getIcon(), rapidDns, rapidDns.getTips());
         this.addTab(otx.getTitle(), otx.getIcon(), otx, otx.getTips());
         this.addTab(zone0.getTitle(), zone0.getIcon(), zone0, zone0.getTips());
         this.addTab(shodanPort.getTitle(), shodanPort.getIcon(), shodanPort, shodanPort.getTips());
@@ -35,8 +37,8 @@ public class SearchPanel extends JTabbedPane {
             SwingUtilities.invokeLater(() -> {
                 SearchPanel searchPanel = getSearchPanelInstance();
                 if (searchPanel != null) {
-                    // ShodanPort是第6个tab，索引为5
-                    searchPanel.setSelectedIndex(5);
+                    // ShodanPort是第7个tab，索引为6
+                    searchPanel.setSelectedIndex(6);
                 }
             });
         }
