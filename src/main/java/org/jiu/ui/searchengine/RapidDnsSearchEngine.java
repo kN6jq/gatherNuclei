@@ -5,6 +5,7 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.RapidDnsCore;
 import org.jiu.ui.SearchPanel;
 
@@ -134,9 +135,10 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
 
         // 输入框
         inputField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        inputField.setPreferredSize(new Dimension(300, 25));
-        inputField.putClientProperty("JTextField.placeholderText", "输入域名，例如: baidu.com");
+        inputField.setPreferredSize(new Dimension(200, 28));
+        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "输入域名，例如: baidu.com");
         inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
+        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
 
         // 搜索按钮
         searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));

@@ -170,8 +170,9 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         
         // 输入框
         inputField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        inputField.setPreferredSize(new Dimension(300, 25));
-        inputField.putClientProperty("JTextField.placeholderText", "输入FOFA搜索语法...");
+        inputField.setPreferredSize(new Dimension(200, 28));
+        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "输入FOFA搜索语法...");
+        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
         
         // 状态按钮
         statusBtn.setPreferredSize(new Dimension(25, 25));
