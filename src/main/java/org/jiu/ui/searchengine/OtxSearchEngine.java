@@ -7,6 +7,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.OtxCore;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -161,20 +162,14 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
 
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
-        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "OTX Search... & Enter");
-        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
-        searchBtn.setText("搜索");
-        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchBtn.setPreferredSize(new Dimension(80, 25));
-        searchBtn.setBackground(new Color(0, 123, 255));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
-        statusBtn.setToolTipText("搜索状态提示灯");
+        UIUtils.setupSearchField(inputField, "OTX Search... & Enter");
+        UIUtils.setupSearchButton(searchBtn, "搜索");
+        UIUtils.setupStatusLabel(statusBtn);
 
         toolBar.add(inputField);
         toolBar.add(searchBtn);
-        toolBar.add(statusBtn);
         toolBar.addSeparator();
+        toolBar.add(statusBtn);
 
         // 搜索按钮
         searchBtn.addActionListener(e -> {

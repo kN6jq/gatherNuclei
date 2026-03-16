@@ -12,6 +12,7 @@ import org.jiu.core.ShodanCore;
 import org.jiu.ui.SearchPanel;
 import org.jiu.ui.component.MultiComboBox;
 import org.jiu.utils.TelnetUtils;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -168,35 +169,22 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         };
         comboxstatus = new MultiComboBox(values);
         
-        // 输入框
-        inputField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        inputField.setPreferredSize(new Dimension(200, 28));
-        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "输入FOFA搜索语法...");
-        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
+        // 输入框样式
+        UIUtils.setupSearchField(inputField, "输入FOFA搜索语法...");
         
-        // 状态按钮
-        statusBtn.setPreferredSize(new Dimension(25, 25));
-        statusBtn.setBorderPainted(false);
-        statusBtn.setContentAreaFilled(false);
-        statusBtn.setOpaque(true);
-        statusBtn.setBackground(Color.RED);
-        statusBtn.setToolTipText("API连接状态");
+        // 状态指示灯样式
+        UIUtils.setupStatusLabel(statusBtn);
         
-        // 搜索类型选择
+        // 搜索类型下拉框样式
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
-        searchTypeComboBox.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchTypeComboBox.setPreferredSize(new Dimension(100, 25));
+        UIUtils.setupComboBox(searchTypeComboBox, 100);
         
-        // 多选框
-        comboxstatus.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        comboxstatus.setPreferredSize(new Dimension(120, 25));
+        // 多选框样式
+        comboxstatus.setFont(UIUtils.TEXT_FONT);
+        comboxstatus.setPreferredSize(new Dimension(120, UIUtils.COMBO_HEIGHT));
         
-        // 搜索按钮
-        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchBtn.setPreferredSize(new Dimension(80, 25));
-        searchBtn.setBackground(new Color(0, 123, 255));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
+        // 搜索按钮样式
+        UIUtils.setupSearchButton(searchBtn, "搜索");
 
         // 搜索按钮事件
         searchBtn.addActionListener(e -> search(1));

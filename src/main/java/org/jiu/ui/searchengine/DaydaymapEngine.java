@@ -11,6 +11,7 @@ import org.jiu.core.DaydaymapCore;
 import org.jiu.ui.SearchPanel;
 import org.jiu.ui.component.MultiComboBox;
 import org.jiu.utils.TelnetUtils;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -265,20 +266,19 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
 
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
-        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "DayDayMap Search... & Enter");
-        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
-        searchBtn.setText("搜索");
-        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchBtn.setPreferredSize(new Dimension(80, 25));
-        searchBtn.setBackground(new Color(0, 123, 255));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
-        statusBtn.setToolTipText("搜索状态提示灯");
+        UIUtils.setupSearchField(inputField, "DayDayMap Search... & Enter");
+        UIUtils.setupSearchButton(searchBtn, "搜索");
+        UIUtils.setupStatusLabel(statusBtn);
+
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
+        UIUtils.setupComboBox(searchTypeComboBox, 100);
+
         String[] values = new String[]{"全选", "icp_reg_name", "isp", "server", "service", "product", "tags", "city", "province", "country", "banner", "header", "cert", "asn", "asn_org"};
         comboxstatus = new MultiComboBox(values);
+        comboxstatus.setFont(UIUtils.TEXT_FONT);
+        comboxstatus.setPreferredSize(new Dimension(120, UIUtils.COMBO_HEIGHT));
 
-        // 回车搜索事件
+        // 回回车搜索事件
         inputField.registerKeyboardAction(e -> {
             search(1);
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false), JComponent.WHEN_FOCUSED);

@@ -8,6 +8,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.RapidDnsCore;
 import org.jiu.ui.SearchPanel;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -133,19 +134,11 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
 
-        // 输入框
-        inputField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        inputField.setPreferredSize(new Dimension(200, 28));
-        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "输入域名，例如: baidu.com");
-        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
-        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
+        // 输入框样式
+        UIUtils.setupSearchField(inputField, "输入域名，例如: baidu.com");
 
-        // 搜索按钮
-        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchBtn.setPreferredSize(new Dimension(80, 25));
-        searchBtn.setBackground(new Color(0, 123, 255));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
+        // 搜索按钮样式
+        UIUtils.setupSearchButton(searchBtn, "搜索");
 
         // 搜索按钮事件
         searchBtn.addActionListener(e -> search());
@@ -161,12 +154,17 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         });
 
         // 组装工具栏
-        toolBar.add(new JLabel(" 域名: "));
+        JLabel label = new JLabel(" 域名: ");
+        label.setFont(UIUtils.TEXT_FONT);
+        toolBar.add(label);
         toolBar.add(inputField);
         toolBar.add(Box.createHorizontalStrut(5));
         toolBar.add(searchBtn);
         toolBar.addSeparator();
-        toolBar.add(new JLabel("无需配置，直接查询"));
+        
+        JLabel hintLabel = new JLabel("无需配置，直接查询");
+        hintLabel.setFont(UIUtils.TEXT_FONT);
+        toolBar.add(hintLabel);
 
         this.add(toolBar, BorderLayout.NORTH);
     }

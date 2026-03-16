@@ -11,6 +11,7 @@ import org.jiu.core.ShodanCore;
 import org.jiu.core.ZoneCore;
 import org.jiu.ui.SearchPanel;
 import org.jiu.ui.component.MultiComboBox;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -197,10 +198,12 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
 
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
-        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "0Zone Search... & Enter");
-        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
-        statusBtn.setToolTipText("搜索状态提示灯");
+        UIUtils.setupSearchField(inputField, "0Zone Search... & Enter");
+        UIUtils.setupSearchButton(searchBtn, "搜索");
+        UIUtils.setupStatusLabel(statusBtn);
+
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"信息系统", "移动端应用", "域名"}));
+        UIUtils.setupComboBox(searchTypeComboBox, 120);
 
         // 回车搜索事件
         inputField.registerKeyboardAction(e -> {
@@ -212,18 +215,12 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             search(1);
         });
 
-        // 设置搜索按钮样式
-        searchBtn.setText("搜索");
-        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchBtn.setPreferredSize(new Dimension(80, 25));
-        searchBtn.setBackground(new Color(0, 123, 255));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
-
         toolBar.add(inputField);
         toolBar.add(searchBtn);
-        toolBar.add(statusBtn);
+        toolBar.addSeparator();
         toolBar.add(searchTypeComboBox);
+        toolBar.addSeparator();
+        toolBar.add(statusBtn);
         this.add(toolBar, BorderLayout.NORTH);
     }
 

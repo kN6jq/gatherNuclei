@@ -16,6 +16,7 @@ import org.jiu.core.ShodanCore;
 import org.jiu.ui.SearchPanel;
 import org.jiu.ui.component.MultiComboBox;
 import org.jiu.utils.TelnetUtils;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -307,20 +308,23 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     private void initToolBar() {
 
         JToolBar toolBar = new JToolBar();
-        inputField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Hunter Search... & Enter");
-        inputField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
-        searchBtn.setText("搜索");
-        searchBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchBtn.setPreferredSize(new Dimension(80, 25));
-        searchBtn.setBackground(new Color(0, 123, 255));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
-        statusBtn.setToolTipText("搜索状态提示灯");
+        UIUtils.setupSearchField(inputField, "Hunter Search... & Enter");
+        UIUtils.setupSearchButton(searchBtn, "搜索");
+        UIUtils.setupStatusLabel(statusBtn);
+
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
+        UIUtils.setupComboBox(searchTypeComboBox, 100);
+
         typeComboBox.setModel(new DefaultComboBoxModel(new String[]{"全部", "web", "非web"}));
+        UIUtils.setupComboBox(typeComboBox, 100);
+
         timeComboBox.setModel(new DefaultComboBoxModel(new String[]{"一年", "半年", "一个月"}));
+        UIUtils.setupComboBox(timeComboBox, 100);
+
         String[] values = new String[]{"全选", "status_code", "web_title", "domain", "protocol", "number", "company", "city", "province", "country", "updated_at", "isp", "header_server", "as_org"};
         comboxstatus = new MultiComboBox(values);
+        comboxstatus.setFont(UIUtils.TEXT_FONT);
+        comboxstatus.setPreferredSize(new Dimension(120, UIUtils.COMBO_HEIGHT));
 
         String today = DateUtil.today();
         end_time = today;
@@ -381,51 +385,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                 search(1);
             }
         });
-        // 时间计算
-        timeComboBox.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String time = (String) timeComboBox.getSelectedItem();
-                String today = DateUtil.today();
-
-                switch (Objects.requireNonNull(time)) {
-                    case "一年":
-                        // end_time 是今天 start_time 是一年前
-                        end_time = today;
-                        start_time = DateUtil.formatDate(DateUtil.offsetMonth(DateUtil.parse(today), -12));
-                        break;
-                    case "半年":
-                        end_time = today;
-                        start_time = DateUtil.formatDate(DateUtil.offsetMonth(DateUtil.parse(today), -6));
-                        break;
-                    case "一个月":
-                        end_time = today;
-                        // 修改为固定29天前
-                        start_time = DateUtil.formatDate(DateUtil.offsetDay(DateUtil.parse(today), -29));
-                        break;
-                }
-            }
-        });
-        // 资产类型
-        typeComboBox.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String typeStr = (String) typeComboBox.getSelectedItem();
-                assert typeStr != null;
-                switch (typeStr) {
-                    case "全部":
-                        type = 3;
-                        break;
-                    case "web":
-                        type = 1;
-                        break;
-                    case "非web":
-                        type = 2;
-                        break;
-                }
-            }
-        });
-
 
         // 添加组件
         toolBar.add(inputField);
