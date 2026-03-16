@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import cn.hutool.core.codec.Base64;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -514,7 +513,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             data = "ip=\"" + inputField.getText() + "\"";
         }
 
-        String qbase64 = Base64.encode(data.getBytes(StandardCharsets.UTF_8));
+        String qbase64 = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(data.getBytes(StandardCharsets.UTF_8));
         new Thread(() -> {
             try {
                 JSONObject responseJson = JSONUtil.parseObj(HunterCore.getData(qbase64, p, 100, type, start_time, end_time));
@@ -623,7 +622,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             data = "ip=\"" + searchData + "\"";
         }
         
-        String qbase64 = Base64.encode(data.getBytes(StandardCharsets.UTF_8));
+        String qbase64 = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(data.getBytes(StandardCharsets.UTF_8));
         
         new Thread(() -> {
             try {
