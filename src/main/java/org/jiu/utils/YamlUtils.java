@@ -48,6 +48,7 @@ public class YamlUtils {
         if (fofaConfig != null) {
             Utils.fofaUrl = fofaConfig.getOrDefault("fofaurl", "");
             Utils.fofaKey = fofaConfig.getOrDefault("fofakey", "");
+            Utils.fofaTimeRange = org.jiu.core.FofaCore.normalizeTimeRange(fofaConfig.get("fofatimerange"));
         }
 
         // 获取hunter配置
@@ -86,6 +87,7 @@ public class YamlUtils {
         configMap.put("nucleiarg", "nuclei");
         configMap.put("fofaurl", "fofa");
         configMap.put("fofakey", "fofa");
+        configMap.put("fofatimerange", "fofa");
         configMap.put("hunterurl", "hunter");
         configMap.put("hunterkey", "hunter");
         configMap.put("zoneurl", "zone");
@@ -149,7 +151,7 @@ public class YamlUtils {
 
                 // 初始化各个配置section
                 data.put("nuclei", createConfigSection("nucleipath", "nucleiarg"));
-                data.put("fofa", createConfigSection("fofaurl", "fofakey"));
+                data.put("fofa", createConfigSection("fofaurl", "fofakey", "fofatimerange"));
                 data.put("hunter", createConfigSection("hunterurl", "hunterkey"));
                 data.put("zone", createConfigSection("zoneurl", "zonekey"));
                 data.put("daydaymap", createConfigSection("daydaymapurl", "daydaymapkey"));

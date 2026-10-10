@@ -13,6 +13,8 @@ import org.jiu.ui.SearchPanel;
 import org.jiu.ui.component.MultiComboBox;
 import org.jiu.utils.TelnetUtils;
 import org.jiu.utils.UIUtils;
+import org.jiu.utils.Utils;
+import org.jiu.utils.YamlUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -58,6 +60,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
     };
     private JButton searchBtn = new JButton("搜索");
     private MultiComboBox comboxstatus;
+    private JComboBox<String> timeRangeComboBox;
     private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
     private AtomicInteger tabCounter = new AtomicInteger(0); // 标签页计数器
     private String fields = "ip,host,port,title,domain,icp,city,protocol,country_name,server,os";
@@ -178,6 +181,19 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         // 搜索类型下拉框样式
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
         UIUtils.setupComboBox(searchTypeComboBox, 100);
+
+        // 时间范围下拉框（数据的更新时间范围）
+        timeRangeComboBox = new JComboBox<>(FofaCore.TIME_RANGES.keySet().toArray(new String[0]));
+        timeRangeComboBox.setSelectedItem(FofaCore.getTimeRangeLabel(Utils.fofaTimeRange));
+        timeRangeComboBox.setToolTipText("限定数据的更新时间范围，语句中已写 after/before 时以语句为准");
+        UIUtils.setupComboBox(timeRangeComboBox, 95);
+        // 选中后持久化到配置文件（放在监听器之前，避免初始化时就写文件）
+        timeRangeComboBox.addActionListener(e -> {
+            Object selected = timeRangeComboBox.getSelectedItem();
+            String value = FofaCore.getTimeRangeValue(selected == null ? null : selected.toString());
+            Utils.fofaTimeRange = value;
+            YamlUtils.modifyYaml("fofatimerange", value);
+        });
         
         // 多选框样式
         comboxstatus.setFont(UIUtils.TEXT_FONT);
@@ -206,11 +222,29 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         toolBar.addSeparator();
         toolBar.add(searchTypeComboBox);
         toolBar.addSeparator();
+        toolBar.add(timeRangeComboBox);
+        toolBar.addSeparator();
         toolBar.add(statusBtn);
         toolBar.addSeparator();
         toolBar.add(comboxstatus);
         
         this.add(toolBar, BorderLayout.NORTH);
+    }
+
+    /**
+     * 根据搜索类型和当前时间范围构建最终的查询语句
+     */
+    private String buildSearchData(String raw) {
+        int i = searchTypeComboBox.getSelectedIndex();
+        String data;
+        if (i == 1) {
+            data = "domain=\"" + raw + "\"";
+        } else if (i == 2) {
+            data = "ip=\"" + raw + "\"";
+        } else {
+            data = raw;
+        }
+        return FofaCore.applyTimeRange(data, Utils.fofaTimeRange);
     }
 
     private void search(int p) {
@@ -296,16 +330,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         }
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         fields = stringBuilder.toString();
-        int i = searchTypeComboBox.getSelectedIndex();
-        String data = "";
-        if (i == 0) {
-            data = inputField.getText();
-        } else if (i == 1) {
-            data = "domain=\"" + inputField.getText() + "\"";
-        } else if (i == 2) {
-            data = "ip=\"" + inputField.getText() + "\"";
-        }
-        String qbase64 = Base64.encode(data);
+        String qbase64 = Base64.encode(buildSearchData(searchData));
         new Thread(() -> {
             try {
                 JSONObject responseJson = JSONUtil.parseObj(FofaCore.getData(qbase64, fields, p, 100, false));
@@ -420,16 +445,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         String fields = stringBuilder.toString();
 
-        int i = searchTypeComboBox.getSelectedIndex();
-        String data = "";
-        if (i == 0) {
-            data = searchData;
-        } else if (i == 1) {
-            data = "domain=\"" + searchData + "\"";
-        } else if (i == 2) {
-            data = "ip=\"" + searchData + "\"";
-        }
-        String qbase64 = Base64.encode(data);
+        String qbase64 = Base64.encode(buildSearchData(searchData));
 
         new Thread(() -> {
             try {

@@ -9,6 +9,7 @@ public class Utils {
     public static String templateArg = "";
     public static String fofaUrl = "";
     public static String fofaKey = "";
+    public static String fofaTimeRange = "all";
     public static String hunterUrl = "";
     public static String hunterKey = "";
     public static String zoneUrl = "";

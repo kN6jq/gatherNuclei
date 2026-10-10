@@ -21,6 +21,7 @@ public class ConfigPanel extends JPanel {
     // Fofa配置组件
     private JTextField fofaUrlField;
     private JPasswordField fofaKeyField;
+    private JComboBox<String> fofaTimeRangeCombo;
 
     // Hunter配置组件
     private JTextField hunterUrlField;
@@ -216,7 +217,24 @@ public class ConfigPanel extends JPanel {
         gbc.gridx = 1;
         inputPanel.add(fofaKeyField, gbc);
         textFields.put("fofakey", fofaKeyField);
-        
+
+        // 默认时间范围
+        JLabel timeRangeLabel = new JLabel("时间范围:");
+        timeRangeLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        timeRangeLabel.setPreferredSize(new Dimension(100, 25));
+        timeRangeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        timeRangeLabel.setToolTipText("查询数据的更新时间范围，搜索页工具栏可临时切换");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        inputPanel.add(timeRangeLabel, gbc);
+
+        fofaTimeRangeCombo = new JComboBox<>(
+                org.jiu.core.FofaCore.TIME_RANGES.keySet().toArray(new String[0]));
+        fofaTimeRangeCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        fofaTimeRangeCombo.setPreferredSize(new Dimension(300, 25));
+        gbc.gridx = 1;
+        inputPanel.add(fofaTimeRangeCombo, gbc);
+
         // 保存按钮
         JButton saveButton = new JButton("保存FOFA配置");
         saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
@@ -428,6 +446,7 @@ public class ConfigPanel extends JPanel {
 
             fofaUrlField.setText(Utils.fofaUrl);
             fofaKeyField.setText(Utils.fofaKey);
+            fofaTimeRangeCombo.setSelectedItem(org.jiu.core.FofaCore.getTimeRangeLabel(Utils.fofaTimeRange));
 
             hunterUrlField.setText(Utils.hunterUrl);
             hunterKeyField.setText(Utils.hunterKey);
@@ -456,12 +475,17 @@ public class ConfigPanel extends JPanel {
     private void saveFofaConfig() {
         String url = fofaUrlField.getText().trim();
         String key = new String(fofaKeyField.getPassword());
+        Object selectedTimeRange = fofaTimeRangeCombo.getSelectedItem();
+        String timeRange = org.jiu.core.FofaCore.getTimeRangeValue(
+                selectedTimeRange == null ? null : selectedTimeRange.toString());
 
         saveConfig("fofaurl", url);
         saveConfig("fofakey", key);
+        saveConfig("fofatimerange", timeRange);
 
         Utils.fofaUrl = url;
         Utils.fofaKey = key;
+        Utils.fofaTimeRange = timeRange;
 
         showSaveSuccess();
     }
