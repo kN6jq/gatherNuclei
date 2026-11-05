@@ -12,6 +12,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -201,12 +202,23 @@ public class YamlPanel extends JPanel {
 
     private void saveFile() {
         if (absolutePath == null) {
+            if (Utils.templatePath == null || Utils.templatePath.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "请先在配置面板设置模板路径",
+                        "提示",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             String filename = JOptionPane.showInputDialog(this, "请输入文件名:");
             if (filename == null || filename.trim().isEmpty()) {
                 return;
             }
+            filename = filename.trim();
 
-            String templatePath = Utils.templatePath + "\\" + filename + ".yaml";
+            // 已带 .yaml 后缀则不重复追加，避免保存成 xxx.yaml.yaml
+            String yamlName = filename.toLowerCase().endsWith(".yaml") ? filename : filename + ".yaml";
+            String templatePath = Utils.templatePath + File.separator + yamlName;
             if (FileUtil.exist(templatePath)) {
                 int result = JOptionPane.showConfirmDialog(
                         this,
