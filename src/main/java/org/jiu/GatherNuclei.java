@@ -2,6 +2,7 @@ package org.jiu;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import org.jiu.ui.InitUI;
+import org.jiu.ui.component.Icons;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -63,6 +64,9 @@ public class GatherNuclei extends JFrame {
     private void initFrame() {
         setTitle(TITLE);
         setLayout(new BorderLayout());
+
+        // 设置窗口图标（标题栏与任务栏）
+        setIconImage(Icons.appLogo().getImage());
 
         // 设置窗口大小
         setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);

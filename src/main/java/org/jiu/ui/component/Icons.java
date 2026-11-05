@@ -26,6 +26,23 @@ public final class Icons {
     }
 
     /**
+     * 应用图标（窗口标题栏与菜单栏使用）
+     * 该图标为多色图形，不做单色着色处理
+     */
+    public static FlatSVGIcon appLogo() {
+        return appLogo(32);
+    }
+
+    /**
+     * 应用图标（多色，不做单色着色）
+     *
+     * @param size 尺寸
+     */
+    public static FlatSVGIcon appLogo(int size) {
+        return new FlatSVGIcon("icons/app.svg", size, size);
+    }
+
+    /**
      * 创建使用主题前景色的图标
      */
     public static FlatSVGIcon create(String name) {

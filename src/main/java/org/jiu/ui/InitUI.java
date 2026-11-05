@@ -59,13 +59,24 @@ public class InitUI {
 
     /**
      * 菜单栏初始化
+     * 菜单栏左侧放置应用 logo，整体作为窗口顶部区域
      */
     private static void initMenuBar(JFrame frame) {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(createFileMenu(frame));
         menuBar.add(createSettingsMenu(frame));
         menuBar.add(createAboutMenu(frame));
-        frame.setJMenuBar(menuBar);
+
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 0));
+
+        JLabel logo = new JLabel(Icons.appLogo(20));
+        logo.setToolTipText("gatherNuclei");
+        logo.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
+        topBar.add(logo, BorderLayout.WEST);
+        topBar.add(menuBar, BorderLayout.CENTER);
+
+        frame.add(topBar, BorderLayout.NORTH);
     }
 
     /**
