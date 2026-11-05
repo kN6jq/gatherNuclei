@@ -1,5 +1,6 @@
 package org.jiu.ui.searchengine;
 
+import org.jiu.ui.component.Icons;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import org.jiu.core.ShodanCore;
 
@@ -214,7 +215,7 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
 
     @Override
     public FlatSVGIcon getIcon() {
-        return null;
+        return Icons.create("shodan");
     }
 
     @Override

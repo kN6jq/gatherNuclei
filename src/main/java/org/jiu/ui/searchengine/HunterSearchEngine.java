@@ -1,5 +1,6 @@
 package org.jiu.ui.searchengine;
 
+import org.jiu.ui.InitUI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,6 +15,7 @@ import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.HunterCore;
 import org.jiu.core.ShodanCore;
 import org.jiu.ui.SearchPanel;
+import org.jiu.ui.component.Icons;
 import org.jiu.ui.component.MultiComboBox;
 import org.jiu.utils.TelnetUtils;
 import org.jiu.utils.UIUtils;
@@ -81,6 +83,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
      */
     private void initTabbedPane() {
         resultsTabbedPane = new JTabbedPane();
+        InitUI.styleTabbedPane(resultsTabbedPane, false);
         add(resultsTabbedPane, BorderLayout.CENTER);
         addWelcomePanel();
     }
@@ -811,7 +814,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
 
     @Override
     public FlatSVGIcon getIcon() {
-        return null;
+        return Icons.create("hunter");
     }
 
     @Override

@@ -1,5 +1,7 @@
 package org.jiu.ui;
 
+import com.formdev.flatlaf.FlatClientProperties;
+import org.jiu.ui.component.Icons;
 import org.jiu.ui.dialog.ProxyConfigDialog;
 
 import javax.swing.*;
@@ -18,6 +20,11 @@ public class InitUI {
     private static YamlPanel yamlPanel;
     private static NucleiTemplatePanel nucleiTemplatePanel;
     private static WorkflowPanel workflowPanel;
+
+    /** 主标签页图标名，顺序与标签页一致 */
+    private static final String[] MAIN_TAB_ICONS = {
+            "template", "workflow", "search", "settings", "newtemplate", "generator"
+    };
 
     // 私有构造函数，防止实例化
     private InitUI() {
@@ -153,14 +160,18 @@ public class InitUI {
             try {
                 mainTabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
                 mainTabbedPane.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+                styleTabbedPane(mainTabbedPane);
 
                 // 添加标签页 - 使用更兼容的标签
-                addTab("模板管理", templatesPanel);
-                addTab("工作流", workflowPanel);
-                addTab("搜索引擎", searchPanel);
-                addTab("配置", configPanel);
-                addTab("新建模板", yamlPanel);
-                addTab("Nuclei", nucleiTemplatePanel);
+                addTab("模板管理", "template", templatesPanel, "浏览、过滤并生成 Nuclei 模板的运行命令");
+                addTab("工作流", "workflow", workflowPanel, "将多个模板组织成工作流并批量生成运行命令");
+                addTab("搜索引擎", "search", searchPanel, "多空间测绘引擎集成搜索");
+                addTab("配置", "settings", configPanel, "Nuclei 路径参数与各引擎 API Key 配置");
+                addTab("新建模板", "newtemplate", yamlPanel, "使用 YAML 编辑器新建或编辑模板");
+                addTab("Nuclei", "generator", nucleiTemplatePanel, "通过表单快速生成 Nuclei 模板");
+
+                // 选中项图标用强调色，未选中项用灰色，区分更明显
+                Icons.applyTabIcons(mainTabbedPane, MAIN_TAB_ICONS);
 
                 frame.add(mainTabbedPane, BorderLayout.CENTER);
                 frame.revalidate();
@@ -172,11 +183,39 @@ public class InitUI {
     }
 
     /**
+     * 统一选项卡外观：下划线选中态、分隔线、统一的标签高度与内边距
+     */
+    public static void styleTabbedPane(JTabbedPane tabbedPane) {
+        styleTabbedPane(tabbedPane, true);
+    }
+
+    /**
+     * 统一选项卡外观
+     *
+     * @param tabbedPane 选项卡容器
+     * @param separators 是否显示标签之间的分隔线
+     */
+    public static void styleTabbedPane(JTabbedPane tabbedPane, boolean separators) {
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_TYPE,
+                FlatClientProperties.TABBED_PANE_TAB_TYPE_UNDERLINED);
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_SHOW_TAB_SEPARATORS, separators);
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_HEIGHT, 30);
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_INSETS, new Insets(0, 12, 0, 12));
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_WIDTH_MODE,
+                FlatClientProperties.TABBED_PANE_TAB_WIDTH_MODE_PREFERRED);
+        tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ALIGNMENT,
+                FlatClientProperties.TABBED_PANE_ALIGN_LEADING);
+
+        // 选中的标签文字使用强调色，配合下划线让选中态更明显
+        UIManager.put("TabbedPane.selectedForeground", Icons.SELECTED_COLOR);
+    }
+
+    /**
      * 添加标签页的辅助方法
      */
-    private static void addTab(String title, JComponent component) {
+    private static void addTab(String title, String iconName, JComponent component, String tip) {
         if (component != null) {
-            mainTabbedPane.addTab(title, component);
+            mainTabbedPane.addTab(title, Icons.create(iconName), component, tip);
         } else {
             System.err.println("Warning: Attempted to add null component for tab: " + title);
         }

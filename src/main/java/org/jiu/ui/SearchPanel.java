@@ -1,5 +1,6 @@
 package org.jiu.ui;
 
+import org.jiu.ui.component.Icons;
 import org.jiu.ui.searchengine.*;
 
 import javax.swing.*;
@@ -14,6 +15,11 @@ public class SearchPanel extends JTabbedPane {
     private Zone0SearchEngine zone0 = new Zone0SearchEngine();
     private ShodanPortSearchEngine shodanPort = new ShodanPortSearchEngine();
 
+    /** 各搜索引擎标签页的图标名，顺序与标签页一致 */
+    private static final String[] ENGINE_ICONS = {
+            "fofa", "hunter", "daydaymap", "rapiddns", "otx", "zone0", "shodan"
+    };
+
     public SearchPanel() {
         this.addTab(fofa.getTitle(), fofa.getIcon(), fofa, fofa.getTips());
         this.addTab(hunter.getTitle(), hunter.getIcon(), hunter, hunter.getTips());
@@ -22,6 +28,10 @@ public class SearchPanel extends JTabbedPane {
         this.addTab(otx.getTitle(), otx.getIcon(), otx, otx.getTips());
         this.addTab(zone0.getTitle(), zone0.getIcon(), zone0, zone0.getTips());
         this.addTab(shodanPort.getTitle(), shodanPort.getIcon(), shodanPort, shodanPort.getTips());
+
+        // 统一标签页外观，并按选中状态着色图标
+        InitUI.styleTabbedPane(this);
+        Icons.applyTabIcons(this, ENGINE_ICONS);
     }
 
     /**

@@ -1,8 +1,10 @@
 package org.jiu.ui.searchengine;
 
+import org.jiu.ui.InitUI;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import org.jiu.ui.component.Icons;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
@@ -53,6 +55,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
      */
     private void initTabbedPane() {
         resultsTabbedPane = new JTabbedPane();
+        InitUI.styleTabbedPane(resultsTabbedPane, false);
         add(resultsTabbedPane, BorderLayout.CENTER);
         addWelcomePanel();
     }
@@ -422,7 +425,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
 
     @Override
     public FlatSVGIcon getIcon() {
-        return null;
+        return Icons.create("rapiddns");
     }
 
     @Override
