@@ -115,9 +115,11 @@ public class YamlUtils {
                     newData.put(sectionName, new LinkedHashMap<>());
                 }
 
-                // 如果原数据中有这个字段，则保留
+                // 如果原数据中有这个字段，则保留；缺失的补空值，保证配置结构完整
                 if (data.containsKey(sectionName) && data.get(sectionName).containsKey(configType)) {
                     newData.get(sectionName).put(configType, data.get(sectionName).get(configType));
+                } else {
+                    newData.get(sectionName).put(configType, "");
                 }
             }
 
