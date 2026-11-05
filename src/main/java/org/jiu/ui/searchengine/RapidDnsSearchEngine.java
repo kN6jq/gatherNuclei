@@ -16,7 +16,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -143,15 +142,9 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         // 搜索按钮事件
         searchBtn.addActionListener(e -> search());
 
-        // 添加快捷键
-        toolBar.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-            KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "search");
-        toolBar.getActionMap().put("search", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                search();
-            }
-        });
+        // 回车搜索事件（仅输入框聚焦时触发，避免影响其他面板）
+        inputField.registerKeyboardAction(e -> search(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false), JComponent.WHEN_FOCUSED);
 
         // 组装工具栏
         JLabel label = new JLabel(" 域名: ");
