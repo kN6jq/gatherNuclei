@@ -28,8 +28,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WorkflowPanel extends JPanel {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -38,7 +40,10 @@ public class WorkflowPanel extends JPanel {
     private final DefaultTableModel tableModel;
     private final TableRowSorter<DefaultTableModel> sorter;
     private final JTextField searchField = new JTextField(20);
-    private final Map<String, List<LinkedHashMap<String, String>>> workflows = new HashMap<>();
+    /** 后台线程写入、事件分发线程读取 */
+    private final Map<String, List<LinkedHashMap<String, String>>> workflows = new ConcurrentHashMap<>();
+    /** 加载中标记，避免重复提交加载任务 */
+    private final AtomicBoolean loading = new AtomicBoolean(false);
 
     private final String[] columnNames = {
             "#",
@@ -154,11 +159,12 @@ public class WorkflowPanel extends JPanel {
         }
 
         // 为严重程度相关列设置特殊渲染器
-        table.getColumnModel().getColumn(4).setCellRenderer(createSeverityRenderer("info")); // info列
-        table.getColumnModel().getColumn(5).setCellRenderer(createSeverityRenderer("low"));  // low列
-        table.getColumnModel().getColumn(6).setCellRenderer(createSeverityRenderer("medium")); // medium列
-        table.getColumnModel().getColumn(7).setCellRenderer(createSeverityRenderer("high")); // high列
-        table.getColumnModel().getColumn(8).setCellRenderer(createSeverityRenderer("critical")); // critical列
+        // 列顺序：0=# 1=workflow_name 2=template_count 3=info 4=low 5=medium 6=high 7=critical 8=last_modified
+        table.getColumnModel().getColumn(3).setCellRenderer(createSeverityRenderer("info")); // info_count
+        table.getColumnModel().getColumn(4).setCellRenderer(createSeverityRenderer("low"));  // low_count
+        table.getColumnModel().getColumn(5).setCellRenderer(createSeverityRenderer("medium")); // medium_count
+        table.getColumnModel().getColumn(6).setCellRenderer(createSeverityRenderer("high")); // high_count
+        table.getColumnModel().getColumn(7).setCellRenderer(createSeverityRenderer("critical")); // critical_count
 
         table.addMouseListener(new PopupListener(table));
         return table;
@@ -172,78 +178,77 @@ public class WorkflowPanel extends JPanel {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                
+
                 if (!isSelected) {
-                    String severity = severityType;
-                    switch (severity) {
-                        case "critical":
-                            if (Integer.parseInt(value.toString()) > 0) {
+                    int count = parseCount(value);
+                    if (count > 0) {
+                        switch (severityType) {
+                            case "critical":
                                 label.setBackground(new Color(220, 53, 69));
                                 label.setForeground(Color.WHITE);
-                            } else {
-                                label.setBackground(null);
-                                label.setForeground(null);
-                            }
-                            break;
-                        case "high":
-                            if (Integer.parseInt(value.toString()) > 0) {
+                                break;
+                            case "high":
                                 label.setBackground(new Color(255, 193, 7));
                                 label.setForeground(Color.BLACK);
-                            } else {
-                                label.setBackground(null);
-                                label.setForeground(null);
-                            }
-                            break;
-                        case "medium":
-                            if (Integer.parseInt(value.toString()) > 0) {
+                                break;
+                            case "medium":
                                 label.setBackground(new Color(255, 133, 27));
                                 label.setForeground(Color.WHITE);
-                            } else {
-                                label.setBackground(null);
-                                label.setForeground(null);
-                            }
-                            break;
-                        case "low":
-                            if (Integer.parseInt(value.toString()) > 0) {
+                                break;
+                            case "low":
                                 label.setBackground(new Color(40, 167, 69));
                                 label.setForeground(Color.WHITE);
-                            } else {
-                                label.setBackground(null);
-                                label.setForeground(null);
-                            }
-                            break;
-                        case "info":
-                            if (Integer.parseInt(value.toString()) > 0) {
+                                break;
+                            case "info":
                                 label.setBackground(new Color(108, 117, 125));
                                 label.setForeground(Color.WHITE);
-                            } else {
+                                break;
+                            default:
                                 label.setBackground(null);
                                 label.setForeground(null);
-                            }
-                            break;
-                        default:
-                            label.setBackground(null);
-                            label.setForeground(null);
+                        }
+                    } else {
+                        label.setBackground(null);
+                        label.setForeground(null);
                     }
                 }
-                
+
                 label.setHorizontalAlignment(JLabel.CENTER);
                 if (value != null) {
                     label.setToolTipText(value.toString());
                 }
-                
+
                 return label;
             }
         };
     }
 
+    /**
+     * 解析计数单元格的值，非数字时按 0 处理
+     */
+    private static int parseCount(Object value) {
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(value.toString().trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     // 在WorkflowPanel类的loadWorkflows方法中
     private void loadWorkflows() {
+        // 防止重复提交导致任务堆积
+        if (!loading.compareAndSet(false, true)) {
+            return;
+        }
+        updateStatus("正在加载工作流...");
         executor.submit(() -> {
             try {
-                updateStatus("正在加载工作流...");
                 workflows.clear();
-                tableModel.setRowCount(0);
+                // 表格模型必须在事件分发线程上修改
+                SwingUtilities.invokeLater(() -> tableModel.setRowCount(0));
 
                 // 确保目录存在
                 File workflowDir = new File(Utils.workflowPath);
@@ -263,17 +268,33 @@ public class WorkflowPanel extends JPanel {
             } catch (Exception e) {
                 e.printStackTrace();
                 updateStatus("加载失败: " + e.getMessage());
+            } finally {
+                loading.set(false);
             }
         });
+    }
+
+    /**
+     * 刷新工作流列表，供外部（如切换到该标签页时）调用
+     */
+    public void refreshWorkflows() {
+        loadWorkflows();
     }
 
     private void processWorkflowFile(Path path) {
         try {
             Yaml yaml = new Yaml();
-            Map<String, List<String>> workflowData = yaml.load(new FileReader(path.toFile()));
+            Map<String, List<String>> workflowData;
+            try (FileReader reader = new FileReader(path.toFile())) {
+                workflowData = yaml.load(reader);
+            }
+            if (workflowData == null) {
+                return;
+            }
             String workflowName = path.getFileName().toString().replace(".yaml", "");
 
-            List<String> templatePaths = workflowData.get("templates");
+            List<String> templates = workflowData.get("templates");
+            final List<String> templatePaths = templates != null ? templates : new ArrayList<>();
             List<LinkedHashMap<String, String>> templateInfoList = new ArrayList<>();
 
             // 统计不同级别的模板数量
@@ -591,7 +612,13 @@ public class WorkflowPanel extends JPanel {
             }
 
             Yaml yaml = new Yaml();
-            Map<String, Object> templateData = yaml.load(new FileReader(templateFile));
+            Map<String, Object> templateData;
+            try (FileReader reader = new FileReader(templateFile)) {
+                templateData = yaml.load(reader);
+            }
+            if (templateData == null) {
+                return null;
+            }
 
             LinkedHashMap<String, String> templateInfo = new LinkedHashMap<>();
             templateInfo.put("path", templatePath);
@@ -604,7 +631,8 @@ public class WorkflowPanel extends JPanel {
                 templateInfo.put("name", (String) info.get("name")); // 修改：从info中获取name
 
                 // 设置severity字段
-                templateInfo.put("severity", ((String) info.get("severity")).toLowerCase());
+                Object severity = info.get("severity");
+                templateInfo.put("severity", severity != null ? severity.toString().toLowerCase() : "unknown");
 
                 // 设置description字段
                 Object description = info.get("description");
