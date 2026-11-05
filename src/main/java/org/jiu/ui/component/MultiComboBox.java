@@ -35,9 +35,15 @@ public class MultiComboBox extends JComponent implements ActionListener {
         arrowButton.setBackground(new Color(0, 123, 255));
         arrowButton.setForeground(Color.WHITE);
         arrowButton.setFocusPainted(false);
+        arrowButton.setMargin(new Insets(0, 6, 0, 6));
         arrowButton.addActionListener(this);
         this.add(editor);
         this.add(arrowButton);
+
+        // 组件在工具栏中空间不足时不应被压扁，否则按钮文字会被截断
+        Dimension preferred = new Dimension(140, 30);
+        setPreferredSize(preferred);
+        setMinimumSize(preferred);
     }
 
     //获取选中的数据

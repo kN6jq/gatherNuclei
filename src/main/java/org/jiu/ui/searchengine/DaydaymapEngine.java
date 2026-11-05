@@ -279,7 +279,7 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         String[] values = new String[]{"全选", "icp_reg_name", "isp", "server", "service", "product", "tags", "city", "province", "country", "banner", "header", "cert", "asn", "asn_org"};
         comboxstatus = new MultiComboBox(values);
         comboxstatus.setFont(UIUtils.TEXT_FONT);
-        comboxstatus.setPreferredSize(new Dimension(120, UIUtils.COMBO_HEIGHT));
+        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.COMBO_HEIGHT));
 
         // 回回车搜索事件
         inputField.registerKeyboardAction(e -> {

@@ -199,7 +199,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         
         // 多选框样式
         comboxstatus.setFont(UIUtils.TEXT_FONT);
-        comboxstatus.setPreferredSize(new Dimension(120, UIUtils.COMBO_HEIGHT));
+        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.COMBO_HEIGHT));
         
         // 搜索按钮样式
         UIUtils.setupSearchButton(searchBtn, "搜索");

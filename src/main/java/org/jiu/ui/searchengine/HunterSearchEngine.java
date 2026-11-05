@@ -327,7 +327,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         String[] values = new String[]{"全选", "status_code", "web_title", "domain", "protocol", "number", "company", "city", "province", "country", "updated_at", "isp", "header_server", "as_org"};
         comboxstatus = new MultiComboBox(values);
         comboxstatus.setFont(UIUtils.TEXT_FONT);
-        comboxstatus.setPreferredSize(new Dimension(120, UIUtils.COMBO_HEIGHT));
+        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.COMBO_HEIGHT));
 
         String today = DateUtil.today();
         end_time = today;
