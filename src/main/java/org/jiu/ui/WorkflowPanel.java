@@ -488,28 +488,10 @@ public class WorkflowPanel extends JPanel {
             row = workflowTable.convertRowIndexToModel(row);
             String workflowName = (String) tableModel.getValueAt(row, 1);
 
-            // 从已加载的工作流信息中取模板路径
-            List<String> templatePaths = new ArrayList<>();
-            List<LinkedHashMap<String, String>> templateInfoList = workflows.get(workflowName);
-            if (templateInfoList != null) {
-                for (LinkedHashMap<String, String> templateInfo : templateInfoList) {
-                    String path = templateInfo.get("path");
-                    if (path != null && !path.isEmpty()) {
-                        templatePaths.add(path);
-                    }
-                }
-            }
-
-            if (templatePaths.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "工作流模板信息加载失败或为空，请刷新后重试",
-                        "提示",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            // 与模板管理面板保持一致：nuclei -t 接受逗号分隔的多个模板
-            String command = "nuclei -t " + String.join(",", templatePaths) + " " + Utils.templateArg + " -u ";
+            // 工作流文件本身就是 nuclei 配置文件（templates 列表），
+            // 直接用 -config 指向该文件即可，无需展开成逗号分隔的模板列表
+            String command = "nuclei -config " + Paths.get(Utils.workflowPath, workflowName + ".yaml")
+                    + " " + Utils.templateArg + " -u ";
             Utils.copyToClipboard(command);
         }
     }
