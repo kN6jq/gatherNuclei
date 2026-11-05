@@ -9,7 +9,7 @@ import java.awt.*;
 import java.io.IOException;
 
 public class InitUI {
-    private static final String VERSION = "v1";
+    private static final String VERSION = "v1.0.0";
     private static final String AUTHOR = "Xm17";
 
     // UI组件
