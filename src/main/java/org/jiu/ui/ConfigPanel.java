@@ -217,15 +217,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(fofaKeyField, gbc);
         textFields.put("fofakey", fofaKeyField);
 
-        // 时间范围在「搜索引擎 → fofa」面板的工具栏中设置，此处只作说明
-        JLabel timeRangeTip = new JLabel("时间范围请在「搜索引擎 → fofa」面板的工具栏中选择");
-        timeRangeTip.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        timeRangeTip.setForeground(new Color(120, 120, 120));
-        timeRangeTip.setPreferredSize(new Dimension(400, 25));
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        inputPanel.add(timeRangeTip, gbc);
-
         // 保存按钮
         JButton saveButton = new JButton("保存FOFA配置");
         saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
