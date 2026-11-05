@@ -46,10 +46,7 @@ public class GatherNuclei extends JFrame {
         GatherNuclei frame = new GatherNuclei();
 
         try {
-            // 设置菜单栏
-            frame.setJMenuBar(createMenuBar());
-            
-            // 初始化所有UI组件
+            // 初始化所有UI组件（菜单栏由 InitUI 统一创建）
             InitUI.initializeUI(frame);
 
             // 添加底部状态栏
@@ -72,34 +69,6 @@ public class GatherNuclei extends JFrame {
         setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-    }
-
-    private static JMenuBar createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-        
-        // 文件菜单
-        JMenu fileMenu = new JMenu("文件");
-        fileMenu.add(new JMenuItem("打开模板目录"));
-        fileMenu.add(new JMenuItem("导入模板"));
-        fileMenu.add(new JMenuItem("导出模板"));
-        fileMenu.addSeparator();
-        fileMenu.add(new JMenuItem("退出"));
-        
-        // 工具菜单
-        JMenu toolsMenu = new JMenu("工具");
-        toolsMenu.add(new JMenuItem("模板验证"));
-        toolsMenu.add(new JMenuItem("批量处理"));
-        
-        // 帮助菜单
-        JMenu helpMenu = new JMenu("帮助");
-        helpMenu.add(new JMenuItem("使用说明"));
-        helpMenu.add(new JMenuItem("关于"));
-        
-        menuBar.add(fileMenu);
-        menuBar.add(toolsMenu);
-        menuBar.add(helpMenu);
-        
-        return menuBar;
     }
 
     private static JPanel createStatusBar() {
