@@ -26,6 +26,9 @@ public class InitUI {
             "template", "workflow", "search", "settings", "newtemplate", "generator"
     };
 
+    /** 工作流标签页在主标签页中的索引 */
+    private static final int WORKFLOW_TAB_INDEX = 1;
+
     // 私有构造函数，防止实例化
     private InitUI() {
         throw new AssertionError("InitUI类不应该被实例化");
@@ -183,6 +186,13 @@ public class InitUI {
 
                 // 选中项图标用强调色，未选中项用灰色，区分更明显
                 Icons.applyTabIcons(mainTabbedPane, MAIN_TAB_ICONS);
+
+                // 切换到工作流标签页时自动刷新，保证新建的工作流能立即显示
+                mainTabbedPane.addChangeListener(e -> {
+                    if (mainTabbedPane.getSelectedIndex() == WORKFLOW_TAB_INDEX) {
+                        workflowPanel.refreshWorkflows();
+                    }
+                });
 
                 frame.add(mainTabbedPane, BorderLayout.CENTER);
                 frame.revalidate();
