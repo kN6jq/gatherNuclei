@@ -25,6 +25,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 工作流管理面板：扫描工作流目录下的 YAML 文件，按严重程度统计模板数量，
+ * 并支持查看模板详情、复制 nuclei 运行命令与删除工作流。
+ */
 public class WorkflowPanel extends JPanel {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final JLabel statusLabel;
@@ -72,7 +76,7 @@ public class WorkflowPanel extends JPanel {
     }
 
     /**
-     * 解析计数单元格的值，非数字时按 0 处理
+     * 解析计数单元格的值，null 或非数字时按 0 处理。
      */
     private static int parseCount(Object value) {
         if (value == null) {
@@ -85,6 +89,11 @@ public class WorkflowPanel extends JPanel {
         }
     }
 
+    /**
+     * 解析 nuclei 模板 YAML，提取 id 及 info 中的元信息，多值字段统一转为逗号分隔字符串。
+     *
+     * @return 模板信息映射；文件不存在、内容为空或解析异常时返回 null
+     */
     public static LinkedHashMap<String, String> getTemplateInfo(String templatePath) {
         try {
             File templateFile = new File(templatePath);
@@ -103,23 +112,21 @@ public class WorkflowPanel extends JPanel {
 
             LinkedHashMap<String, String> templateInfo = new LinkedHashMap<>();
             templateInfo.put("path", templatePath);
-            templateInfo.put("id", (String) templateData.get("id")); // 修改：正确设置id字段
+            templateInfo.put("id", (String) templateData.get("id"));
 
-            // 处理嵌套的info字段
+            // 模板元信息位于嵌套的 info 节点下
             Map<String, Object> info = (Map<String, Object>) templateData.get("info");
             if (info != null) {
-                // 设置name字段
-                templateInfo.put("name", (String) info.get("name")); // 修改：从info中获取name
+                templateInfo.put("name", (String) info.get("name"));
 
-                // 设置severity字段
+                // 统一小写，便于后续按级别统计
                 Object severity = info.get("severity");
                 templateInfo.put("severity", severity != null ? severity.toString().toLowerCase() : "unknown");
 
-                // 设置description字段
                 Object description = info.get("description");
-                templateInfo.put("description", description != null ? description.toString() : ""); // 添加：设置description
+                templateInfo.put("description", description != null ? description.toString() : "");
 
-                // 设置reference字段
+                // reference/tags/author 在 YAML 中可能是字符串或列表，统一转成逗号分隔字符串
                 Object reference = info.get("reference");
                 if (reference instanceof List) {
                     templateInfo.put("reference", String.join(",", (List<String>) reference));
@@ -129,7 +136,6 @@ public class WorkflowPanel extends JPanel {
                     templateInfo.put("reference", "");
                 }
 
-                // 处理tags字段
                 Object tags = info.get("tags");
                 if (tags instanceof List) {
                     templateInfo.put("tags", String.join(",", (List<String>) tags));
@@ -139,7 +145,6 @@ public class WorkflowPanel extends JPanel {
                     templateInfo.put("tags", "");
                 }
 
-                // 处理author字段
                 Object author = info.get("author");
                 if (author instanceof List) {
                     templateInfo.put("author", String.join(",", (List<String>) author));
@@ -149,7 +154,7 @@ public class WorkflowPanel extends JPanel {
                     templateInfo.put("author", "");
                 }
             } else {
-                // 如果info为空，设置默认值
+                // info 缺失时填充默认值，避免下游取到 null
                 templateInfo.put("name", "未知");
                 templateInfo.put("severity", "unknown");
                 templateInfo.put("description", "");
@@ -165,6 +170,9 @@ public class WorkflowPanel extends JPanel {
         }
     }
 
+    /**
+     * 组装工具栏与可滚动的工作流表格。
+     */
     private void initUI() {
         add(createToolBar(), BorderLayout.NORTH);
         JScrollPane scrollPane = new JScrollPane(workflowTable);
@@ -172,23 +180,22 @@ public class WorkflowPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * 构建工具栏：左侧状态标签与刷新按钮，右侧搜索框（回车触发过滤）。
+     */
     private JToolBar createToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // 创建主面板
         JPanel mainPanel = new JPanel(new BorderLayout());
 
-        // 左侧控件：状态标签
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         leftPanel.add(statusLabel);
 
-        // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
 
-        // 刷新按钮
         JButton refreshBtn = new JButton("刷新");
         refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
         refreshBtn.setFocusPainted(false);
@@ -198,10 +205,8 @@ public class WorkflowPanel extends JPanel {
         refreshBtn.addActionListener(e -> loadWorkflows());
         leftPanel.add(refreshBtn);
 
-        // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
 
-        // 右侧控件：搜索框
         JPanel rightPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -214,7 +219,6 @@ public class WorkflowPanel extends JPanel {
         searchField.addActionListener(e -> performSearch());
         rightPanel.add(searchField, gbc);
 
-        // 将左右面板添加到主面板
         mainPanel.add(leftPanel, BorderLayout.WEST);
         mainPanel.add(rightPanel, BorderLayout.EAST);
 
@@ -222,25 +226,32 @@ public class WorkflowPanel extends JPanel {
         return toolBar;
     }
 
+    /**
+     * 为搜索框设置 FlatLaf 占位提示、尾部搜索图标并绑定回车搜索（当前无调用方）。
+     */
     private void configureSearchField() {
         searchField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search workflows, Enter");
         searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
         searchField.addActionListener(e -> performSearch());
     }
 
+    /**
+     * 按搜索框内容过滤表格行，关键词作为正则表达式处理且不区分大小写。
+     */
     private void performSearch() {
         String searchKeyWord = searchField.getText().trim();
         sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchKeyWord));
     }
 
+    /**
+     * 创建工作流表格：全列居中，严重程度计数列按级别着色，并绑定双击与右键监听。
+     */
     private JTable createTable() {
         JTable table = new JTable(tableModel);
 
-        // 设置表格属性
         table.setRowHeight(25);
         table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
 
-        // 设置表格渲染器
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
 
@@ -248,20 +259,21 @@ public class WorkflowPanel extends JPanel {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        // 为严重程度相关列设置特殊渲染器
         // 列顺序：0=# 1=workflow_name 2=template_count 3=info 4=low 5=medium 6=high 7=critical 8=last_modified
-        table.getColumnModel().getColumn(3).setCellRenderer(createSeverityRenderer("info")); // info_count
-        table.getColumnModel().getColumn(4).setCellRenderer(createSeverityRenderer("low"));  // low_count
-        table.getColumnModel().getColumn(5).setCellRenderer(createSeverityRenderer("medium")); // medium_count
-        table.getColumnModel().getColumn(6).setCellRenderer(createSeverityRenderer("high")); // high_count
-        table.getColumnModel().getColumn(7).setCellRenderer(createSeverityRenderer("critical")); // critical_count
+        table.getColumnModel().getColumn(3).setCellRenderer(createSeverityRenderer("info"));
+        table.getColumnModel().getColumn(4).setCellRenderer(createSeverityRenderer("low"));
+        table.getColumnModel().getColumn(5).setCellRenderer(createSeverityRenderer("medium"));
+        table.getColumnModel().getColumn(6).setCellRenderer(createSeverityRenderer("high"));
+        table.getColumnModel().getColumn(7).setCellRenderer(createSeverityRenderer("critical"));
 
         table.addMouseListener(new PopupListener(table));
         return table;
     }
 
     /**
-     * 创建严重程度渲染器
+     * 创建严重程度计数列渲染器：未选中且计数大于 0 时按级别着色，否则恢复默认配色。
+     *
+     * @param severityType 取值 info、low、medium、high、critical，其余值不着色
      */
     private DefaultTableCellRenderer createSeverityRenderer(String severityType) {
         return new DefaultTableCellRenderer() {
@@ -313,7 +325,9 @@ public class WorkflowPanel extends JPanel {
         };
     }
 
-    // 在WorkflowPanel类的loadWorkflows方法中
+    /**
+     * 在后台单线程中重新扫描工作流目录并重建表格，加载期间忽略重复调用。
+     */
     private void loadWorkflows() {
         // 防止重复提交导致任务堆积
         if (!loading.compareAndSet(false, true)) {
@@ -326,13 +340,11 @@ public class WorkflowPanel extends JPanel {
                 // 表格模型必须在事件分发线程上修改
                 SwingUtilities.invokeLater(() -> tableModel.setRowCount(0));
 
-                // 确保目录存在
                 File workflowDir = new File(Utils.workflowPath);
                 if (!workflowDir.exists()) {
-                    workflowDir.mkdirs();  // 使用mkdirs而不是Files.createDirectories
+                    workflowDir.mkdirs();
                 }
 
-                // 使用File API遍历文件而不是Files.list
                 File[] files = workflowDir.listFiles((dir, name) -> name.endsWith(".yaml"));
                 if (files != null) {
                     for (File file : files) {
@@ -351,12 +363,16 @@ public class WorkflowPanel extends JPanel {
     }
 
     /**
-     * 刷新工作流列表，供外部（如切换到该标签页时）调用
+     * 刷新工作流列表，供外部（如切换到该标签页时）调用。
      */
     public void refreshWorkflows() {
         loadWorkflows();
     }
 
+    /**
+     * 解析单个工作流 YAML，统计其模板各严重程度的数量，写入缓存并在事件分发线程追加表格行；
+     * 解析失败仅打印堆栈，不影响其他工作流。
+     */
     private void processWorkflowFile(Path path) {
         try {
             Yaml yaml = new Yaml();
@@ -373,8 +389,7 @@ public class WorkflowPanel extends JPanel {
             final List<String> templatePaths = templates != null ? templates : new ArrayList<>();
             List<LinkedHashMap<String, String>> templateInfoList = new ArrayList<>();
 
-            // 统计不同级别的模板数量
-            int[] counts = new int[5]; // info, low, medium, high, critical
+            int[] counts = new int[5]; // 下标依次为 info, low, medium, high, critical
 
             for (String templatePath : templatePaths) {
                 LinkedHashMap<String, String> templateInfo = getTemplateInfo(templatePath);
@@ -420,20 +435,20 @@ public class WorkflowPanel extends JPanel {
         }
     }
 
+    /**
+     * 构建表格右键菜单：查看详情、复制运行命令、删除工作流。
+     */
     private JPopupMenu createPopupMenu() {
         JPopupMenu popup = new JPopupMenu();
 
-        // 查看详情
         JMenuItem viewItem = new JMenuItem("查看工作流详情");
         viewItem.addActionListener(e -> showTemplateDetails());
         popup.add(viewItem);
 
-        // 执行工作流
         JMenuItem executeItem = new JMenuItem("复制运行命令");
         executeItem.addActionListener(e -> executeWorkflow());
         popup.add(executeItem);
 
-        // 删除工作流
         JMenuItem deleteItem = new JMenuItem("删除工作流");
         deleteItem.addActionListener(e -> deleteWorkflow());
         popup.add(deleteItem);
@@ -441,10 +456,13 @@ public class WorkflowPanel extends JPanel {
         return popup;
     }
 
+    /**
+     * 以模态对话框展示选中工作流的模板明细；未选中行时不处理，无模板或读取失败时弹窗提示。
+     */
     private void showTemplateDetails() {
         int row = workflowTable.getSelectedRow();
         if (row != -1) {
-            // 注意：需要将视图索引转换为模型索引
+            // 表格存在排序与过滤，视图索引必须先转换为模型索引
             row = workflowTable.convertRowIndexToModel(row);
             String workflowName = (String) tableModel.getValueAt(row, 1);
             List<LinkedHashMap<String, String>> templates = workflows.get(workflowName);
@@ -457,12 +475,11 @@ public class WorkflowPanel extends JPanel {
                 return;
             }
 
-            // 创建新窗口显示模板详情
             JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                     workflowName + " - 模板详情", true);
             dialog.setLayout(new BorderLayout());
 
-            // 使用与 TemplatesPanel 相同的列名
+            // 列名与 TemplatesPanel 的模板表格保持一致
             String[] detailColumns = {
                     "#",
                     "templates_id",
@@ -483,7 +500,6 @@ public class WorkflowPanel extends JPanel {
 
             JTable detailTable = new JTable(detailModel);
 
-            // 设置表格渲染器，使其居中显示并支持工具提示
             DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
                 @Override
                 public Component getTableCellRendererComponent(
@@ -497,19 +513,16 @@ public class WorkflowPanel extends JPanel {
                 }
             };
 
-            // 应用渲染器到所有列
             for (int i = 0; i < detailTable.getColumnCount(); i++) {
                 detailTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
             }
 
-            // 设置列宽
             detailTable.getColumn("#").setPreferredWidth(20);
             detailTable.getColumn("templates_id").setPreferredWidth(60);
             detailTable.getColumn("templates_name").setPreferredWidth(100);
             detailTable.getColumn("templates_severity").setPreferredWidth(40);
             detailTable.getColumn("templates_author").setPreferredWidth(30);
 
-            // 添加数据行
             int count = 1;
             for (LinkedHashMap<String, String> template : templates) {
                 detailModel.addRow(new Object[]{
@@ -531,6 +544,9 @@ public class WorkflowPanel extends JPanel {
         }
     }
 
+    /**
+     * 把选中工作流的 nuclei 运行命令复制到剪贴板，命令以 -u 结尾，需由使用者补上目标。
+     */
     private void executeWorkflow() {
         int row = workflowTable.getSelectedRow();
         if (row != -1) {
@@ -545,6 +561,9 @@ public class WorkflowPanel extends JPanel {
         }
     }
 
+    /**
+     * 确认后删除选中工作流文件并重新加载列表；文件不存在或删除失败时弹窗提示。
+     */
     private void deleteWorkflow() {
         int row = workflowTable.getSelectedRow();
         if (row != -1) {
@@ -557,7 +576,6 @@ public class WorkflowPanel extends JPanel {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    // 获取工作流文件
                     File file = new File(Utils.workflowPath, workflowName + ".yaml");
                     if (!file.exists()) {
                         JOptionPane.showMessageDialog(this,
@@ -567,28 +585,25 @@ public class WorkflowPanel extends JPanel {
                         return;
                     }
 
-                    // 确保关闭所有可能的文件句柄
+                    // 文件可能仍被未回收的句柄占用，先触发 GC 并留出释放时间
                     System.gc();
-                    Thread.sleep(100); // 给系统一点时间进行GC
+                    Thread.sleep(100);
 
-                    // 尝试多次删除文件
                     boolean deleted = false;
                     int maxRetries = 3;
                     int retryCount = 0;
                     Exception lastException = null;
 
+                    // 逐级退化重试：Files.delete -> File.delete -> 解除只读后再删，应对文件占用与权限问题
                     while (!deleted && retryCount < maxRetries) {
                         try {
-                            // 先尝试使用Files.delete
                             Files.delete(file.toPath());
                             deleted = true;
                         } catch (Exception e) {
                             lastException = e;
-                            // 如果Files.delete失败，尝试使用File.delete
                             if (file.delete()) {
                                 deleted = true;
                             } else {
-                                // 如果还是失败，标记文件为可删除并再次尝试
                                 file.setWritable(true);
                                 if (file.delete()) {
                                     deleted = true;
@@ -597,12 +612,11 @@ public class WorkflowPanel extends JPanel {
                         }
                         if (!deleted) {
                             retryCount++;
-                            Thread.sleep(100); // 在重试之间稍作等待
+                            Thread.sleep(100); // 等待占用释放后再重试
                         }
                     }
 
                     if (deleted) {
-                        // 删除成功后重新加载列表
                         workflows.remove(workflowName);
                         loadWorkflows();
                         JOptionPane.showMessageDialog(this,
@@ -610,7 +624,6 @@ public class WorkflowPanel extends JPanel {
                                 "提示",
                                 JOptionPane.INFORMATION_MESSAGE);
                     } else {
-                        // 如果所有尝试都失败了，则抛出最后一个异常
                         throw new IOException("无法删除文件，可能被其他程序占用", lastException);
                     }
                 } catch (Exception e) {
@@ -626,16 +639,25 @@ public class WorkflowPanel extends JPanel {
         }
     }
 
+    /**
+     * 更新状态文本，内部切回事件分发线程，可安全地从后台加载线程调用。
+     */
     private void updateStatus(String message) {
         SwingUtilities.invokeLater(() -> statusLabel.setText(message));
     }
 
+    /**
+     * 面板从容器移除时关闭后台加载线程池，避免线程泄漏。
+     */
     @Override
     public void removeNotify() {
         super.removeNotify();
         executor.shutdown();
     }
 
+    /**
+     * 表格鼠标监听：双击查看模板详情；各平台右键触发时机不同，故 pressed 与 released 都检查 popupTrigger。
+     */
     private class PopupListener extends MouseAdapter {
         private final JTable table;
 

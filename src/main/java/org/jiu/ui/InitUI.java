@@ -8,6 +8,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
+/**
+ * 主界面装配工具类：创建各功能面板、顶部菜单与主标签页，并对外提供面板实例访问。
+ */
 public class InitUI {
     private static final String VERSION = "v1.0.0";
     private static final String AUTHOR = "Xm17";
@@ -21,7 +24,6 @@ public class InitUI {
      * 工作流标签页在主标签页中的索引
      */
     private static final int WORKFLOW_TAB_INDEX = 1;
-    // UI组件
     private static JTabbedPane mainTabbedPane;
     private static TemplatesPanel templatesPanel;
     private static SearchPanel searchPanel;
@@ -30,15 +32,12 @@ public class InitUI {
     private static NucleiTemplatePanel nucleiTemplatePanel;
     private static WorkflowPanel workflowPanel;
 
-    // 私有构造函数，防止实例化
     private InitUI() {
         throw new AssertionError("InitUI类不应该被实例化");
     }
 
     /**
-     * 初始化所有UI组件
-     *
-     * @param frame 主窗口
+     * 装配主窗口界面：面板、菜单栏、主标签页；任一步骤异常时弹窗报错。
      */
     public static void initializeUI(JFrame frame) {
         try {
@@ -51,7 +50,7 @@ public class InitUI {
     }
 
     /**
-     * 初始化所有面板
+     * 创建各功能面板实例，供主标签页装配与外部 getter 访问。
      */
     private static void initPanels() {
         templatesPanel = new TemplatesPanel();
@@ -63,8 +62,7 @@ public class InitUI {
     }
 
     /**
-     * 菜单栏初始化
-     * 菜单栏左侧放置应用 logo，整体作为窗口顶部区域
+     * 构建窗口顶部区域：左侧应用 logo，右侧文件、设置、关于菜单。
      */
     private static void initMenuBar(JFrame frame) {
         JMenuBar menuBar = new JMenuBar();
@@ -85,7 +83,7 @@ public class InitUI {
     }
 
     /**
-     * 创建文件菜单
+     * 构建标题为「打开」的菜单，提供打开系统终端入口。
      */
     private static JMenu createFileMenu(JFrame frame) {
         JMenu fileMenu = new JMenu("打开");
@@ -95,13 +93,9 @@ public class InitUI {
         return fileMenu;
     }
 
-    /**
-     * 创建设置菜单
-     */
     private static JMenu createSettingsMenu(JFrame frame) {
         JMenu settingsMenu = new JMenu("设置");
 
-        // 代理配置
         JMenuItem proxyItem = new JMenuItem("代理配置");
         proxyItem.setToolTipText("配置 HTTP/SOCKS5 代理");
         proxyItem.addActionListener(e -> {
@@ -113,9 +107,6 @@ public class InitUI {
         return settingsMenu;
     }
 
-    /**
-     * 创建关于菜单
-     */
     private static JMenu createAboutMenu(JFrame frame) {
         JMenu aboutMenu = new JMenu("关于");
         JMenuItem aboutItem = new JMenuItem("关于");
@@ -124,9 +115,6 @@ public class InitUI {
         return aboutMenu;
     }
 
-    /**
-     * 显示关于对话框
-     */
     private static void showAboutDialog(JFrame frame) {
         SwingUtilities.invokeLater(() -> {
             JOptionPane.showMessageDialog(
@@ -139,7 +127,7 @@ public class InitUI {
     }
 
     /**
-     * 打开系统终端
+     * 按操作系统启动系统终端；Linux 下依次尝试常见终端，全部失败或系统不支持时弹窗提示。
      */
     private static void openSystemShell(JFrame frame) {
         String os = System.getProperty("os.name").toLowerCase();
@@ -149,7 +137,6 @@ public class InitUI {
             } else if (os.startsWith("mac")) {
                 Runtime.getRuntime().exec("open -a Terminal");
             } else if (os.contains("linux") || os.contains("unix")) {
-                // 尝试常见的Linux终端
                 String[] terminals = {"gnome-terminal", "konsole", "xterm"};
                 for (String terminal : terminals) {
                     try {
@@ -169,7 +156,7 @@ public class InitUI {
     }
 
     /**
-     * 选项卡面板初始化
+     * 在事件分发线程上创建主标签页、装入六个功能面板并加入窗口中部；异常时弹窗报错。
      */
     private static void initTabbedPane(JFrame frame) {
         SwingUtilities.invokeLater(() -> {
@@ -178,7 +165,6 @@ public class InitUI {
                 mainTabbedPane.setFont(new Font("微软雅黑", Font.PLAIN, 12));
                 styleTabbedPane(mainTabbedPane);
 
-                // 添加标签页 - 使用更兼容的标签
                 addTab("模板管理", "template", templatesPanel, "浏览、过滤并生成 Nuclei 模板的运行命令");
                 addTab("工作流", "workflow", workflowPanel, "将多个模板组织成工作流并批量生成运行命令");
                 addTab("搜索引擎", "search", searchPanel, "多空间测绘引擎集成搜索");
@@ -206,16 +192,15 @@ public class InitUI {
     }
 
     /**
-     * 统一选项卡外观：下划线选中态、分隔线、统一的标签高度与内边距
+     * 统一选项卡外观：下划线选中态、标签分隔线、统一的标签高度与内边距。
      */
     public static void styleTabbedPane(JTabbedPane tabbedPane) {
         styleTabbedPane(tabbedPane, true);
     }
 
     /**
-     * 统一选项卡外观
+     * 统一选项卡外观：下划线选中态、固定标签高度与内边距、标签左对齐。
      *
-     * @param tabbedPane 选项卡容器
      * @param separators 是否显示标签之间的分隔线
      */
     public static void styleTabbedPane(JTabbedPane tabbedPane, boolean separators) {
@@ -229,12 +214,12 @@ public class InitUI {
         tabbedPane.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ALIGNMENT,
                 FlatClientProperties.TABBED_PANE_ALIGN_LEADING);
 
-        // 选中的标签文字使用强调色，配合下划线让选中态更明显
+        // 选中文字用强调色配合下划线突出选中态；该键写入全局 UIManager，会影响所有选项卡面板
         UIManager.put("TabbedPane.selectedForeground", Icons.SELECTED_COLOR);
     }
 
     /**
-     * 添加标签页的辅助方法
+     * 向主标签页追加带图标与提示的标签页；component 为 null 时只打印警告并跳过。
      */
     private static void addTab(String title, String iconName, JComponent component, String tip) {
         if (component != null) {
@@ -245,7 +230,9 @@ public class InitUI {
     }
 
     /**
-     * 显示错误消息
+     * 弹窗展示错误信息；e 非空时打印堆栈并把异常信息拼接到消息末尾。
+     *
+     * @param e 可为 null，表示无异常详情的纯提示
      */
     private static void showError(Component parent, String message, Exception e) {
         if (e != null) {
@@ -260,9 +247,6 @@ public class InitUI {
         );
     }
 
-    /**
-     * 显示提示消息
-     */
     private static void showMessage(Component parent, String message, String title) {
         JOptionPane.showMessageDialog(
                 parent,
@@ -272,7 +256,6 @@ public class InitUI {
         );
     }
 
-    // Getter方法
     public static JTabbedPane getMainTabbedPane() {
         return mainTabbedPane;
     }

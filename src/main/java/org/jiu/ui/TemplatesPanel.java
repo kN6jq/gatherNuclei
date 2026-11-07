@@ -29,11 +29,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 模板管理面板
- * 用于显示和管理YAML格式的模板文件
+ * 模板管理面板：加载并以表格管理 YAML 格式的 nuclei 模板，支持过滤、搜索、编辑及工作流操作。
  */
 public class TemplatesPanel extends JPanel {
-    // 常量定义
     private static final String[] COLUMN_NAMES = {
             "#",
             "templates_id",
@@ -48,16 +46,15 @@ public class TemplatesPanel extends JPanel {
             "info", "low", "medium", "high", "critical", "unknown"
     };
 
-    // UI组件
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final JLabel statusLabel;
     private final JTable templateTable;
     private final DefaultTableModel tableModel;
     private final TableRowSorter<DefaultTableModel> sorter;
     private final JTextField searchField;
+    // 加载互斥锁，确保后台加载任务串行执行
     private final Object loadLock = new Object();
 
-    // 过滤按钮
     private final JToggleButton infoBtn;
     private final JToggleButton lowBtn;
     private final JToggleButton mediumBtn;
@@ -65,53 +62,46 @@ public class TemplatesPanel extends JPanel {
     private final JToggleButton criticalBtn;
     private final JButton refreshBtn;
 
-    // 数据存储
     private final List<Map<String, Object>> templates;
     private final Set<String> activeFilters;
+    // 表格序号（# 列，从 1 开始）到模板文件路径的映射
     private final Map<Integer, String> templatePathMap = new HashMap<>();
+    // 加载失败的文件及异常，每轮加载前清空，供状态栏点击查看
     private Map<Path, Exception> failedFiles = Collections.synchronizedMap(new HashMap<>());
 
     /**
-     * 构造函数
+     * 构建面板界面并触发首次后台加载。
      */
     public TemplatesPanel() {
         setLayout(new BorderLayout());
 
-        // 初始化数据存储
         templates = new ArrayList<>();
         activeFilters = new HashSet<>();
 
-        // 初始化状态标签
         statusLabel = new JLabel("正在初始化...");
 
-        // 初始化表格模型和表格
         tableModel = createTableModel();
         templateTable = createTable();
         sorter = new TableRowSorter<>(tableModel);
         templateTable.setRowSorter(sorter);
 
-        // 初始化搜索框
         searchField = createSearchField();
 
-        // 初始化过滤按钮
         infoBtn = createFilterButton("信息", "info");
         lowBtn = createFilterButton("低", "low");
         mediumBtn = createFilterButton("中", "medium");
         highBtn = createFilterButton("高", "high");
         criticalBtn = createFilterButton("危", "critical");
 
-        // 初始化刷新按钮
         refreshBtn = createRefreshButton();
 
-        // 初始化UI
         initUI();
 
-        // 加载初始数据
         loadTemplatesInBackground();
     }
 
     /**
-     * 创建表格模型
+     * 创建只读表格模型，所有列统一为字符串类型。
      */
     private DefaultTableModel createTableModel() {
         return new DefaultTableModel(COLUMN_NAMES, 0) {
@@ -128,38 +118,34 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建表格
+     * 创建模板表格，配置多选、渲染器、列宽与右键菜单。
      */
     private JTable createTable() {
         JTable table = new JTable(tableModel);
 
-        // 设置表格属性
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
         table.setRowHeight(25);
         table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
 
-        // 设置表格渲染器
         DefaultTableCellRenderer centerRenderer = createCenterRenderer();
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        // 为严重程度列设置特殊渲染器
+        // 第 3 列为严重程度，使用颜色渲染器
         table.getColumnModel().getColumn(3).setCellRenderer(createSeverityRenderer());
 
-        // 设置列宽
         configureColumnWidths(table);
 
-        // 添加右键菜单
         table.addMouseListener(new PopupListener(table));
 
         return table;
     }
 
     /**
-     * 创建居中渲染器
+     * 创建居中渲染器，悬浮提示显示完整单元格内容。
      */
     private DefaultTableCellRenderer createCenterRenderer() {
         return new DefaultTableCellRenderer() {
@@ -179,7 +165,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建严重程度渲染器
+     * 按严重程度着色渲染，选中状态下不着色。
      */
     private DefaultTableCellRenderer createSeverityRenderer() {
         return new DefaultTableCellRenderer() {
@@ -229,14 +215,12 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 配置表格列宽
+     * 配置各列首选宽度，并统一行高与字体。
      */
     private void configureColumnWidths(JTable table) {
-        // 设置表格行高和字体
         table.setRowHeight(25);
         table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
 
-        // 设置列宽
         table.getColumnModel().getColumn(0).setPreferredWidth(40);   // #
         table.getColumnModel().getColumn(1).setPreferredWidth(120);  // ID
         table.getColumnModel().getColumn(2).setPreferredWidth(200);  // Name
@@ -248,7 +232,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建搜索框
+     * 创建搜索框，文本变化经文档监听器防抖后触发过滤。
      */
     private JTextField createSearchField() {
         JTextField field = new JTextField(20);
@@ -258,7 +242,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建过滤按钮
+     * 创建默认选中的严重程度过滤按钮，按级别着色，点击触发过滤。
      */
     private JToggleButton createFilterButton(String text, String severity) {
         JToggleButton button = new JToggleButton(text);
@@ -266,7 +250,6 @@ public class TemplatesPanel extends JPanel {
         button.setToolTipText(severity + "级别模板");
         button.addActionListener(e -> filterTemplates());
 
-        // 根据严重级别设置颜色
         Color selectedColor = new Color(0, 123, 255); // 默认蓝色
         Color normalColor = Color.WHITE;
 
@@ -292,7 +275,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建刷新按钮
+     * 创建刷新按钮，点击重新加载模板列表。
      */
     private JButton createRefreshButton() {
         JButton button = new JButton("刷新");
@@ -305,50 +288,41 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 初始化UI组件
+     * 组装工具栏与表格滚动面板，并初始化过滤器。
      */
     private void initUI() {
-        // 创建主工具栏
         JToolBar toolBar = createToolBar();
         add(toolBar, BorderLayout.NORTH);
 
-        // 创建表格滚动面板
         JScrollPane scrollPane = new JScrollPane(templateTable);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         add(scrollPane, BorderLayout.CENTER);
 
-        // 初始化过滤器
         initializeFilters();
     }
 
     /**
-     * 创建工具栏
+     * 创建工具栏：左侧为状态标签、过滤与刷新按钮，右侧为搜索框。
      */
     private JToolBar createToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // 创建主面板
         JPanel mainPanel = new JPanel(new BorderLayout());
 
-        // 左侧控件：状态和过滤器
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
 
-        // 状态标签
         statusLabel.setPreferredSize(new Dimension(200, 25));
         statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         leftPanel.add(statusLabel);
 
-        // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
 
-        // 过滤器按钮
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
         filterPanel.add(new JLabel("过滤:"));
 
-        // 统一按钮样式
         Dimension buttonSize = new Dimension(50, 25);
         for (JToggleButton btn : new JToggleButton[]{infoBtn, lowBtn, mediumBtn, highBtn, criticalBtn}) {
             btn.setPreferredSize(buttonSize);
@@ -359,16 +333,13 @@ public class TemplatesPanel extends JPanel {
 
         leftPanel.add(filterPanel);
 
-        // 刷新按钮
         refreshBtn.setPreferredSize(new Dimension(60, 25));
         refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
         refreshBtn.setFocusPainted(false);
         leftPanel.add(refreshBtn);
 
-        // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
 
-        // 右侧控件：搜索框
         JPanel rightPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -380,7 +351,6 @@ public class TemplatesPanel extends JPanel {
         searchField.putClientProperty("JTextField.placeholderText", "搜索模板 (Ctrl+F)...");
         rightPanel.add(searchField, gbc);
 
-        // 将左右面板添加到主面板
         mainPanel.add(leftPanel, BorderLayout.WEST);
         mainPanel.add(rightPanel, BorderLayout.EAST);
 
@@ -389,16 +359,15 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 初始化过滤器
+     * 默认启用全部严重程度过滤（含 unknown）。
      */
     private void initializeFilters() {
-        // 初始化活动过滤器集合
         activeFilters.clear();
         activeFilters.addAll(Arrays.asList(SEVERITY_LEVELS));
     }
 
     /**
-     * 在后台加载模板数据
+     * 异步加载模板：加载期间禁用刷新按钮，任务经 loadLock 串行化，异常回到 EDT 处理。
      */
     private void loadTemplatesInBackground() {
         updateStatus("正在加载模板...");
@@ -408,7 +377,6 @@ public class TemplatesPanel extends JPanel {
             try {
                 synchronized (loadLock) {
                     String templatePath = Utils.templatePath;
-                    // 如果路径为空，直接更新状态并返回
                     if (templatePath == null || templatePath.trim().isEmpty()) {
                         SwingUtilities.invokeLater(() -> {
                             updateStatus("未配置模板路径");
@@ -425,7 +393,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 加载模板数据
+     * 在后台线程递归加载目录下所有 .yaml 模板，完成后回到 EDT 刷新表格；路径无效时抛出 IOException。
      */
     private void loadTemplates() throws IOException {
         String templatePath = Utils.templatePath;
@@ -433,12 +401,10 @@ public class TemplatesPanel extends JPanel {
         if (templatePath == null || templatePath.trim().isEmpty()) {
             return;
         }
-        // 检查路径是否有效
         if (!isValidPath(templatePath)) {
             throw new IOException("无效的模板路径: " + templatePath);
         }
 
-        // 清空现有数据
         SwingUtilities.invokeLater(() -> {
             synchronized (templates) {
                 templates.clear();
@@ -447,31 +413,31 @@ public class TemplatesPanel extends JPanel {
             }
         });
 
-        // 重要：在开始新的加载前清空失败记录
+        // 新一轮加载前清空上次的失败记录，避免残留旧错误
         failedFiles.clear();
 
-        // 先收集所有模板
+        // 先在后台线程收集全部模板，最后一次性发布到 UI，避免逐条刷新
         List<Map<String, Object>> tempTemplates = new ArrayList<>();
-        final int[] stats = new int[]{0, 0, 0}; // 总数，成功，失败
+        final int[] stats = new int[]{0, 0, 0}; // 依次为总数、成功、失败
 
         Files.walkFileTree(Paths.get(templatePath), new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (file.toString().endsWith(".yaml")) {
-                    stats[0]++; // 总数增加
+                    stats[0]++;
                     try {
                         Map<String, Object> template = loadYamlFile(file);
                         if (template != null && isValidTemplate(template)) {
-                            template.put("path", file.toString()); // 保存文件路径
+                            template.put("path", file.toString()); // 注入路径字段，供序号到路径映射使用
                             tempTemplates.add(template);
-                            stats[1]++; // 成功数增加
+                            stats[1]++;
                             updateProgressStatus(stats);
                         } else {
-                            stats[2]++; // 失败数增加
+                            stats[2]++;
                             handleTemplateLoadError(file, new Exception("无效的模板格式"));
                         }
                     } catch (Exception e) {
-                        stats[2]++; // 失败数增加
+                        stats[2]++;
                         handleTemplateLoadError(file, e);
                     }
                     updateProgressStatus(stats);
@@ -480,13 +446,11 @@ public class TemplatesPanel extends JPanel {
             }
         });
 
-        // 更新UI和数据结构
         SwingUtilities.invokeLater(() -> {
             synchronized (templates) {
                 templates.clear();
                 templates.addAll(tempTemplates);
 
-                // 更新表格数据
                 updateTableDataWithMapping();
                 updateFinalStatus(stats);
                 refreshBtn.setEnabled(true);
@@ -495,30 +459,26 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 使用映射更新表格数据
+     * 按过滤条件重建表格行并维护序号到文件路径的映射，须在 EDT 上且持有 templates 锁时调用。
      */
     private void updateTableDataWithMapping() {
         tableModel.setRowCount(0);
         templatePathMap.clear();
         List<Map<String, Object>> visibleTemplates = new ArrayList<>();
 
-        // 过滤可见的模板
         for (Map<String, Object> template : templates) {
             if (isTemplateVisible(template)) {
                 visibleTemplates.add(template);
             }
         }
 
-        // 更新表格和映射
         for (int i = 0; i < visibleTemplates.size(); i++) {
             Map<String, Object> template = visibleTemplates.get(i);
             int rowNum = i + 1;
 
-            // 保存映射关系
             String path = (String) template.get("path");
             templatePathMap.put(rowNum, path);
 
-            // 添加表格数据
             Object[] rowData = createRowData(rowNum, template);
             tableModel.addRow(rowData);
         }
@@ -527,15 +487,12 @@ public class TemplatesPanel extends JPanel {
     }
 
 
-    /**
-     * 验证模板路径
-     */
     private boolean isValidPath(String path) {
         return path != null && !path.isEmpty() && Files.exists(Paths.get(path));
     }
 
     /**
-     * 加载YAML文件
+     * 解析 YAML 模板并附加 path 字段；空文件返回 null，读取失败抛出 IOException。
      */
     private Map<String, Object> loadYamlFile(Path file) throws IOException {
         try (InputStream is = Files.newInputStream(file)) {
@@ -549,7 +506,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 验证模板数据的有效性
+     * 校验模板包含非空的 info.name 与 info.severity。
      */
     private boolean isValidTemplate(Map<String, Object> template) {
         if (!template.containsKey("info")) {
@@ -565,7 +522,9 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 更新进度状态
+     * 在 EDT 上刷新加载进度文本。
+     *
+     * @param stats 依次为总数、成功数、失败数
      */
     private void updateProgressStatus(int[] stats) {
         SwingUtilities.invokeLater(() ->
@@ -575,23 +534,23 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 更新最终状态
+     * 显示加载汇总；存在失败文件时状态标签可点击查看失败详情。
+     *
+     * @param stats 依次为总数、成功数、失败数
      */
     private void updateFinalStatus(int[] stats) {
         StringBuilder status = new StringBuilder();
         status.append(String.format("加载完成 - 总数: %d, 成功: %d, 失败: %d",
                 stats[0], stats[1], stats[2]));
 
-        // 重要：同时检查 stats[2] 和 failedFiles.size()
         if (stats[2] > 0 && !failedFiles.isEmpty()) {
             status.append(" (点击查看失败详情)");
 
-            // 清除之前的所有MouseListener
+            // 先移除旧监听器，避免多次加载后点击事件重复叠加
             for (MouseListener listener : statusLabel.getMouseListeners()) {
                 statusLabel.removeMouseListener(listener);
             }
 
-            // 添加新的点击事件监听器
             statusLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             statusLabel.addMouseListener(new MouseAdapter() {
                 @Override
@@ -601,7 +560,6 @@ public class TemplatesPanel extends JPanel {
             });
         } else {
             statusLabel.setCursor(Cursor.getDefaultCursor());
-            // 移除之前的所有MouseListener
             for (MouseListener listener : statusLabel.getMouseListeners()) {
                 statusLabel.removeMouseListener(listener);
             }
@@ -613,7 +571,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 显示失败文件详情对话框
+     * 弹窗展示失败文件及异常堆栈，支持一键复制；无失败记录时仅给出提示。
      */
     private void showFailedFilesDialog() {
         if (failedFiles.isEmpty()) {
@@ -632,7 +590,6 @@ public class TemplatesPanel extends JPanel {
         failedFiles.forEach((path, ex) -> {
             message.append("文件: ").append(path).append("\n");
             message.append("错误: ").append(ex.getMessage()).append("\n");
-            // 添加异常堆栈信息
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             ex.printStackTrace(pw);
@@ -640,16 +597,14 @@ public class TemplatesPanel extends JPanel {
             message.append("----------------------------------------\n\n");
         });
 
-        // 创建一个更友好的显示界面
         JTextArea textArea = new JTextArea(message.toString());
         textArea.setEditable(false);
-        textArea.setCaretPosition(0); // 滚动到顶部
+        textArea.setCaretPosition(0);
         textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(800, 400));
 
-        // 添加复制按钮
         JButton copyButton = new JButton("复制错误信息");
         copyButton.addActionListener(e -> {
             textArea.selectAll();
@@ -661,12 +616,10 @@ public class TemplatesPanel extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE);
         });
 
-        // 创建一个包含滚动面板和按钮的面板
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(copyButton, BorderLayout.SOUTH);
 
-        // 显示对话框
         JOptionPane.showMessageDialog(this,
                 panel,
                 "加载失败详情",
@@ -674,13 +627,12 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 处理模板加载错误
+     * 记录单个文件的加载失败并输出日志。
      */
     private void handleTemplateLoadError(Path file, Exception e) {
-        // 在UI线程外添加错误记录
+        // 在后台线程写入失败记录，failedFiles 为同步 Map，可安全跨线程访问
         failedFiles.put(file, e);
 
-        // 在UI线程中打印错误日志
         SwingUtilities.invokeLater(() -> {
             System.err.println("加载模板失败: " + file);
             System.err.println("错误信息: " + e.getMessage());
@@ -689,15 +641,13 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 处理整体加载错误
+     * 在 EDT 上汇总整体加载失败信息，弹窗展示后清空失败记录。
      */
     private void handleLoadError(Exception e) {
         StringBuilder errorMessage = new StringBuilder("加载模板失败:\n\n");
 
-        // 添加主要错误信息
         errorMessage.append("主要错误: ").append(e.getMessage()).append("\n\n");
 
-        // 如果有具体的文件加载失败信息，添加到错误信息中
         if (!failedFiles.isEmpty()) {
             errorMessage.append("以下文件加载失败:\n");
             failedFiles.forEach((path, ex) -> {
@@ -706,36 +656,30 @@ public class TemplatesPanel extends JPanel {
             });
         }
 
-        // 更新状态标签
         String statusText = String.format("加载失败 - %d 个文件出错", failedFiles.size());
         statusLabel.setText(statusText);
         statusLabel.setToolTipText(statusText);
 
-        // 显示错误对话框
         showErrorDialog("加载模板失败", errorMessage.toString(), e);
 
-        // 清除错误记录
         failedFiles.clear();
     }
 
     /**
-     * 更新表格数据
+     * 按过滤条件重建表格行，不维护序号到路径的映射。
      */
     private void updateTableData() {
         tableModel.setRowCount(0);
         int displayedCount = 0;
 
-        // 创建一个临时的显示列表
         List<Map<String, Object>> visibleTemplates = new ArrayList<>();
 
-        // 先收集所有应该显示的模板
         for (Map<String, Object> template : templates) {
             if (isTemplateVisible(template)) {
                 visibleTemplates.add(template);
             }
         }
 
-        // 再添加到表格中
         for (int i = 0; i < visibleTemplates.size(); i++) {
             Map<String, Object> template = visibleTemplates.get(i);
             displayedCount++;
@@ -747,7 +691,9 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建表格行数据
+     * 将模板字段组装为一行表格数据。
+     *
+     * @param rowNum 从 1 开始的显示序号
      */
     private Object[] createRowData(int rowNum, Map<String, Object> template) {
         Map<String, Object> info = (Map<String, Object>) template.get("info");
@@ -764,7 +710,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 获取模板字段值
+     * 取字段的字符串值，缺失或为 null 时返回空串。
      */
     private String getTemplateValue(Map<String, Object> map, String key) {
         Object value = map.get(key);
@@ -772,7 +718,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 格式化标签
+     * 将 tags 格式化为逗号分隔字符串，兼容列表与单值，null 返回空串。
      */
     private String formatTags(Object tags) {
         if (tags == null) {
@@ -787,7 +733,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 判断模板是否应该显示
+     * 按严重程度与搜索关键词判断模板是否可见，severity 缺失按 unknown 处理。
      */
     private boolean isTemplateVisible(Map<String, Object> template) {
         if (template == null || !template.containsKey("info")) {
@@ -800,12 +746,10 @@ public class TemplatesPanel extends JPanel {
             severity = "unknown";
         }
 
-        // 检查严重程度过滤器
         if (!activeFilters.contains(severity.toLowerCase())) {
             return false;
         }
 
-        // 检查搜索过滤器
         String searchText = searchField.getText().toLowerCase().trim();
         if (!searchText.isEmpty()) {
             return matchesSearch(template, info, searchText);
@@ -815,10 +759,9 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 检查模板是否匹配搜索条件
+     * 在 id、名称、作者、描述、标签中匹配关键词。
      */
     private boolean matchesSearch(Map<String, Object> template, Map<String, Object> info, String searchText) {
-        // 检查所有相关字段
         return containsIgnoreCase(getTemplateValue(template, "id"), searchText) ||
                 containsIgnoreCase(getTemplateValue(info, "name"), searchText) ||
                 containsIgnoreCase(getTemplateValue(info, "author"), searchText) ||
@@ -827,18 +770,17 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 不区分大小写的包含检查
+     * 包含匹配，仅对 text 转小写，调用方须保证 searchText 已为小写。
      */
     private boolean containsIgnoreCase(String text, String searchText) {
         return text.toLowerCase().contains(searchText);
     }
 
     /**
-     * 执行模板过滤
+     * 按过滤按钮选中状态重建 activeFilters（unknown 始终保留）并刷新表格。
      */
     private void filterTemplates() {
         synchronized (templates) {
-            // 更新活动过滤器
             activeFilters.clear();
             if (infoBtn.isSelected()) activeFilters.add("info");
             if (lowBtn.isSelected()) activeFilters.add("low");
@@ -847,34 +789,29 @@ public class TemplatesPanel extends JPanel {
             if (criticalBtn.isSelected()) activeFilters.add("critical");
             activeFilters.add("unknown");
 
-            // 更新表格显示
             updateTableDataWithMapping();
         }
     }
 
     /**
-     * 刷新模板
+     * 重新后台加载模板，并在 3 秒后强制恢复刷新按钮。
      */
     public void refreshTemplates() {
         refreshBtn.setEnabled(false);
         loadTemplatesInBackground();
 
-        // 3秒后重新启用刷新按钮
         Timer timer = new Timer(3000, e -> refreshBtn.setEnabled(true));
         timer.setRepeats(false);
         timer.start();
     }
 
-    /**
-     * 更新状态标签
-     */
     private void updateStatus(String message) {
         statusLabel.setText(message);
         statusLabel.setToolTipText(message);
     }
 
     /**
-     * 错误对话框显示
+     * 弹出含异常堆栈的错误对话框。
      */
     private void showErrorDialog(String title, String message, Exception e) {
         StringWriter sw = new StringWriter();
@@ -895,43 +832,35 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建右键菜单
+     * 组装右键菜单：编辑、删除、选中数量、打开目录、复制命令及工作流操作。
      */
     private JPopupMenu createPopupMenu() {
         JPopupMenu menu = new JPopupMenu();
 
-        // 添加编辑选项
         addEditMenuItem(menu);
 
-        // 添加删除选项
         addDeleteMenuItem(menu);
 
-        // 添加选中数量显示
         menu.add(new JMenuItem("已选中POC数量: " +
                 templateTable.getSelectedRowCount()));
 
-        // 添加打开文件夹选项
         addOpenFolderMenuItem(menu);
 
-        // 添加命令复制选项
         addCopyCommandMenuItem(menu);
 
-        // 添加工作流选项
         addWorkflowMenuItem(menu);
 
-        // 加入到已有工作流选项
         addAddToWorkflowMenuItem(menu);
 
         return menu;
     }
 
     /**
-     * @param menu
+     * 添加"加入到已有工作流"菜单项：列出工作流目录下的 .yaml 文件供选择。
      */
     private void addAddToWorkflowMenuItem(JPopupMenu menu) {
         JMenuItem addToWorkflowItem = new JMenuItem("加入到已有工作流");
         addToWorkflowItem.addActionListener(e -> {
-            // 获取已有工作流列表
             File workflowDir = new File(Utils.workflowPath);
             if (!workflowDir.exists() || !workflowDir.isDirectory()) {
                 JOptionPane.showMessageDialog(this,
@@ -950,13 +879,11 @@ public class TemplatesPanel extends JPanel {
                 return;
             }
 
-            // 创建工作流名称列表
             String[] workflowNames = new String[workflowFiles.length];
             for (int i = 0; i < workflowFiles.length; i++) {
                 workflowNames[i] = workflowFiles[i].getName().replace(".yaml", "");
             }
 
-            // 显示工作流选择对话框
             String selectedWorkflow = (String) JOptionPane.showInputDialog(
                     this,
                     "请选择要加入的工作流:",
@@ -973,9 +900,11 @@ public class TemplatesPanel extends JPanel {
         menu.add(addToWorkflowItem);
     }
 
+    /**
+     * 将选中模板路径追加到指定工作流的 templates 列表，重复项经确认后跳过，最后写回文件。
+     */
     private void addTemplatesToExistingWorkflow(String workflowName) {
         try {
-            // 获取选中的模板路径
             int[] selectedRows = templateTable.getSelectedRows();
             List<String> templatePaths = new ArrayList<>();
 
@@ -994,7 +923,6 @@ public class TemplatesPanel extends JPanel {
                 return;
             }
 
-            // 读取现有工作流
             File workflowFile = new File(Utils.workflowPath, workflowName + ".yaml");
             if (!workflowFile.exists()) {
                 JOptionPane.showMessageDialog(this,
@@ -1004,7 +932,6 @@ public class TemplatesPanel extends JPanel {
                 return;
             }
 
-            // 读取工作流数据
             Yaml yaml = new Yaml();
             Map<String, List<String>> workflowData;
             try (FileReader reader = new FileReader(workflowFile)) {
@@ -1017,7 +944,6 @@ public class TemplatesPanel extends JPanel {
                 }
             }
 
-            // 检查重复模板
             List<String> existingTemplates = workflowData.get("templates");
             List<String> duplicateTemplates = new ArrayList<>();
             List<String> templatestoAdd = new ArrayList<>();
@@ -1030,7 +956,6 @@ public class TemplatesPanel extends JPanel {
                 }
             }
 
-            // 处理重复模板
             if (!duplicateTemplates.isEmpty()) {
                 StringBuilder message = new StringBuilder("以下模板已存在于工作流中：\n");
                 for (String path : duplicateTemplates) {
@@ -1048,7 +973,6 @@ public class TemplatesPanel extends JPanel {
                 }
             }
 
-            // 检查是否有新模板可添加
             if (templatestoAdd.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
                         "没有新的模板可以添加",
@@ -1057,10 +981,8 @@ public class TemplatesPanel extends JPanel {
                 return;
             }
 
-            // 添加新模板
             existingTemplates.addAll(templatestoAdd);
 
-            // 保存更新后的工作流
             DumperOptions options = new DumperOptions();
             options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
             options.setPrettyFlow(true);
@@ -1070,7 +992,6 @@ public class TemplatesPanel extends JPanel {
                 yaml.dump(workflowData, writer);
             }
 
-            // 显示成功消息
             JOptionPane.showMessageDialog(this,
                     "成功添加 " + templatestoAdd.size() + " 个模板到工作流",
                     "提示",
@@ -1081,9 +1002,6 @@ public class TemplatesPanel extends JPanel {
         }
     }
 
-    /**
-     * 添加编辑菜单项
-     */
     private void addEditMenuItem(JPopupMenu menu) {
         JMenuItem editItem = new JMenuItem("编辑选中模板");
         editItem.addActionListener(e -> {
@@ -1095,9 +1013,6 @@ public class TemplatesPanel extends JPanel {
         menu.add(editItem);
     }
 
-    /**
-     * 添加删除菜单项
-     */
     private void addDeleteMenuItem(JPopupMenu menu) {
         JMenuItem deleteItem = new JMenuItem("删除选中模板");
         deleteItem.addActionListener(e -> {
@@ -1109,9 +1024,6 @@ public class TemplatesPanel extends JPanel {
         menu.add(deleteItem);
     }
 
-    /**
-     * 添加打开文件夹菜单项
-     */
     private void addOpenFolderMenuItem(JPopupMenu menu) {
         JMenuItem openFolderItem = new JMenuItem("打开模板所在文件夹");
         openFolderItem.addActionListener(e -> {
@@ -1123,9 +1035,6 @@ public class TemplatesPanel extends JPanel {
         menu.add(openFolderItem);
     }
 
-    /**
-     * 添加复制命令菜单项
-     */
     private void addCopyCommandMenuItem(JPopupMenu menu) {
         JMenuItem copyCommandItem = new JMenuItem("复制运行命令");
         copyCommandItem.addActionListener(e -> {
@@ -1137,9 +1046,6 @@ public class TemplatesPanel extends JPanel {
         menu.add(copyCommandItem);
     }
 
-    /**
-     * 添加工作流菜单项
-     */
     private void addWorkflowMenuItem(JPopupMenu menu) {
         JMenuItem workflowItem = new JMenuItem("创建工作流");
         workflowItem.addActionListener(e -> {
@@ -1152,7 +1058,9 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 编辑模板
+     * 读取模板文件内容并打开编辑器。
+     *
+     * @param row 视图行号（排序/过滤后的索引）
      */
     private void editTemplate(int row) {
         try {
@@ -1160,7 +1068,6 @@ public class TemplatesPanel extends JPanel {
             if (path != null) {
                 String content = new String(Files.readAllBytes(Paths.get(path)),
                         StandardCharsets.UTF_8);
-                // 这里调用你的编辑器组件
                 showTemplateEditor(path, content);
             }
         } catch (IOException e) {
@@ -1169,7 +1076,9 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 删除模板
+     * 经确认后删除选中的模板文件并重新加载列表。
+     *
+     * @param rows 视图行号数组
      */
     private void deleteTemplates(int[] rows) {
         int confirm = JOptionPane.showConfirmDialog(this,
@@ -1194,7 +1103,9 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 打开模板所在文件夹
+     * 在系统文件管理器中定位模板文件，按操作系统分别处理。
+     *
+     * @param row 视图行号
      */
     private void openTemplateFolder(int row) {
         try {
@@ -1203,7 +1114,6 @@ public class TemplatesPanel extends JPanel {
                 Path templatePath = Paths.get(path);
                 File templateFile = templatePath.toFile();
 
-                // 检查文件是否存在
                 if (!templateFile.exists()) {
                     JOptionPane.showMessageDialog(this,
                             "模板文件不存在: " + templateFile.getAbsolutePath(),
@@ -1212,17 +1122,16 @@ public class TemplatesPanel extends JPanel {
                     return;
                 }
 
-                // 在Windows系统上使用explorer定位到文件
+                // Windows 用 explorer /select 定位并选中文件
                 if (System.getProperty("os.name").toLowerCase().contains("windows")) {
                     Runtime.getRuntime().exec("explorer.exe /select," + templateFile.getAbsolutePath());
                 }
-                // 在macOS系统上使用Finder定位到文件
+                // macOS 用 open -R 在 Finder 中显示文件
                 else if (System.getProperty("os.name").toLowerCase().contains("mac")) {
                     Runtime.getRuntime().exec(new String[]{"open", "-R", templateFile.getAbsolutePath()});
                 }
-                // 在Linux系统上尝试使用默认文件管理器
+                // 其他系统只能打开父目录，无法定位到具体文件
                 else {
-                    // 首先尝试使用xdg-open打开父目录
                     Desktop.getDesktop().open(templateFile.getParentFile());
                 }
             }
@@ -1232,7 +1141,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 复制运行命令
+     * 为选中模板生成 nuclei 运行命令并复制到剪贴板。
      */
     private void copyRunCommand(int[] rows) {
         List<String> templatePaths = new ArrayList<>();
@@ -1254,7 +1163,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 创建工作流
+     * 弹窗输入工作流名称，将选中模板保存为新工作流文件。
      */
     private void createWorkflow(int[] rows) {
         String name = JOptionPane.showInputDialog(this,
@@ -1278,16 +1187,14 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 获取模板路径
+     * 由视图行号查模板文件路径，行号无效或未映射时返回 null。
      */
     private String getTemplatePath(int viewRow) {
         if (viewRow < 0) return null;
 
-        // 转换为模型索引
         int modelRow = templateTable.convertRowIndexToModel(viewRow);
         if (modelRow < 0 || modelRow >= tableModel.getRowCount()) return null;
 
-        // 获取行号
         String numStr = (String) tableModel.getValueAt(modelRow, 0);
         try {
             int num = Integer.parseInt(numStr);
@@ -1298,16 +1205,12 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 生成运行命令
+     * 拼接 nuclei 批量运行命令，末尾 -u 后留空待补充目标。
      */
     private String generateRunCommand(List<String> templatePaths) {
-        // 这里根据你的需求生成具体的命令
         return "nuclei -t " + String.join(",", templatePaths) + " " + Utils.templateArg + " -u ";
     }
 
-    /**
-     * 复制到剪贴板
-     */
     private void copyToClipboard(String text) {
         Toolkit.getDefaultToolkit()
                 .getSystemClipboard()
@@ -1315,11 +1218,10 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 保存工作流
+     * 以块式 YAML 将模板路径列表写入工作流目录下的 name.yaml，失败时弹错误框。
      */
     private void saveWorkflow(String name, List<String> templatePaths) {
         try {
-            // 这里实现工作流保存逻辑
             DumperOptions options = new DumperOptions();
             options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
             options.setPrettyFlow(true);
@@ -1344,14 +1246,12 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 模板编辑器显示方法
+     * 弹出模态 YAML 编辑器；Ctrl+S 或保存按钮以 UTF-8 覆盖原文件并重新加载列表，Esc/取消关闭。
      */
     private void showTemplateEditor(String path, String content) {
-        // 创建编辑器对话框
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 "编辑模板", true);
 
-        // 创建 RSyntaxTextArea
         RSyntaxTextArea textArea = new RSyntaxTextArea(20, 60);
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_YAML);
         textArea.setCodeFoldingEnabled(true);
@@ -1359,26 +1259,22 @@ public class TemplatesPanel extends JPanel {
         textArea.setText(content);
         textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
-        // 设置主题
         try {
             Theme theme = Theme.load(getClass().getResourceAsStream(
                     "/org/fife/ui/rsyntaxtextarea/themes/monokai.xml"));
             theme.apply(textArea);
         } catch (Exception e) {
-            // 如果主题加载失败，继续使用默认主题
+            // 主题加载失败时继续使用默认主题
             e.printStackTrace();
         }
 
-        // 创建滚动面板
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         scrollPane.setFoldIndicatorEnabled(true);
 
-        // 创建按钮面板
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveButton = new JButton("保存");
         JButton cancelButton = new JButton("取消");
 
-        // 添加快捷键支持
         KeyStroke ctrlS = KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK);
         KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
 
@@ -1396,7 +1292,6 @@ public class TemplatesPanel extends JPanel {
         dialog.getRootPane().registerKeyboardAction(e -> dialog.dispose(),
                 escKey, JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        // 设置按钮事件
         saveButton.addActionListener(e -> {
             try {
                 Files.write(Paths.get(path),
@@ -1410,34 +1305,30 @@ public class TemplatesPanel extends JPanel {
 
         cancelButton.addActionListener(e -> dialog.dispose());
 
-        // 添加按钮到面板
         buttonPanel.add(saveButton);
         buttonPanel.add(Box.createHorizontalStrut(10));
         buttonPanel.add(cancelButton);
 
-        // 设置对话框布局
         dialog.setLayout(new BorderLayout());
         dialog.add(scrollPane, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
-        // 设置对话框属性
         dialog.setSize(1000, 800);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
     /**
-     * 资源清理方法
+     * 组件从容器移除时关闭后台加载线程池。
      */
     @Override
     public void removeNotify() {
         super.removeNotify();
-        // 关闭执行器
         shutdownExecutor();
     }
 
     /**
-     * 关闭执行器
+     * 关闭线程池，最多等待 3 秒，超时或被中断则强制终止。
      */
     private void shutdownExecutor() {
         try {
@@ -1452,7 +1343,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 搜索文档监听器
+     * 搜索框防抖监听：输入停止 300ms 后在 EDT 上重建表格。
      */
     private class SearchDocumentListener implements DocumentListener {
         private final Timer timer = new Timer(300, e -> {
@@ -1482,7 +1373,7 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 弹出监听器类
+     * 右键菜单监听：按下与释放都检查触发，兼容不同平台的弹出时机，且仅在有选中行时显示。
      */
     private class PopupListener extends MouseAdapter {
         private final JTable table;

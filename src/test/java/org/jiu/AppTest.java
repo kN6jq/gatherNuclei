@@ -5,28 +5,23 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Unit test for simple App.
+ * Maven 骨架生成的占位单元测试。
  */
 public class AppTest
         extends TestCase {
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
     public AppTest(String testName) {
         super(testName);
     }
 
     /**
-     * @return the suite of tests being tested
+     * 返回包含本类全部用例的测试套件。
      */
     public static Test suite() {
         return new TestSuite(AppTest.class);
     }
 
     /**
-     * Rigourous Test :-)
+     * 占位用例，仅验证测试框架可正常运行。
      */
     public void testApp() {
         assertTrue(true);

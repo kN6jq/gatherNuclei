@@ -17,6 +17,9 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * YAML 模板编辑面板：提供语法高亮编辑器、新建与保存工具栏、快捷键及状态栏。
+ */
 public class YamlPanel extends JPanel {
     private final Font editorFont = new Font("Consolas", Font.PLAIN, 14);
     private final Color statusBarBackground = new Color(235, 235, 235);
@@ -33,16 +36,12 @@ public class YamlPanel extends JPanel {
     }
 
     private void initComponents() {
-        // 初始化工具栏
         initToolBar();
 
-        // 初始化编辑器
         initEditor();
 
-        // 初始化状态栏
         initStatusBar();
 
-        // 注册快捷键
         registerShortcuts();
     }
 
@@ -54,11 +53,9 @@ public class YamlPanel extends JPanel {
                 new EmptyBorder(3, 5, 3, 5)
         ));
 
-        // 新建模板按钮
         addTemplateButton = createToolBarButton("新建模板", "/icons/new.png");
         addTemplateButton.addActionListener(e -> newTemplate());
 
-        // 保存按钮
         saveTemplateButton = createToolBarButton("保存", "/icons/save.png");
         saveTemplateButton.addActionListener(e -> saveFile());
 
@@ -69,21 +66,27 @@ public class YamlPanel extends JPanel {
         add(toolBar, BorderLayout.NORTH);
     }
 
+    /**
+     * 创建工具栏按钮，图标缩放为 16x16；图标资源缺失时回退为纯文本按钮。
+     *
+     * @param iconPath classpath 下的图标资源路径，如 /icons/save.png
+     */
     private JButton createToolBarButton(String text, String iconPath) {
         JButton button = new JButton(text);
         button.setFocusable(false);
-        // 如果有图标资源，则设置图标
         try {
             ImageIcon icon = new ImageIcon(getClass().getResource(iconPath));
             Image img = icon.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
             button.setIcon(new ImageIcon(img));
         } catch (Exception e) {
-            // 如果没有图标资源，使用文本
             button.setText(text);
         }
         return button;
     }
 
+    /**
+     * 创建带行号滚动槽的编辑器并置于面板中部。
+     */
     private void initEditor() {
         textArea = new RSyntaxTextArea();
         configureTextArea();
@@ -97,6 +100,10 @@ public class YamlPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * 配置 YAML 语法高亮、缩进与括号匹配等编辑特性，应用 monokai 主题，
+     * 并监听文档变化以刷新状态栏；主题加载失败时仅打印堆栈，保留默认外观。
+     */
     private void configureTextArea() {
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_YAML);
         textArea.setCodeFoldingEnabled(true);
@@ -109,7 +116,6 @@ public class YamlPanel extends JPanel {
         textArea.setPaintTabLines(true);
         textArea.setMarkOccurrences(true);
 
-        // 加载编辑器主题
         try {
             Theme theme = Theme.load(getClass().getResourceAsStream(
                     "/org/fife/ui/rsyntaxtextarea/themes/monokai.xml"));
@@ -118,7 +124,6 @@ public class YamlPanel extends JPanel {
             e.printStackTrace();
         }
 
-        // 添加编辑器监听器
         textArea.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) {
                 updateStatus();
@@ -134,6 +139,9 @@ public class YamlPanel extends JPanel {
         });
     }
 
+    /**
+     * 构建底部状态栏：左侧状态文本，右侧实时光标行列（对外显示从 1 开始计数）。
+     */
     private void initStatusBar() {
         JPanel statusBar = new JPanel(new BorderLayout());
         statusBar.setBorder(BorderFactory.createCompoundBorder(
@@ -148,7 +156,6 @@ public class YamlPanel extends JPanel {
         statusField.setBackground(statusBarBackground);
         statusField.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
 
-        // 添加光标位置显示
         JLabel positionLabel = new JLabel("行 1, 列 1");
         positionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         textArea.addCaretListener(e -> {
@@ -163,8 +170,10 @@ public class YamlPanel extends JPanel {
         add(statusBar, BorderLayout.SOUTH);
     }
 
+    /**
+     * 注册窗口级快捷键（焦点在本面板所在窗口内即生效）：Ctrl+S 保存、Ctrl+N 新建。
+     */
     private void registerShortcuts() {
-        // Ctrl + S 保存
         KeyStroke ctrlS = KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK);
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ctrlS, "save");
         getActionMap().put("save", new AbstractAction() {
@@ -174,7 +183,6 @@ public class YamlPanel extends JPanel {
             }
         });
 
-        // Ctrl + N 新建
         KeyStroke ctrlN = KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK);
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(ctrlN, "new");
         getActionMap().put("new", new AbstractAction() {
@@ -185,6 +193,9 @@ public class YamlPanel extends JPanel {
         });
     }
 
+    /**
+     * 清空编辑器与当前文件路径以新建模板；已有内容时先确认，用户取消则不做任何改动。
+     */
     private void newTemplate() {
         if (!textArea.getText().isEmpty()) {
             int result = JOptionPane.showConfirmDialog(
@@ -202,6 +213,10 @@ public class YamlPanel extends JPanel {
         updateStatus();
     }
 
+    /**
+     * 保存编辑器内容到当前文件；首次保存需已配置模板目录并输入文件名，同名文件询问是否覆盖。
+     * 写盘在 SwingWorker 后台线程执行，完成后回到事件分发线程提示成功或弹窗报错。
+     */
     private void saveFile() {
         if (absolutePath == null) {
             if (Utils.templatePath == null || Utils.templatePath.trim().isEmpty()) {
@@ -292,7 +307,6 @@ public class YamlPanel extends JPanel {
         updateStatus("新建模板");
     }
 
-    // 如果需要获取内容
     public String getEditorContent() {
         return textArea.getText();
     }
@@ -302,7 +316,6 @@ public class YamlPanel extends JPanel {
         updateStatus("正在编辑: " + (absolutePath != null ? absolutePath : "新文件"));
     }
 
-    // 如果需要获取当前文件路径
     public String getCurrentFilePath() {
         return absolutePath;
     }

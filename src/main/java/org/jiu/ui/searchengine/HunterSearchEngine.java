@@ -29,6 +29,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Hunter 测绘搜索引擎面板：采集资产并以多标签页表格展示，支持资产类型、时间范围、字段筛选与分页。
+ */
 public class HunterSearchEngine extends JPanel implements SearchEngine {
     private static JComboBox searchTypeComboBox = new JComboBox();
     private static JComboBox typeComboBox = new JComboBox();
@@ -56,12 +59,12 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     private int type = 3; // 资产类型，1代表”web资产“，2代表”非web资产“，3代表”全部“
     private String start_time;
     private String end_time;
-    private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
-    private AtomicInteger tabCounter = new AtomicInteger(0); // 标签页计数器;
+    private JTabbedPane resultsTabbedPane; 
+    private AtomicInteger tabCounter = new AtomicInteger(0); 
 
     public HunterSearchEngine() {
         this.setLayout(new BorderLayout());
-        // 初始化默认时间范围为一年
+        // 默认查询时间范围为最近一年
         String today = DateUtil.today();
         end_time = today;
         start_time = DateUtil.formatDate(DateUtil.offsetMonth(DateUtil.parse(today), -12));
@@ -71,7 +74,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
 
 
     /**
-     * 初始化标签页容器
+     * 创建结果标签页容器并加入欢迎页。
      */
     private void initTabbedPane() {
         resultsTabbedPane = new JTabbedPane();
@@ -81,7 +84,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 添加欢迎面板
+     * 构建欢迎页，提示用户输入 Hunter 语法发起搜索。
      */
     private void addWelcomePanel() {
         JPanel welcomePanel = new JPanel(new GridBagLayout());
@@ -109,12 +112,11 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 初始化表格
+     * 创建结果表格，设置列渲染并绑定右键菜单。
      */
     private JTable createTable() {
         JTable table = new JTable();
         DefaultTableModel tableModel = new DefaultTableModel() {
-            // 可编辑
             @Override
             public boolean isCellEditable(int row, int column) {
                 return true;
@@ -138,12 +140,10 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         table.getColumn("URL").setPreferredWidth(150);
 
 
-        // 添加右键功能
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == 3) {
-                    // 模板面板右键功能
                     JPopupMenu popupMenu = createPopupMenu(table);
                     popupMenu.show(table, e.getX(), e.getY());
                 }
@@ -153,11 +153,13 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         return table;
     }
 
+    /**
+     * 构建结果表格右键菜单：复制行/IP/URL、打开 URL、telnet 测试、发送到 Shodan。
+     */
     private JPopupMenu createPopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
 
 
-        // 复制当前选中行数据
         JMenuItem copyRowItem = new JMenuItem("复制当前选中行数据");
         copyRowItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -185,7 +187,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
             }
         });
-        // 通过浏览器打开当前选中行第三列数据
         JMenuItem openBrowserItem = new JMenuItem("浏览器打开");
         openBrowserItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -203,7 +204,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // telnet端口测试
         JMenuItem telnetItem = new JMenuItem("telnet端口测试");
         telnetItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -222,7 +222,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 复制选中行的ip
         JMenuItem copyIpItem = new JMenuItem("复制选中行的ip");
         copyIpItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -246,7 +245,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 复制选中行的url
         JMenuItem copyUrlItem = new JMenuItem("复制选中行的url");
         copyUrlItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -256,9 +254,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                 StringBuilder stringBuilder = new StringBuilder();
                 int validCount = 0;
                 for (int selectedRow : selectedRows) {
-                    // 获取单元格的值
                     Object cellValue = table.getValueAt(selectedRow, 2);
-                    // 检查值是否为空或空字符串
                     if (cellValue != null && !cellValue.toString().trim().isEmpty()) {
                         if (validCount > 0) {
                             stringBuilder.append("\n");
@@ -267,14 +263,12 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                         validCount++;
                     }
                 }
-                // 检查是否有有效内容需要复制
                 if (stringBuilder.length() > 0) {
                     StringSelection stringSelection = new StringSelection(stringBuilder.toString());
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
                 }
             }
         });
-        // 将选中的ip发送到shodan
         JMenuItem sendToShodanItem = new JMenuItem("使用shodan扫描选中的ip");
         sendToShodanItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -287,7 +281,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                     ips.add(ip);
                 }
                 ShodanPortSearchEngine.inputArea.setText(String.join("\n", ips));
-                // 切换到ShodanPort标签页
                 SearchPanel.switchToShodanPort();
             }
         });
@@ -300,6 +293,9 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         return popupMenu;
     }
 
+    /**
+     * 构建顶部工具栏：搜索框、搜索类型/资产类型/时间范围/字段下拉框及搜索与回车事件。
+     */
     private void initToolBar() {
 
         JToolBar toolBar = new JToolBar();
@@ -324,7 +320,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         String today = DateUtil.today();
         end_time = today;
         start_time = DateUtil.formatDate(DateUtil.offsetMonth(DateUtil.parse(today), -12));
-        // 时间计算
         timeComboBox.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -332,7 +327,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
 
                 switch (Objects.requireNonNull(time)) {
                     case "一年":
-                        // end_time 是今天 start_time 是一年前
                         end_time = today;
                         start_time = DateUtil.formatDate(DateUtil.offsetMonth(DateUtil.parse(today), -12));
                         break;
@@ -342,13 +336,11 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                         break;
                     case "一个月":
                         end_time = today;
-                        // 修改为固定29天前
                         start_time = DateUtil.formatDate(DateUtil.offsetDay(DateUtil.parse(today), -29));
                         break;
                 }
             }
         });
-        // 资产类型
         typeComboBox.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -368,12 +360,11 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 回车搜索事件
+        // 仅在输入框聚焦时响应回车，避免影响其他面板
         inputField.registerKeyboardAction(e -> {
             search(1);
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false), JComponent.WHEN_FOCUSED);
 
-        // 搜索按钮搜索事件
         searchBtn.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -381,7 +372,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 添加组件
         toolBar.add(inputField);
         toolBar.add(searchBtn);
         toolBar.addSeparator();
@@ -394,6 +384,11 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         this.add(toolBar, BorderLayout.NORTH);
     }
 
+    /**
+     * 发起搜索：新建结果标签页，后台线程拉取数据后回到 EDT 填充表格；无结果或异常时移除空标签页。
+     *
+     * @param p 页码，从 1 开始
+     */
     private void search(int p) {
         String searchData = inputField.getText().trim();
         if (searchData.isEmpty()) {
@@ -401,33 +396,26 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             return;
         }
 
-        // 创建新的标签页和表格
         JTable newTable = createTable();
         JScrollPane scrollPane = new JScrollPane(newTable);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        // 生成标签页标题
         String tabTitle = searchData.substring(0, Math.min(searchData.length(), 20)) + (searchData.length() > 20 ? "..." : "");
         int tabNumber = tabCounter.incrementAndGet();
         tabTitle = "[" + tabNumber + "] " + tabTitle;
 
-        // 创建分页状态Holder
         final PageState pageState = new PageState();
         pageState.lastQuery[0] = searchData;
 
-        // 创建包含表格和分页控件的面板
         JPanel contentPanel = new JPanel(new BorderLayout());
 
-        // 创建分页面板，传递分页状态
         JPanel pagingPanel = createPagingPanel(newTable, searchData, tabTitle, pageState);
 
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(pagingPanel, BorderLayout.SOUTH);
 
-        // 添加到标签页
-        resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先添加标签页
+        resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); 
 
-        // 添加自定义标签
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
         closeButton.setPreferredSize(new Dimension(20, 20));
@@ -439,7 +427,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         tabWithCloseButton.add(closeButton, BorderLayout.EAST);
 
         closeButton.addActionListener(e -> {
-            // 动态获取当前tab的索引
+            // 标签索引随增删变化，按组件引用动态定位当前页
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                 if (resultsTabbedPane.getTabComponentAt(i) == tabWithCloseButton) {
                     resultsTabbedPane.removeTabAt(i);
@@ -448,13 +436,11 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 为标签页添加右键菜单
         addTabPopupMenu(tabWithCloseButton);
 
-        resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
-        resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
+        resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); 
+        resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); 
 
-        // 获取当前标签页上的表格和模型
         DefaultTableModel tableModel = (DefaultTableModel) newTable.getModel();
 
         int i = searchTypeComboBox.getSelectedIndex();
@@ -467,6 +453,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             data = "ip=\"" + inputField.getText() + "\"";
         }
 
+        // Hunter 接口要求 search 为 URL 安全 Base64（无填充）编码
         String qbase64 = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(data.getBytes(StandardCharsets.UTF_8));
         new Thread(() -> {
             try {
@@ -475,8 +462,8 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                 int sizePage = jsonObject1.getInt("total");
                 JSONArray results = jsonObject1.getJSONArray("arr");
                 if (results != null) {
-                    int currentPage = p;    // 当前页
-                    int totalPage = (int) Math.ceil((double) sizePage / 100); // 总页数
+                    int currentPage = p;    
+                    int totalPage = (int) Math.ceil((double) sizePage / 100); 
                     SwingUtilities.invokeLater(() -> {
                         resetTableRows(results, tableModel, pagingPanel, currentPage, totalPage, sizePage, pageState);
                     });
@@ -511,7 +498,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 创建分页面板
+     * 创建分页面板，上一页/下一页按钮基于 pageState 触发翻页查询。
      */
     private JPanel createPagingPanel(JTable table, String searchData, String tabTitle, PageState pageState) {
         JPanel pagingPanel = new JPanel();
@@ -523,12 +510,11 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         JButton pageTotalLabel = new JButton("总页");
         JButton sizeLabel = new JButton("总数");
 
-        // 设置按钮的固定标识符
+        // 固定 name，供刷新结果时按名称定位这些标签按钮
         pageCurrentLabel.setName("pageCurrentLabel");
         pageTotalLabel.setName("pageTotalLabel");
         sizeLabel.setName("sizeLabel");
 
-        // 初始化分页组件
         predBtn.setSelected(true);
         pageCurrentLabel.setEnabled(false);
         pageCurrentLabel.setSelected(true);
@@ -546,7 +532,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         pagingPanel.add(sizeLabel);
         pagingPanel.add(nextBtn);
 
-        // 为分页按钮添加事件，使用传入的pageState
         predBtn.addActionListener(e -> {
             if (pageState.currentPage[0] > 1) {
                 int newPage = pageState.currentPage[0] - 1;
@@ -565,7 +550,9 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 执行分页搜索
+     * 翻到指定页：后台重新查询，回到 EDT 刷新表格与分页状态。
+     *
+     * @param page 目标页码，从 1 开始
      */
     private void performPagingSearch(JTable table, String searchData, int page, int totalPages, int[] currentPageRef, int[] totalPagesRef, JPanel pagingPanel, PageState pageState) {
         String data = searchData;
@@ -576,6 +563,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             data = "ip=\"" + searchData + "\"";
         }
 
+        // Hunter 接口要求 search 为 URL 安全 Base64（无填充）编码
         String qbase64 = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(data.getBytes(StandardCharsets.UTF_8));
 
         new Thread(() -> {
@@ -606,26 +594,22 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 为分页搜索重置表格行
+     * 用分页结果重建表格列与行并刷新分页标签，需在 EDT 调用。
      */
     private void resetTableRowsForPaging(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState, JTable table) {
-        // 清空现有数据
         tableModel.setRowCount(0);
 
         Object[] selectedValues = comboxstatus.getSelectedValues();
         Object[] originalArray = new Object[]{"ip", "url", "port"};
         Object[] result = new Object[]{};
-        // 根据selectedValues的值来获取对应的jsonObject的值
         if (selectedValues.length == 0) {
             result = new Object[]{"ip", "url", "port", "web_title", "domain", "number", "company", "city", "province", "country", "isp", "status_code", "protocol"};
         } else {
-            // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
             result = new Object[selectedValues.length + originalArray.length];
             System.arraycopy(originalArray, 0, result, 0, originalArray.length);
             System.arraycopy(selectedValues, 0, result, originalArray.length, selectedValues.length);
         }
 
-        // 给result最开始插入一个#号
         Object newValueId = "#";
         Object[] newArray = new Object[result.length + 1];
         newArray[0] = newValueId;
@@ -639,9 +623,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                 JSONObject jsonObject = (JSONObject) obj;
                 String[] values = new String[]{};
                 ArrayList<String> tempList = new ArrayList<>(Arrays.asList(values));
-                // 给vuales赋值
                 tempList.add(String.valueOf(num));
-                // 给selectedValues插入值
 
                 for (Object o : result) {
                     tempList.add(jsonObject.getStr((String) o));
@@ -652,7 +634,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -675,25 +656,23 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         }
 
         if (pageCurrentLabel != null) {
-            pageCurrentLabel.setText(String.valueOf(currentPage)); // 显示当前页
+            pageCurrentLabel.setText(String.valueOf(currentPage)); 
             pageCurrentLabel.setToolTipText("当前页 " + currentPage);
         }
         if (pageTotalLabel != null) {
-            pageTotalLabel.setText(String.valueOf(totalPage)); // 显示总页数
+            pageTotalLabel.setText(String.valueOf(totalPage)); 
             pageTotalLabel.setToolTipText("总页 " + totalPage);
         }
         if (sizeLabel != null) {
-            sizeLabel.setText(String.valueOf(sizePage)); // 显示总数量
+            sizeLabel.setText(String.valueOf(sizePage)); 
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 滚动到顶部
         SwingUtilities.invokeLater(() -> {
             JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, table);
             if (scrollPane != null) {
@@ -703,28 +682,22 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 结果填充表格
-     *
-     * @param jsonArray
+     * 用首次搜索的结果重建表格列与行并刷新分页标签，需在 EDT 调用。
      */
     private void resetTableRows(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState) {
-        // 清空现有数据
         tableModel.setRowCount(0);
 
         Object[] selectedValues = comboxstatus.getSelectedValues();
         Object[] originalArray = new Object[]{"ip", "url", "port"};
         Object[] result = new Object[]{};
-        // 根据selectedValues的值来获取对应的jsonObject的值
         if (selectedValues.length == 0) {
             result = new Object[]{"ip", "url", "port", "web_title", "domain", "number", "company", "city", "province", "country", "isp", "status_code", "protocol"};
         } else {
-            // 将new Object[]{"ip","url", "port"}插入到selectedValues的前面
             result = new Object[selectedValues.length + originalArray.length];
             System.arraycopy(originalArray, 0, result, 0, originalArray.length);
             System.arraycopy(selectedValues, 0, result, originalArray.length, selectedValues.length);
         }
 
-        // 给result最开始插入一个#号
         Object newValueId = "#";
         Object[] newArray = new Object[result.length + 1];
         newArray[0] = newValueId;
@@ -738,9 +711,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
                 JSONObject jsonObject = (JSONObject) obj;
                 String[] values = new String[]{};
                 ArrayList<String> tempList = new ArrayList<>(Arrays.asList(values));
-                // 给vuales赋值
                 tempList.add(String.valueOf(num));
-                // 给selectedValues插入值
 
                 for (Object o : result) {
                     tempList.add(jsonObject.getStr((String) o));
@@ -751,7 +722,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -774,25 +744,23 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         }
 
         if (pageCurrentLabel != null) {
-            pageCurrentLabel.setText(String.valueOf(currentPage)); // 显示当前页
+            pageCurrentLabel.setText(String.valueOf(currentPage)); 
             pageCurrentLabel.setToolTipText("当前页 " + currentPage);
         }
         if (pageTotalLabel != null) {
-            pageTotalLabel.setText(String.valueOf(totalPage)); // 显示总页数
+            pageTotalLabel.setText(String.valueOf(totalPage)); 
             pageTotalLabel.setToolTipText("总页 " + totalPage);
         }
         if (sizeLabel != null) {
-            sizeLabel.setText(String.valueOf(sizePage)); // 显示总数量
+            sizeLabel.setText(String.valueOf(sizePage)); 
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 更新分页状态
         if (pageState != null) {
             pageState.currentPage[0] = currentPage;
             pageState.totalPages[0] = totalPage;
@@ -815,12 +783,11 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 为标签页添加右键菜单
+     * 为标签页组件绑定右键菜单（关闭当前/其他/所有）与左键切换选中。
      */
     private void addTabPopupMenu(JPanel tabComponent) {
         JPopupMenu popupMenu = new JPopupMenu();
 
-        // 关闭当前
         JMenuItem closeCurrentItem = new JMenuItem("关闭当前");
         closeCurrentItem.addActionListener(e -> {
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
@@ -831,7 +798,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭其他
         JMenuItem closeOthersItem = new JMenuItem("关闭其他");
         closeOthersItem.addActionListener(e -> {
             // 从后向前遍历，避免索引变化问题
@@ -842,7 +808,6 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭所有
         JMenuItem closeAllItem = new JMenuItem("关闭所有");
         closeAllItem.addActionListener(e -> {
             resultsTabbedPane.removeAll();
@@ -853,14 +818,13 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         popupMenu.addSeparator();
         popupMenu.add(closeAllItem);
 
-        // 为标签页组件添加鼠标监听器
         tabComponent.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 } else if (e.getButton() == MouseEvent.BUTTON1) {
-                    // 左键点击时切换到对应标签页
+                    // 自定义标签组件不会自动切换选中，左键需手动定位并选中
                     for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                         if (resultsTabbedPane.getTabComponentAt(i) == tabComponent) {
                             resultsTabbedPane.setSelectedIndex(i);

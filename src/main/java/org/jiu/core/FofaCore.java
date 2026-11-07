@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 
+/**
+ * FOFA 资产查询核心：封装搜索接口调用，并提供时间范围条件的换算与追加。
+ */
 public class FofaCore {
 
     /**
@@ -40,14 +43,12 @@ public class FofaCore {
     }
 
     /**
-     * 获取数据
+     * 调用 FOFA search/all 接口，超时 20 秒，网络异常由 Hutool 直接抛出。
      *
-     * @param data
-     * @param fields
-     * @param page
-     * @param size
-     * @param full
-     * @return
+     * @param data   Base64 编码后的查询语句
+     * @param fields 逗号分隔的返回字段列表
+     * @param full   是否查询全量数据（false 时仅返回有限条数）
+     * @return 接口原始响应体（JSON 文本）
      */
     public static String getData(String data, String fields, int page, int size, Boolean full) {
         String apiUrl = Utils.fofaUrl + "/api/v1/search/all";
@@ -60,13 +61,13 @@ public class FofaCore {
                 "&size=" + size +
                 "&full=" + full;
         return HttpProxyUtil.get(url)
-                .header(Header.USER_AGENT, "Hutool http")//头信息，多个头信息多次调用此方法即可
-                .timeout(20000)//超时，毫秒
+                .header(Header.USER_AGENT, "Hutool http")
+                .timeout(20000)
                 .execute().body();
     }
 
     /**
-     * 根据配置值获取对应的下拉框展示文案
+     * 根据配置值获取对应的下拉框展示文案，无匹配时返回"全部"。
      */
     public static String getTimeRangeLabel(String value) {
         if (value != null) {
@@ -80,7 +81,7 @@ public class FofaCore {
     }
 
     /**
-     * 根据下拉框展示文案获取配置值
+     * 根据下拉框展示文案获取配置值，未知文案按"全部"处理。
      */
     public static String getTimeRangeValue(String label) {
         if (label != null && TIME_RANGES.containsKey(label)) {
@@ -104,7 +105,7 @@ public class FofaCore {
     }
 
     /**
-     * 计算时间范围的起始日期，全部则返回空字符串
+     * 计算时间范围的起始日期（格式 yyyy-MM-dd），"全部"返回空字符串。
      */
     private static String buildStartDate(String timeRange) {
         LocalDate now = LocalDate.now();
@@ -139,10 +140,6 @@ public class FofaCore {
      * 在查询语句上追加时间范围条件。
      * FOFA API v1 不支持网页端的 filter_type 参数（传了会被忽略），只能通过查询语法 after="YYYY-MM-DD" 实现。
      * 若语句中已自带 after/before，则以语句为准，忽略传入的时间范围。
-     *
-     * @param query     原始查询语句
-     * @param timeRange 时间范围配置值
-     * @return 追加后的查询语句
      */
     public static String applyTimeRange(String query, String timeRange) {
         String startDate = buildStartDate(timeRange);

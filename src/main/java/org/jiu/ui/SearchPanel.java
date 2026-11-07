@@ -6,6 +6,9 @@ import org.jiu.ui.searchengine.*;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * 搜索引擎标签页容器：为 FOFA、Hunter、DayDayMap、RapidDNS、OTX、Zone0、Shodan 各提供独立子标签页。
+ */
 public class SearchPanel extends JTabbedPane {
     /**
      * 各搜索引擎标签页的图标名，顺序与标签页一致
@@ -36,13 +39,11 @@ public class SearchPanel extends JTabbedPane {
     }
 
     /**
-     * 切换到ShodanPort标签页
+     * 跳转到「搜索引擎」标签页下的 Shodan 子页；找不到主窗口时不做任何事。
      */
     public static void switchToShodanPort() {
-        // 获取当前活动窗口的SearchPanel实例
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(getSearchPanelInstance());
         if (frame != null) {
-            // 切换到搜索标签页
             InitUI.getMainTabbedPane().setSelectedIndex(2); // 搜索标签页在索引2
             // 延迟切换到ShodanPort子标签页，等待主标签页切换完成
             SwingUtilities.invokeLater(() -> {
@@ -56,7 +57,7 @@ public class SearchPanel extends JTabbedPane {
     }
 
     /**
-     * 获取SearchPanel实例
+     * 遍历主窗口的标签页查找 SearchPanel 实例，未找到时返回 null。
      */
     private static SearchPanel getSearchPanelInstance() {
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(InitUI.getMainTabbedPane());
@@ -65,7 +66,6 @@ public class SearchPanel extends JTabbedPane {
             for (Component comp : components) {
                 if (comp instanceof JTabbedPane) {
                     JTabbedPane tabbedPane = (JTabbedPane) comp;
-                    // 查找包含ShodanPort的标签页
                     for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                         if (tabbedPane.getComponentAt(i) instanceof SearchPanel) {
                             return (SearchPanel) tabbedPane.getComponentAt(i);

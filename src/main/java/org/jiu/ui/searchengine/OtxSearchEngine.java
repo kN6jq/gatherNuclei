@@ -18,6 +18,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * OTX（AlienVault Open Threat Exchange）搜索引擎面板：按关键词查询历史 URL 资产，多标签页展示并支持分页。
+ */
 public class OtxSearchEngine extends JPanel implements SearchEngine {
 
     private final String[] columnNames = {
@@ -32,8 +35,8 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
     private JTextField inputField = new JTextField();
     private JButton searchBtn = new JButton();
     private JButton statusBtn = new JButton();
-    private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
-    private AtomicInteger tabCounter = new AtomicInteger(0); // 标签页计数器
+    private JTabbedPane resultsTabbedPane;
+    private AtomicInteger tabCounter = new AtomicInteger(0);
 
     public OtxSearchEngine() {
         this.setLayout(new BorderLayout());
@@ -41,9 +44,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         initTabbedPane();
     }
 
-    /**
-     * 初始化标签页容器
-     */
     private void initTabbedPane() {
         resultsTabbedPane = new JTabbedPane();
         InitUI.styleTabbedPane(resultsTabbedPane, false);
@@ -51,9 +51,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         addWelcomePanel();
     }
 
-    /**
-     * 添加欢迎面板
-     */
     private void addWelcomePanel() {
         JPanel welcomePanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -79,13 +76,9 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         resultsTabbedPane.addTab("欢迎", welcomePanel);
     }
 
-    /**
-     * 初始化表格
-     */
     private JTable createTable() {
         JTable table = new JTable();
         DefaultTableModel tableModel = new DefaultTableModel() {
-            // 可编辑
             @Override
             public boolean isCellEditable(int row, int column) {
                 return true;
@@ -97,21 +90,16 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        // 设置表格内容居中
         DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();
         tcr.setHorizontalAlignment(JLabel.CENTER);
         table.setDefaultRenderer(Object.class, tcr);
 
-        // 设置第一列的列宽
         table.getColumnModel().getColumn(0).setPreferredWidth(5);
-        // 设置第三列的列宽
         table.getColumnModel().getColumn(2).setPreferredWidth(250);
-        // 添加右键功能
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == 3) {
-                    // 模板面板右键功能
                     JPopupMenu popupMenu = createPopupMenu(table);
                     popupMenu.show(table, e.getX(), e.getY());
                 }
@@ -121,11 +109,13 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         return table;
     }
 
+    /**
+     * 构建表格右键菜单：将选中行各列以制表符拼接复制到系统剪贴板。
+     */
     private JPopupMenu createPopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
 
 
-        // 复制当前选中行数据
         JMenuItem copyRowItem = new JMenuItem("复制当前选中行数据");
         copyRowItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -171,7 +161,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         toolBar.addSeparator();
         toolBar.add(statusBtn);
 
-        // 搜索按钮
         searchBtn.addActionListener(e -> {
             search(1);
         });
@@ -179,6 +168,11 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         this.add(toolBar, BorderLayout.NORTH);
     }
 
+    /**
+     * 发起一次 OTX 查询：新建结果标签页与分页面板，后台线程请求指定页（每页 100 条），完成后在 EDT 填充表格。
+     *
+     * @param page 页码，从 1 开始
+     */
     private void search(int page) {
         String searchData = inputField.getText().trim();
         if (searchData.isEmpty()) {
@@ -186,33 +180,26 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             return;
         }
 
-        // 创建新的标签页和表格
         JTable newTable = createTable();
         JScrollPane scrollPane = new JScrollPane(newTable);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        // 生成标签页标题
         String tabTitle = searchData.substring(0, Math.min(searchData.length(), 20)) + (searchData.length() > 20 ? "..." : "");
         int tabNumber = tabCounter.incrementAndGet();
         tabTitle = "[" + tabNumber + "] " + tabTitle;
 
-        // 创建分页状态Holder
         final PageState pageState = new PageState();
         pageState.lastQuery[0] = searchData;
 
-        // 创建包含表格和分页控件的面板
         JPanel contentPanel = new JPanel(new BorderLayout());
 
-        // 创建分页面板，传递分页状态
         JPanel pagingPanel = createPagingPanel(newTable, searchData, tabTitle, pageState);
 
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(pagingPanel, BorderLayout.SOUTH);
 
-        // 添加到标签页
-        resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先添加标签页
+        resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先占位添加，随后才能设置自定义标签组件
 
-        // 添加自定义标签
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
         closeButton.setPreferredSize(new Dimension(20, 20));
@@ -224,7 +211,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         tabWithCloseButton.add(closeButton, BorderLayout.EAST);
 
         closeButton.addActionListener(e -> {
-            // 动态获取当前tab的索引
+            // 标签索引随关闭操作变化，按组件引用动态查找
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                 if (resultsTabbedPane.getTabComponentAt(i) == tabWithCloseButton) {
                     resultsTabbedPane.removeTabAt(i);
@@ -233,19 +220,16 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 为标签页添加右键菜单
         addTabPopupMenu(tabWithCloseButton);
 
-        resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
-        resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
+        resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton);
+        resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1);
 
-        // 获取当前标签页上的表格和模型
         DefaultTableModel tableModel = (DefaultTableModel) newTable.getModel();
 
         String data = inputField.getText();
         new Thread(() -> {
             JSONObject responseJson = JSONUtil.parseObj(OtxCore.getData(data, page, 100));
-            // 获取总数
             String full_size = responseJson.getStr("full_size");
             int sizePage = Integer.parseInt(full_size);
             int totalPage = (int) Math.ceil((double) sizePage / 100);
@@ -259,7 +243,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 创建分页面板
+     * 创建分页控件面板；页码/总页/总数按钮以固定 name 标识，供填充结果时按名查找更新。
      */
     private JPanel createPagingPanel(JTable table, String searchData, String tabTitle, PageState pageState) {
         JPanel pagingPanel = new JPanel();
@@ -271,12 +255,11 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         JButton pageTotalLabel = new JButton("总页");
         JButton sizeLabel = new JButton("总数");
 
-        // 设置按钮的固定标识符
+        // 固定 name 标识，供 resetTableRows 系列方法按名查找更新
         pageCurrentLabel.setName("pageCurrentLabel");
         pageTotalLabel.setName("pageTotalLabel");
         sizeLabel.setName("sizeLabel");
 
-        // 初始化分页组件
         predBtn.setSelected(true);
         pageCurrentLabel.setEnabled(false);
         pageCurrentLabel.setSelected(true);
@@ -294,7 +277,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         pagingPanel.add(sizeLabel);
         pagingPanel.add(nextBtn);
 
-        // 为分页按钮添加事件，使用传入的pageState
         predBtn.addActionListener(e -> {
             if (pageState.currentPage[0] > 1) {
                 int newPage = pageState.currentPage[0] - 1;
@@ -313,12 +295,13 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 执行分页搜索
+     * 翻页查询：后台线程请求指定页，完成后在 EDT 重置表格行并回写当前页/总页。
+     *
+     * @param page 目标页码，从 1 开始
      */
     private void performPagingSearch(JTable table, String searchData, int page, int totalPages, int[] currentPageRef, int[] totalPagesRef, JPanel pagingPanel, PageState pageState) {
         new Thread(() -> {
             JSONObject responseJson = JSONUtil.parseObj(OtxCore.getData(searchData, page, 100));
-            // 获取总数
             String full_size = responseJson.getStr("full_size");
             int sizePage = Integer.parseInt(full_size);
             int totalPage = (int) Math.ceil((double) sizePage / 100);
@@ -335,7 +318,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 为分页搜索重置表格行
+     * 翻页结果填充：重建表格行、更新分页按钮显示与 pageState，并将表格滚动到顶部（需在 EDT 调用）。
      */
     private void resetTableRowsForPaging(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState, JTable table) {
         tableModel.setRowCount(0);
@@ -350,7 +333,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             tableModel.addRow(new Object[]{i + 1, domain, url, hostname, ip, http_code, date});
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -384,14 +366,12 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 滚动到顶部
         SwingUtilities.invokeLater(() -> {
             JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, table);
             if (scrollPane != null) {
@@ -400,6 +380,9 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         });
     }
 
+    /**
+     * 首次查询结果填充：重建表格行、更新分页按钮显示与分页状态。
+     */
     private void resetTableRows(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState) {
         tableModel.setRowCount(0);
         for (int i = 0; i < jsonArray.size(); i++) {
@@ -413,7 +396,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             tableModel.addRow(new Object[]{i + 1, domain, url, hostname, ip, http_code, date});
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -447,14 +429,12 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 更新分页状态
         if (pageState != null) {
             pageState.currentPage[0] = currentPage;
             pageState.totalPages[0] = totalPage;
@@ -477,12 +457,11 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 为标签页添加右键菜单
+     * 为标签页组件绑定右键菜单（关闭当前/其他/所有）及左键切换选中。
      */
     private void addTabPopupMenu(JPanel tabComponent) {
         JPopupMenu popupMenu = new JPopupMenu();
 
-        // 关闭当前
         JMenuItem closeCurrentItem = new JMenuItem("关闭当前");
         closeCurrentItem.addActionListener(e -> {
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
@@ -493,7 +472,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭其他
         JMenuItem closeOthersItem = new JMenuItem("关闭其他");
         closeOthersItem.addActionListener(e -> {
             // 从后向前遍历，避免索引变化问题
@@ -504,7 +482,6 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭所有
         JMenuItem closeAllItem = new JMenuItem("关闭所有");
         closeAllItem.addActionListener(e -> {
             resultsTabbedPane.removeAll();
@@ -515,14 +492,13 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         popupMenu.addSeparator();
         popupMenu.add(closeAllItem);
 
-        // 为标签页组件添加鼠标监听器
         tabComponent.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 } else if (e.getButton() == MouseEvent.BUTTON1) {
-                    // 左键点击时切换到对应标签页
+                    // 自定义标签组件不会自动选中，左键点击时手动切换到对应页
                     for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                         if (resultsTabbedPane.getTabComponentAt(i) == tabComponent) {
                             resultsTabbedPane.setSelectedIndex(i);

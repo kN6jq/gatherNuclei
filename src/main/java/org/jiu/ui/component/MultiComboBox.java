@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 多选下拉框组件：编辑框展示已选值，点击按钮弹出复选框列表进行多选。
+ */
 public class MultiComboBox extends JComponent implements ActionListener {
     protected JButton arrowButton;
     private Object[] values;
@@ -22,11 +25,14 @@ public class MultiComboBox extends JComponent implements ActionListener {
         initComponent();
     }
 
+    /**
+     * 组装编辑框与下拉按钮，并构建复选框弹出菜单。
+     */
     private void initComponent() {
         this.setLayout(new GridLayout(1, 2));
         popup = new MultiPopup(values);
         editor = new JTextField();
-        //editor 编辑框的长度不可变 固定
+        // 编辑框尺寸固定，不随内容变化
         editor.setPreferredSize(new Dimension(100, 20));
         editor.setEditable(false);
         editor.addActionListener(this);
@@ -46,17 +52,18 @@ public class MultiComboBox extends JComponent implements ActionListener {
         setMinimumSize(preferred);
     }
 
-    //获取选中的数据
     public Object[] getSelectedValues() {
         return popup.getSelectedValues();
     }
 
-    //设置需要选中的值
     public void setSelectValues(Object[] selectvalues) {
         popup.setSelectValues(selectvalues);
         setText(selectvalues);
     }
 
+    /**
+     * 将选中值以逗号分隔显示在编辑框，空数组则清空。
+     */
     private void setText(Object[] values) {
         if (values.length > 0) {
             String value = Arrays.toString(values);
@@ -69,16 +76,20 @@ public class MultiComboBox extends JComponent implements ActionListener {
     }
 
 
+    /**
+     * 点击编辑框或下拉按钮时弹出选择菜单。
+     */
     @Override
     public void actionPerformed(ActionEvent arg0) {
-        // TODO Auto-generated method stub
         if (!popup.isVisible()) {
             popup.show(this, 0, getHeight());
         }
     }
 
 
-    //内部类MultiPopup
+    /**
+     * 多选弹出菜单：复选框列表加确定/取消按钮，首项为"全选"时联动其余选项。
+     */
 
     public class MultiPopup extends JPopupMenu implements ActionListener {
         private Object[] values;
@@ -92,6 +103,9 @@ public class MultiComboBox extends JComponent implements ActionListener {
             initComponent();
         }
 
+        /**
+         * 构建复选框列表与确定/取消按钮，首项"全选"可联动勾选或清空其余项。
+         */
         private void initComponent() {
             JPanel checkboxPane = new JPanel();
             JPanel buttonPane = new JPanel();
@@ -147,6 +161,9 @@ public class MultiComboBox extends JComponent implements ActionListener {
 
         }
 
+        /**
+         * 按显示文本匹配并勾选对应复选框（不会取消其他已勾选项），同时刷新编辑框。
+         */
         public void setSelectValues(Object[] values) {
             if (values.length > 0) {
                 for (int i = 0; i < values.length; i++) {
@@ -161,6 +178,9 @@ public class MultiComboBox extends JComponent implements ActionListener {
         }
 
 
+        /**
+         * 收集勾选的值；首项"全选"勾选时返回除"全选"外的全部项。
+         */
         public Object[] getSelectedValues() {
             List<Object> selectedValues = new ArrayList<Object>();
 
@@ -188,9 +208,11 @@ public class MultiComboBox extends JComponent implements ActionListener {
         }
 
 
+        /**
+         * 确定：回填编辑框并收起菜单；取消：仅收起菜单。
+         */
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            // TODO Auto-generated method stub
             Object source = arg0.getSource();
             if (source instanceof JButton) {
                 JButton button = (JButton) source;

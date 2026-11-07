@@ -9,15 +9,13 @@ import java.io.*;
 import java.util.Properties;
 
 /**
- * 代理配置对话框
- * 支持 SOCKS5 和 HTTP 代理配置
+ * 代理配置对话框，支持 SOCKS5 和 HTTP 代理配置。
+ * 配置持久化到运行目录的 proxy.properties，并提供静态方法供全局读取。
  */
 public class ProxyConfigDialog extends JDialog {
 
     private static final String CONFIG_FILE = "proxy.properties";
-    // 代理配置属性
     private static Properties proxyProps = new Properties();
-    // 代理设置组件
     private JCheckBox enableProxyCheckBox;
     private JComboBox<String> proxyTypeComboBox;
     private JTextField hostField;
@@ -40,7 +38,8 @@ public class ProxyConfigDialog extends JDialog {
     }
 
     /**
-     * 获取代理配置
+     * 获取代理配置属性；首次访问时从 proxy.properties 懒加载，
+     * 文件不存在或读取失败时返回空配置。
      */
     public static Properties getProxyConfig() {
         if (proxyProps.isEmpty()) {
@@ -57,7 +56,7 @@ public class ProxyConfigDialog extends JDialog {
     }
 
     /**
-     * 检查是否启用了代理
+     * 是否启用代理（proxy.enabled，默认 false）。
      */
     public static boolean isProxyEnabled() {
         Properties props = getProxyConfig();
@@ -65,7 +64,7 @@ public class ProxyConfigDialog extends JDialog {
     }
 
     /**
-     * 获取代理对象
+     * 按配置构建代理对象，未启用时返回 NO_PROXY；端口格式非法时抛出 NumberFormatException。
      */
     public static java.net.Proxy getProxy() {
         Properties props = getProxyConfig();
@@ -86,16 +85,16 @@ public class ProxyConfigDialog extends JDialog {
         }
     }
 
+    /**
+     * 创建代理开关、类型、地址端口、认证输入框及操作按钮。
+     */
     private void initComponents() {
-        // 启用代理复选框
         enableProxyCheckBox = new JCheckBox("启用代理");
         enableProxyCheckBox.setFont(new Font("微软雅黑", Font.PLAIN, 12));
 
-        // 代理类型选择
         proxyTypeComboBox = new JComboBox<>(new String[]{"HTTP", "SOCKS5"});
         proxyTypeComboBox.setFont(new Font("微软雅黑", Font.PLAIN, 12));
 
-        // 主机和端口
         hostField = new JTextField(15);
         hostField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         hostField.setToolTipText("代理服务器地址，如: 127.0.0.1");
@@ -104,7 +103,6 @@ public class ProxyConfigDialog extends JDialog {
         portField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         portField.setToolTipText("代理服务器端口，如: 1080");
 
-        // 认证信息
         usernameField = new JTextField(15);
         usernameField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         usernameField.setToolTipText("可选，代理认证用户名");
@@ -113,7 +111,6 @@ public class ProxyConfigDialog extends JDialog {
         passwordField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         passwordField.setToolTipText("可选，代理认证密码");
 
-        // 按钮
         testButton = new JButton("测试连接");
         testButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         testButton.setPreferredSize(new Dimension(100, 28));
@@ -130,11 +127,13 @@ public class ProxyConfigDialog extends JDialog {
         cancelButton.setPreferredSize(new Dimension(80, 28));
     }
 
+    /**
+     * 以 GridBag 布局组装代理设置、认证信息与按钮面板。
+     */
     private void setupLayout() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // 代理设置面板
         JPanel proxyPanel = new JPanel(new GridBagLayout());
         proxyPanel.setBorder(new TitledBorder("代理服务器设置"));
 
@@ -142,13 +141,11 @@ public class ProxyConfigDialog extends JDialog {
         gbc.insets = new Insets(5, 8, 5, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // 启用代理
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         proxyPanel.add(enableProxyCheckBox, gbc);
 
-        // 代理类型
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
@@ -156,21 +153,18 @@ public class ProxyConfigDialog extends JDialog {
         gbc.gridx = 1;
         proxyPanel.add(proxyTypeComboBox, gbc);
 
-        // 主机地址
         gbc.gridx = 0;
         gbc.gridy = 2;
         proxyPanel.add(new JLabel("主机地址:"), gbc);
         gbc.gridx = 1;
         proxyPanel.add(hostField, gbc);
 
-        // 端口
         gbc.gridx = 0;
         gbc.gridy = 3;
         proxyPanel.add(new JLabel("端口:"), gbc);
         gbc.gridx = 1;
         proxyPanel.add(portField, gbc);
 
-        // 认证信息面板
         JPanel authPanel = new JPanel(new GridBagLayout());
         authPanel.setBorder(new TitledBorder("认证信息 (可选)"));
 
@@ -190,14 +184,12 @@ public class ProxyConfigDialog extends JDialog {
         authGbc.gridx = 1;
         authPanel.add(passwordField, authGbc);
 
-        // 按钮面板
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.add(testButton);
         buttonPanel.add(Box.createHorizontalStrut(20));
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
 
-        // 组装面板
         JPanel centerPanel = new JPanel(new GridLayout(2, 1, 0, 10));
         centerPanel.add(proxyPanel);
         centerPanel.add(authPanel);
@@ -208,23 +200,24 @@ public class ProxyConfigDialog extends JDialog {
         setContentPane(mainPanel);
     }
 
+    /**
+     * 绑定复选框与各按钮事件，并按当前开关状态初始化组件可用性。
+     */
     private void setupListeners() {
-        // 启用/禁用代理时更新组件状态
         enableProxyCheckBox.addActionListener(e -> updateComponentState());
 
-        // 测试连接
         testButton.addActionListener(this::testProxyConnection);
 
-        // 保存配置
         saveButton.addActionListener(e -> saveConfig());
 
-        // 取消
         cancelButton.addActionListener(e -> dispose());
 
-        // 初始状态
         updateComponentState();
     }
 
+    /**
+     * 按代理开关状态统一启用/禁用输入组件与测试按钮。
+     */
     private void updateComponentState() {
         boolean enabled = enableProxyCheckBox.isSelected();
         proxyTypeComboBox.setEnabled(enabled);
@@ -235,6 +228,10 @@ public class ProxyConfigDialog extends JDialog {
         testButton.setEnabled(enabled);
     }
 
+    /**
+     * 校验地址与端口（1-65535）后在后台线程测试代理连通性，
+     * 期间禁用测试按钮，完成后弹窗提示结果；校验不通过仅弹窗提示。
+     */
     private void testProxyConnection(ActionEvent e) {
         String host = hostField.getText().trim();
         String portStr = portField.getText().trim();
@@ -262,7 +259,6 @@ public class ProxyConfigDialog extends JDialog {
 
         String proxyType = (String) proxyTypeComboBox.getSelectedItem();
 
-        // 在后台线程测试代理连接
         testButton.setEnabled(false);
         testButton.setText("测试中...");
 
@@ -299,6 +295,10 @@ public class ProxyConfigDialog extends JDialog {
         worker.execute();
     }
 
+    /**
+     * 通过代理向 www.baidu.com 发 HEAD 请求验证连通性（连接/读取超时各 10 秒），
+     * 响应码 2xx/3xx 视为成功，任何异常返回 false。
+     */
     private boolean testProxy(String host, int port, String proxyType) {
         try {
             java.net.Proxy proxy;
@@ -310,7 +310,6 @@ public class ProxyConfigDialog extends JDialog {
                         new java.net.InetSocketAddress(host, port));
             }
 
-            // 尝试连接测试
             java.net.URL url = new java.net.URL("http://www.baidu.com");
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection(proxy);
             conn.setConnectTimeout(10000);
@@ -324,8 +323,11 @@ public class ProxyConfigDialog extends JDialog {
         }
     }
 
+    /**
+     * 启用代理时先校验地址与端口，通过后把配置写入 proxy.properties 并关闭对话框；
+     * 校验或写入失败弹窗提示，不关闭。
+     */
     private void saveConfig() {
-        // 验证输入
         if (enableProxyCheckBox.isSelected()) {
             String host = hostField.getText().trim();
             String portStr = portField.getText().trim();
@@ -351,7 +353,6 @@ public class ProxyConfigDialog extends JDialog {
             }
         }
 
-        // 保存配置
         proxyProps.setProperty("proxy.enabled", String.valueOf(enableProxyCheckBox.isSelected()));
         proxyProps.setProperty("proxy.type", (String) proxyTypeComboBox.getSelectedItem());
         proxyProps.setProperty("proxy.host", hostField.getText().trim());
@@ -368,6 +369,9 @@ public class ProxyConfigDialog extends JDialog {
         }
     }
 
+    /**
+     * 从 proxy.properties 回填界面组件；文件不存在时保持默认值。
+     */
     private void loadConfig() {
         File configFile = new File(CONFIG_FILE);
         if (!configFile.exists()) {

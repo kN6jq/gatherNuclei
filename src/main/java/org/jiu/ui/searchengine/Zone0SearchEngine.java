@@ -22,17 +22,20 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Zone0（0zone）攻击面搜索引擎面板：支持信息系统(site)与移动端应用(apk)两类查询，多标签页展示并分页。
+ */
 public class Zone0SearchEngine extends JPanel implements SearchEngine {
     private static JComboBox searchTypeComboBox = new JComboBox();
     private final JTextField inputField = new JTextField();
     private final JButton statusBtn = new JButton();
-    // Site (信息系统) - 扩展字段
+    // 信息系统(site)搜索结果列
     private final String[] sitecolumnNames = {"#", "IP", "Port", "URL", "Title", "Component", "Service", "Protocol", "City", "Operator", "Status", "Company", "Tags"};
-    // APK (移动端应用) - 扩展字段，包含id字段(wechat_id或app_id)
+    // 移动端应用(apk)结果列，ID 取自 wechat_id 或 app_id
     private final String[] apkcolumnNames = {"#", "Title", "Type", "ID", "Company/Group", "Introduction"};
     private JButton searchBtn = new JButton("搜索");
-    private JTabbedPane resultsTabbedPane; // 用于显示多个搜索结果的标签页
-    private AtomicInteger tabCounter = new AtomicInteger(0); // 标签页计数器
+    private JTabbedPane resultsTabbedPane;
+    private AtomicInteger tabCounter = new AtomicInteger(0);
 
     public Zone0SearchEngine() {
         this.setLayout(new BorderLayout());
@@ -40,9 +43,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         initTabbedPane();
     }
 
-    /**
-     * 初始化标签页容器
-     */
     private void initTabbedPane() {
         resultsTabbedPane = new JTabbedPane();
         InitUI.styleTabbedPane(resultsTabbedPane, false);
@@ -50,15 +50,12 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         addWelcomePanel();
     }
 
-    /**
-     * 初始化表格
-     */
     private JTable createTable(String[] columnNames) {
         JTable table = new JTable();
         DefaultTableModel tableModel = new DefaultTableModel() {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return true; // 可编辑
+                return true;
             }
         };
 
@@ -73,12 +70,10 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
 
         table.getColumn("#").setPreferredWidth(10);
 
-        // 添加右键功能
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == 3) {
-                    // 模板面板右键功能
                     JPopupMenu popupMenu = createPopupMenu(table);
                     popupMenu.show(table, e.getX(), e.getY());
                 }
@@ -88,10 +83,12 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         return table;
     }
 
+    /**
+     * 构建表格右键菜单：复制选中行/IP/URL，并将选中 IP 发送到 Shodan 端口扫描面板。
+     */
     private JPopupMenu createPopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
 
-        // 复制当前选中行数据
         JMenuItem copyRowItem = new JMenuItem("复制当前选中行数据");
         copyRowItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -119,7 +116,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
             }
         });
-        // 复制选中行ip
         JMenuItem copyRowIpItem = new JMenuItem("复制当前选中行IP");
         copyRowIpItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -142,7 +138,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
             }
         });
-        // 复制选中行url
         JMenuItem copyRowUrlItem = new JMenuItem("复制当前选中行URL");
         copyRowUrlItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -165,7 +160,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
             }
         });
-        // 将选中的ip发送到shodan
         JMenuItem sendToShodanItem = new JMenuItem("使用shodan扫描选中的ip");
         sendToShodanItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -178,7 +172,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                     ips.add(ip);
                 }
                 ShodanPortSearchEngine.inputArea.setText(String.join("\n", ips));
-                // 切换到ShodanPort标签页
                 SearchPanel.switchToShodanPort();
             }
         });
@@ -200,12 +193,10 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"信息系统", "移动端应用", "域名"}));
         UIUtils.setupComboBox(searchTypeComboBox, 120);
 
-        // 回车搜索事件
         inputField.registerKeyboardAction(e -> {
             search(1);
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false), JComponent.WHEN_FOCUSED);
 
-        // 搜索按钮事件
         searchBtn.addActionListener(e -> {
             search(1);
         });
@@ -219,6 +210,12 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         this.add(toolBar, BorderLayout.NORTH);
     }
 
+    /**
+     * 发起 Zone0 查询：将下拉框类型映射为 site/apk（域名暂不支持），新建结果标签页与分页面板，
+     * 后台线程请求指定页（每页 100 条）并在 EDT 填充；异常时弹提示并移除占位标签页。
+     *
+     * @param p 页码，从 1 开始
+     */
     private void search(int p) {
         String searchData = inputField.getText().trim();
         if (searchData.isEmpty()) {
@@ -244,35 +241,28 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             return;
         }
 
-        // 创建新的标签页和表格
         String[] columnNames = searchType.equals("site") ? sitecolumnNames : apkcolumnNames;
         JTable newTable = createTable(columnNames);
         JScrollPane scrollPane = new JScrollPane(newTable);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        // 生成标签页标题
         String tabTitle = searchData.substring(0, Math.min(searchData.length(), 20)) + (searchData.length() > 20 ? "..." : "");
         int tabNumber = tabCounter.incrementAndGet();
         tabTitle = "[" + tabNumber + "] " + tabTitle + " - " + type;
 
-        // 创建分页状态Holder
         final PageState pageState = new PageState();
         pageState.lastQuery[0] = searchData;
         pageState.lastSearchType[0] = searchType;
 
-        // 创建包含表格和分页控件的面板
         JPanel contentPanel = new JPanel(new BorderLayout());
 
-        // 创建分页面板，传递分页状态
         JPanel pagingPanel = createPagingPanel(newTable, searchData, tabTitle, pageState);
 
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(pagingPanel, BorderLayout.SOUTH);
 
-        // 添加到标签页
-        resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先添加标签页
+        resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先占位添加，随后才能设置自定义标签组件
 
-        // 添加自定义标签
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
         closeButton.setPreferredSize(new Dimension(20, 20));
@@ -284,7 +274,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         tabWithCloseButton.add(closeButton, BorderLayout.EAST);
 
         closeButton.addActionListener(e -> {
-            // 动态获取当前tab的索引
+            // 标签索引随关闭操作变化，按组件引用动态查找
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                 if (resultsTabbedPane.getTabComponentAt(i) == tabWithCloseButton) {
                     resultsTabbedPane.removeTabAt(i);
@@ -293,13 +283,11 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 为标签页添加右键菜单
         addTabPopupMenu(tabWithCloseButton);
 
-        resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
-        resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
+        resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton);
+        resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1);
 
-        // 获取当前标签页上的表格和模型
         DefaultTableModel tableModel = (DefaultTableModel) newTable.getModel();
 
         new Thread(() -> {
@@ -328,7 +316,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                 JSONObject errorJson = JSONUtil.parseObj("{\"message\":\"请求失败: " + e.getMessage() + "\"}");
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(null, errorJson.getStr("message"));
-                    // 移除空的标签页
+                    // 请求失败，移除占位标签页
                     for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                         if (resultsTabbedPane.getTabComponentAt(i) == tabWithCloseButton) {
                             resultsTabbedPane.removeTabAt(i);
@@ -341,7 +329,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 创建分页面板
+     * 创建分页控件面板；页码/总页/总数按钮以固定 name 标识，供填充结果时按名查找更新。
      */
     private JPanel createPagingPanel(JTable table, String searchData, String tabTitle, PageState pageState) {
         JPanel pagingPanel = new JPanel();
@@ -353,12 +341,11 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         JButton pageTotalLabel = new JButton("总页");
         JButton sizeLabel = new JButton("总数");
 
-        // 设置按钮的固定标识符
+        // 固定 name 标识，供 resetTableRows 系列方法按名查找更新
         pageCurrentLabel.setName("pageCurrentLabel");
         pageTotalLabel.setName("pageTotalLabel");
         sizeLabel.setName("sizeLabel");
 
-        // 初始化分页组件
         predBtn.setSelected(true);
         pageCurrentLabel.setEnabled(false);
         pageCurrentLabel.setSelected(true);
@@ -376,7 +363,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         pagingPanel.add(sizeLabel);
         pagingPanel.add(nextBtn);
 
-        // 为分页按钮添加事件，使用传入的pageState
         predBtn.addActionListener(e -> {
             if (pageState.currentPage[0] > 1) {
                 int newPage = pageState.currentPage[0] - 1;
@@ -395,7 +381,10 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 执行分页搜索
+     * 翻页查询：后台线程按 searchType 请求指定页，完成后在 EDT 刷新表格与分页状态；异常仅弹提示。
+     *
+     * @param page       目标页码，从 1 开始
+     * @param searchType 搜索类型，site 或 apk
      */
     private void performPagingSearch(JTable table, String searchData, int page, int totalPages, int[] currentPageRef, int[] totalPagesRef, String searchType, JPanel pagingPanel, PageState pageState) {
         String input = searchData;
@@ -436,6 +425,9 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         }).start();
     }
 
+    /**
+     * 填充信息系统(site)结果：重建表格行、更新分页按钮显示与 pageState。
+     */
     private void resetTableRowsSite(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState) {
         tableModel.setRowCount(0);
         for (int i = 0; i < jsonArray.size(); i++) {
@@ -450,13 +442,11 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String service = jsonObject.getStr("service");
             String protocol = jsonObject.getStr("protocol");
             String statusCode = jsonObject.getStr("status_code");
-            // company格式 ["111"]
+            // company 原始格式形如 ["111"]，去掉首尾各 2 个字符取出内容
             String company = jsonObject.getStr("company");
-            // 删除company前2个字符和后2个字符
             if (company != null && company.length() > 4) {
                 company = company.substring(2, company.length() - 2);
             }
-            // tags处理
             JSONArray tags = jsonObject.getJSONArray("tags");
             StringBuilder tag = new StringBuilder();
             if (tags != null) {
@@ -470,7 +460,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             tableModel.addRow(new Object[]{i + 1, ip, port, url, title, component, service, protocol, city, operator, statusCode, company, tag.toString()});
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -504,20 +493,21 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 更新分页状态
         if (pageState != null) {
             pageState.currentPage[0] = currentPage;
             pageState.totalPages[0] = totalPage;
         }
     }
 
+    /**
+     * 填充移动端应用(apk)结果：重建表格行、更新分页按钮显示与 pageState。
+     */
     private void resetTableRowsApk(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState) {
         tableModel.setRowCount(0);
         for (int i = 0; i < jsonArray.size(); i++) {
@@ -527,7 +517,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String company = jsonObject.getStr("company");
             String group = jsonObject.getStr("group");
 
-            // 合并company和group
+            // 合并 company 与 group，两者相同则不重复显示
             String companyGroup = "";
             if (company != null && !company.isEmpty()) {
                 companyGroup = company;
@@ -539,32 +529,27 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                 companyGroup += group;
             }
 
-            // 获取msg对象
             JSONObject msgObj = jsonObject.getJSONObject("msg");
             String id = "";
             String introduction = "";
 
             if (msgObj != null) {
-                // 根据类型获取不同的ID
+                // ID 字段随类型变化：微信系取 wechat_id（缺失时回退 wechat_fakeid），iOS/Android 取 app_id
                 if ("微信公众号".equals(type) || "微信小程序".equals(type)) {
-                    // 微信公众号/小程序：获取wechat_id
                     id = msgObj.getStr("wechat_id");
                     if (id == null || id.isEmpty()) {
                         id = msgObj.getStr("wechat_fakeid");
                     }
                 } else if ("iOS".equals(type) || "Android".equals(type)) {
-                    // iOS/Android：获取app_id
                     id = msgObj.getStr("app_id");
                 }
 
-                // 获取简介
                 introduction = msgObj.getStr("introduction");
             }
 
             tableModel.addRow(new Object[]{i + 1, title, type, id, companyGroup, introduction});
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -598,20 +583,21 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 更新分页状态
         if (pageState != null) {
             pageState.currentPage[0] = currentPage;
             pageState.totalPages[0] = totalPage;
         }
     }
 
+    /**
+     * 翻页填充信息系统(site)结果：重建表格行、更新分页按钮与 pageState，并滚动到顶部。
+     */
     private void resetTableRowsSiteForPaging(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState, JTable table) {
         tableModel.setRowCount(0);
         for (int i = 0; i < jsonArray.size(); i++) {
@@ -626,13 +612,11 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String service = jsonObject.getStr("service");
             String protocol = jsonObject.getStr("protocol");
             String statusCode = jsonObject.getStr("status_code");
-            // company格式 ["111"]
+            // company 原始格式形如 ["111"]，去掉首尾各 2 个字符取出内容
             String company = jsonObject.getStr("company");
-            // 删除company前2个字符和后2个字符
             if (company != null && company.length() > 4) {
                 company = company.substring(2, company.length() - 2);
             }
-            // tags处理
             JSONArray tags = jsonObject.getJSONArray("tags");
             StringBuilder tag = new StringBuilder();
             if (tags != null) {
@@ -646,7 +630,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             tableModel.addRow(new Object[]{i + 1, ip, port, url, title, component, service, protocol, city, operator, statusCode, company, tag.toString()});
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -680,14 +663,12 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 滚动到顶部
         SwingUtilities.invokeLater(() -> {
             JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, table);
             if (scrollPane != null) {
@@ -696,6 +677,9 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         });
     }
 
+    /**
+     * 翻页填充移动端应用(apk)结果：重建表格行、更新分页按钮与 pageState，并滚动到顶部。
+     */
     private void resetTableRowsApkForPaging(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState, JTable table) {
         tableModel.setRowCount(0);
         for (int i = 0; i < jsonArray.size(); i++) {
@@ -705,7 +689,7 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             String company = jsonObject.getStr("company");
             String group = jsonObject.getStr("group");
 
-            // 合并company和group
+            // 合并 company 与 group，两者相同则不重复显示
             String companyGroup = "";
             if (company != null && !company.isEmpty()) {
                 companyGroup = company;
@@ -717,32 +701,27 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
                 companyGroup += group;
             }
 
-            // 获取msg对象
             JSONObject msgObj = jsonObject.getJSONObject("msg");
             String id = "";
             String introduction = "";
 
             if (msgObj != null) {
-                // 根据类型获取不同的ID
+                // ID 字段随类型变化：微信系取 wechat_id（缺失时回退 wechat_fakeid），iOS/Android 取 app_id
                 if ("微信公众号".equals(type) || "微信小程序".equals(type)) {
-                    // 微信公众号/小程序：获取wechat_id
                     id = msgObj.getStr("wechat_id");
                     if (id == null || id.isEmpty()) {
                         id = msgObj.getStr("wechat_fakeid");
                     }
                 } else if ("iOS".equals(type) || "Android".equals(type)) {
-                    // iOS/Android：获取app_id
                     id = msgObj.getStr("app_id");
                 }
 
-                // 获取简介
                 introduction = msgObj.getStr("introduction");
             }
 
             tableModel.addRow(new Object[]{i + 1, title, type, id, companyGroup, introduction});
         }
 
-        // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
@@ -776,14 +755,12 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-            // 更新分页状态
             if (pageState != null) {
                 pageState.currentPage[0] = currentPage;
                 pageState.totalPages[0] = totalPage;
             }
         }
 
-        // 滚动到顶部
         SwingUtilities.invokeLater(() -> {
             JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, table);
             if (scrollPane != null) {
@@ -793,9 +770,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
     }
 
 
-    /**
-     * 添加欢迎面板
-     */
     private void addWelcomePanel() {
         JPanel welcomePanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -837,12 +811,11 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 为标签页添加右键菜单
+     * 为标签页组件绑定右键菜单（关闭当前/其他/所有）及左键切换选中。
      */
     private void addTabPopupMenu(JPanel tabComponent) {
         JPopupMenu popupMenu = new JPopupMenu();
 
-        // 关闭当前
         JMenuItem closeCurrentItem = new JMenuItem("关闭当前");
         closeCurrentItem.addActionListener(e -> {
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
@@ -853,7 +826,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭其他
         JMenuItem closeOthersItem = new JMenuItem("关闭其他");
         closeOthersItem.addActionListener(e -> {
             // 从后向前遍历，避免索引变化问题
@@ -864,7 +836,6 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭所有
         JMenuItem closeAllItem = new JMenuItem("关闭所有");
         closeAllItem.addActionListener(e -> {
             resultsTabbedPane.removeAll();
@@ -875,14 +846,13 @@ public class Zone0SearchEngine extends JPanel implements SearchEngine {
         popupMenu.addSeparator();
         popupMenu.add(closeAllItem);
 
-        // 为标签页组件添加鼠标监听器
         tabComponent.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 } else if (e.getButton() == MouseEvent.BUTTON1) {
-                    // 左键点击时切换到对应标签页
+                    // 自定义标签组件不会自动选中，左键点击时手动切换到对应页
                     for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                         if (resultsTabbedPane.getTabComponentAt(i) == tabComponent) {
                             resultsTabbedPane.setSelectedIndex(i);

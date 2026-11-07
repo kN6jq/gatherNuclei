@@ -40,9 +40,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         initTabbedPane();
     }
 
-    /**
-     * 初始化标签页容器
-     */
     private void initTabbedPane() {
         resultsTabbedPane = new JTabbedPane();
         InitUI.styleTabbedPane(resultsTabbedPane, false);
@@ -50,9 +47,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         addWelcomePanel();
     }
 
-    /**
-     * 添加欢迎面板
-     */
     private void addWelcomePanel() {
         JPanel welcomePanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -78,9 +72,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         resultsTabbedPane.addTab("欢迎", welcomePanel);
     }
 
-    /**
-     * 初始化表格
-     */
     private JTable createTable() {
         JTable table = new JTable();
         DefaultTableModel tableModel = new DefaultTableModel() {
@@ -105,7 +96,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         table.getColumn("Type").setPreferredWidth(10);
         table.getColumn("Date").setPreferredWidth(15);
 
-        // 添加右键功能
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -119,27 +109,20 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         return table;
     }
 
-    /**
-     * 工具栏
-     */
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
 
-        // 输入框样式
         UIUtils.setupSearchField(inputField, "输入域名，例如: baidu.com");
 
-        // 搜索按钮样式
         UIUtils.setupSearchButton(searchBtn, "搜索");
 
-        // 搜索按钮事件
         searchBtn.addActionListener(e -> search());
 
-        // 回车搜索事件（仅输入框聚焦时触发，避免影响其他面板）
+        // 回车搜索仅在输入框聚焦时触发，避免影响其他面板
         inputField.registerKeyboardAction(e -> search(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false), JComponent.WHEN_FOCUSED);
 
-        // 组装工具栏
         JLabel label = new JLabel(" 域名: ");
         label.setFont(UIUtils.TEXT_FONT);
         toolBar.add(label);
@@ -155,6 +138,10 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         this.add(toolBar, BorderLayout.NORTH);
     }
 
+    /**
+     * 校验域名格式后新建结果标签页，后台线程调用 RapidDnsCore 抓取子域名记录。
+     * 成功时在 EDT 填充表格与统计；查询失败或无数据时弹提示，失败情形还会移除占位标签页。
+     */
     private void search() {
         String domain = inputField.getText().trim();
         if (domain.isEmpty()) {
@@ -162,26 +149,21 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             return;
         }
 
-        // 简单验证域名格式
         if (!domain.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$")) {
             JOptionPane.showMessageDialog(this, "域名格式不正确");
             return;
         }
 
-        // 创建新的标签页和表格
         JTable newTable = createTable();
         JScrollPane scrollPane = new JScrollPane(newTable);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        // 生成标签页标题
         String tabTitle = domain.substring(0, Math.min(domain.length(), 20)) + (domain.length() > 20 ? "..." : "");
         int tabNumber = tabCounter.incrementAndGet();
         tabTitle = "[" + tabNumber + "] " + tabTitle;
 
-        // 创建包含表格的面板
         JPanel contentPanel = new JPanel(new BorderLayout());
 
-        // 创建统计面板
         JPanel statsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel totalLabel = new JLabel("总计: 0");
         totalLabel.setName("totalLabel");
@@ -191,10 +173,8 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(statsPanel, BorderLayout.SOUTH);
 
-        // 添加到标签页
         resultsTabbedPane.addTab(null, new JScrollPane(contentPanel));
 
-        // 添加自定义标签
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
         closeButton.setPreferredSize(new Dimension(20, 20));
@@ -214,13 +194,11 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 为标签页添加右键菜单
         addTabPopupMenu(tabWithCloseButton);
 
         resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton);
         resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1);
 
-        // 获取当前标签页上的表格和模型
         DefaultTableModel tableModel = (DefaultTableModel) newTable.getModel();
 
         new Thread(() -> {
@@ -230,7 +208,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
                 SwingUtilities.invokeLater(() -> {
                     if (result.hasError()) {
                         JOptionPane.showMessageDialog(null, result.error);
-                        // 移除空的标签页
+                        // 查询出错，移除占位标签页
                         for (int idx = 0; idx < resultsTabbedPane.getTabCount(); idx++) {
                             if (resultsTabbedPane.getTabComponentAt(idx) == tabWithCloseButton) {
                                 resultsTabbedPane.removeTabAt(idx);
@@ -245,10 +223,8 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
                         return;
                     }
 
-                    // 清空表格
                     tableModel.setRowCount(0);
 
-                    // 添加数据
                     for (RapidDnsCore.SubdomainRecord record : result.records) {
                         Object[] rowData = {
                                 record.index,
@@ -260,10 +236,8 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
                         tableModel.addRow(rowData);
                     }
 
-                    // 更新统计
                     totalLabel.setText("总计: " + result.total);
 
-                    // 滚动到顶部
                     SwingUtilities.invokeLater(() -> {
                         JScrollPane parentScrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, newTable);
                         if (parentScrollPane != null) {
@@ -275,7 +249,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             } catch (Exception e) {
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(null, "查询失败: " + e.getMessage());
-                    // 移除空的标签页
+                    // 查询异常，移除占位标签页
                     for (int idx = 0; idx < resultsTabbedPane.getTabCount(); idx++) {
                         if (resultsTabbedPane.getTabComponentAt(idx) == tabWithCloseButton) {
                             resultsTabbedPane.removeTabAt(idx);
@@ -287,10 +261,12 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         }).start();
     }
 
+    /**
+     * 构建表格右键菜单：复制选中行/域名/IP，以及导出全部数据到剪贴板。
+     */
     private JPopupMenu createPopupMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
 
-        // 复制当前选中行数据
         JMenuItem copyRowItem = new JMenuItem("复制当前选中行数据");
         copyRowItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -320,7 +296,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 复制选中行域名
         JMenuItem copyDomainItem = new JMenuItem("复制选中行域名");
         copyDomainItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -340,7 +315,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 复制选中行IP
         JMenuItem copyIpItem = new JMenuItem("复制选中行IP");
         copyIpItem.addActionListener(e -> {
             int[] selectedRows = table.getSelectedRows();
@@ -360,7 +334,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 导出所有数据
         JMenuItem exportItem = new JMenuItem("导出所有数据");
         exportItem.addActionListener(e -> {
             exportToClipboard(table);
@@ -376,13 +349,12 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 导出表格数据到剪贴板
+     * 将整表（含表头）以制表符分隔导出到系统剪贴板。
      */
     private void exportToClipboard(JTable table) {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         StringBuilder sb = new StringBuilder();
 
-        // 表头
         for (int i = 0; i < model.getColumnCount(); i++) {
             sb.append(model.getColumnName(i));
             if (i < model.getColumnCount() - 1) {
@@ -391,7 +363,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         }
         sb.append("\n");
 
-        // 数据
         for (int row = 0; row < model.getRowCount(); row++) {
             for (int col = 0; col < model.getColumnCount(); col++) {
                 Object value = model.getValueAt(row, col);
@@ -424,12 +395,11 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
     }
 
     /**
-     * 为标签页添加右键菜单
+     * 为标签页组件绑定右键菜单（关闭当前/其他/所有）及左键切换选中。
      */
     private void addTabPopupMenu(JPanel tabComponent) {
         JPopupMenu popupMenu = new JPopupMenu();
 
-        // 关闭当前
         JMenuItem closeCurrentItem = new JMenuItem("关闭当前");
         closeCurrentItem.addActionListener(e -> {
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
@@ -440,9 +410,9 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭其他
         JMenuItem closeOthersItem = new JMenuItem("关闭其他");
         closeOthersItem.addActionListener(e -> {
+            // 从后向前遍历，避免删除时索引错位
             for (int i = resultsTabbedPane.getTabCount() - 1; i >= 0; i--) {
                 if (resultsTabbedPane.getTabComponentAt(i) != tabComponent) {
                     resultsTabbedPane.removeTabAt(i);
@@ -450,7 +420,6 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
             }
         });
 
-        // 关闭所有
         JMenuItem closeAllItem = new JMenuItem("关闭所有");
         closeAllItem.addActionListener(e -> {
             resultsTabbedPane.removeAll();
@@ -461,13 +430,13 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         popupMenu.addSeparator();
         popupMenu.add(closeAllItem);
 
-        // 为标签页组件添加鼠标监听器
         tabComponent.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 } else if (e.getButton() == MouseEvent.BUTTON1) {
+                    // 自定义标签组件不会自动选中，左键点击时手动切换到对应页
                     for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
                         if (resultsTabbedPane.getTabComponentAt(i) == tabComponent) {
                             resultsTabbedPane.setSelectedIndex(i);

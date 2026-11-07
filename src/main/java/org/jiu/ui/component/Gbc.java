@@ -2,10 +2,13 @@ package org.jiu.ui.component;
 
 import java.awt.*;
 
+/**
+ * GridBagLayout 约束便捷类，简化网格位置构造并支持链式设置外边距。
+ */
 public class Gbc extends GridBagConstraints {
     /**
-     * 此构造器gridwidth和gridheight使用默认值1
-     **/
+     * gridwidth 与 gridheight 使用默认值 1。
+     */
     public Gbc(int gridx, int gridy) {
         this.gridx = gridx;
         this.gridy = gridy;
@@ -18,7 +21,6 @@ public class Gbc extends GridBagConstraints {
         this.gridheight = gridheight;
     }
 
-    //设置外边距
     public Gbc setInsets(int top, int left, int bottom, int right) {
         this.insets = new Insets(top, left, bottom, right);
         return this;

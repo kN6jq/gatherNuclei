@@ -7,12 +7,18 @@ import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * YAML 配置工具类：读写运行目录下的 gatherConfig.yaml，并把配置同步到 Utils 全局变量。
+ * 对外提供配置解析、单项修改与默认配置生成。
+ */
 public class YamlUtils {
-    // 读取当前目录下的config yaml文件
+    /**
+     * 读取运行目录下的 gatherConfig.yaml，文件不存在时先生成默认配置；
+     * 读取失败仅打印堆栈并返回 null。
+     */
     private static Map<String, Map<String, String>> readConfigYaml() {
         String currentPath = System.getProperty("user.dir");
         String yamlFilePath = currentPath + File.separator + "gatherConfig.yaml";
-        // 判断文件是否存在,不存在调用generateYaml方法生成yaml文件
         File file = new File(yamlFilePath);
         if (!file.exists()) {
             generateYaml();
@@ -28,7 +34,9 @@ public class YamlUtils {
         return yamlMap;
     }
 
-    // 解析yaml文件
+    /**
+     * 解析配置文件并写入 Utils 各全局配置项；读取失败仅打印错误，不抛异常。
+     */
     public static void parseConfig() {
         Map<String, Map<String, String>> data = readConfigYaml();
         if (data == null) {
@@ -36,14 +44,12 @@ public class YamlUtils {
             return;
         }
 
-        // 获取nuclei配置
         Map<String, String> nucleiConfig = data.get("nuclei");
         if (nucleiConfig != null) {
             Utils.templatePath = nucleiConfig.getOrDefault("nucleipath", "");
             Utils.templateArg = nucleiConfig.getOrDefault("nucleiarg", "");
         }
 
-        // 获取fofa配置
         Map<String, String> fofaConfig = data.get("fofa");
         if (fofaConfig != null) {
             Utils.fofaUrl = fofaConfig.getOrDefault("fofaurl", "");
@@ -51,21 +57,18 @@ public class YamlUtils {
             Utils.fofaTimeRange = org.jiu.core.FofaCore.normalizeTimeRange(fofaConfig.get("fofatimerange"));
         }
 
-        // 获取hunter配置
         Map<String, String> hunterConfig = data.get("hunter");
         if (hunterConfig != null) {
             Utils.hunterUrl = hunterConfig.getOrDefault("hunterurl", "");
             Utils.hunterKey = hunterConfig.getOrDefault("hunterkey", "");
         }
 
-        // 获取zone配置
         Map<String, String> zoneConfig = data.get("zone");
         if (zoneConfig != null) {
             Utils.zoneUrl = zoneConfig.getOrDefault("zoneurl", "");
             Utils.zoneKey = zoneConfig.getOrDefault("zonekey", "");
         }
 
-        // 获取daydaymap配置
         Map<String, String> daydaymapConfig = data.get("daydaymap");
         if (daydaymapConfig != null) {
             Utils.daydaymapUrl = daydaymapConfig.getOrDefault("daydaymapurl", "");
@@ -73,7 +76,12 @@ public class YamlUtils {
         }
     }
 
-    // 修改yaml文件
+    /**
+     * 更新指定配置项并整体重写 gatherConfig.yaml；type 未识别时不做任何处理，
+     * 读取或写入失败仅打印错误。
+     *
+     * @param type 配置键名，如 fofaurl、nucleipath
+     */
     public static void modifyYaml(String type, String value) {
         Map<String, Map<String, String>> data = readConfigYaml();
         if (data == null) {
@@ -81,7 +89,7 @@ public class YamlUtils {
             return;
         }
 
-        // 使用Map来存储配置类型和对应的section
+        // 配置键 -> 所属 section 的映射
         Map<String, String> configMap = new LinkedHashMap<>();
         configMap.put("nucleipath", "nuclei");
         configMap.put("nucleiarg", "nuclei");
@@ -97,16 +105,14 @@ public class YamlUtils {
 
         String section = configMap.get(type);
         if (section != null) {
-            // 确保section存在
             if (!data.containsKey(section)) {
                 data.put(section, new LinkedHashMap<>());
             }
             data.get(section).put(type, value);
 
-            // 创建新的数据结构，只包含configMap中定义的字段
+            // 重建数据结构：只保留 configMap 定义的已知字段，丢弃文件中的未知内容
             LinkedHashMap<String, Map<String, String>> newData = new LinkedHashMap<>();
 
-            // 遍历configMap，重新组织数据
             for (Map.Entry<String, String> entry : configMap.entrySet()) {
                 String configType = entry.getKey();
                 String sectionName = entry.getValue();
@@ -137,7 +143,9 @@ public class YamlUtils {
         }
     }
 
-    // 在当前目录下生成yaml文件
+    /**
+     * 在运行目录生成含全部配置项（值为空串）的 gatherConfig.yaml；文件已存在时不覆盖。
+     */
     public static void generateYaml() {
         String currentPath = System.getProperty("user.dir");
         String yamlFilePath = currentPath + File.separator + "gatherConfig.yaml";
@@ -151,7 +159,6 @@ public class YamlUtils {
 
                 LinkedHashMap<String, Map<String, String>> data = new LinkedHashMap<>();
 
-                // 初始化各个配置section
                 data.put("nuclei", createConfigSection("nucleipath", "nucleiarg"));
                 data.put("fofa", createConfigSection("fofaurl", "fofakey", "fofatimerange"));
                 data.put("hunter", createConfigSection("hunterurl", "hunterkey"));
@@ -165,7 +172,9 @@ public class YamlUtils {
         }
     }
 
-    // 辅助方法：创建配置section
+    /**
+     * 创建值全为空串的配置 section。
+     */
     private static Map<String, String> createConfigSection(String... keys) {
         Map<String, String> section = new LinkedHashMap<>();
         for (String key : keys) {

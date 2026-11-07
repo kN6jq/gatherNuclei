@@ -10,30 +10,31 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 配置面板：维护 Nuclei 运行参数与各测绘引擎的 API 地址、Key，并写入 YAML 配置文件。
+ */
 public class ConfigPanel extends JPanel {
     private final JPanel mainPanel;
     private final Map<String, JTextField> textFields;
 
-    // Nuclei配置组件
     private JTextField templatePathField;
     private JTextField templateArgField;
 
-    // Fofa配置组件
     private JTextField fofaUrlField;
     private JPasswordField fofaKeyField;
 
-    // Hunter配置组件
     private JTextField hunterUrlField;
     private JPasswordField hunterKeyField;
 
-    // Zone配置组件
     private JTextField zoneUrlField;
     private JPasswordField zoneKeyField;
 
-    // DayDayMap配置组件
     private JTextField daydaymapUrlField;
     private JPasswordField daydaymapKeyField;
 
+    /**
+     * 构建可滚动的配置界面，并异步回填已保存的配置值。
+     */
     public ConfigPanel() {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(15, 15, 15, 15));
@@ -52,6 +53,9 @@ public class ConfigPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * 按 Nuclei、FOFA、Hunter、Zone、DayDayMap 的顺序纵向排列各配置区块。
+     */
     private void initializeComponents() {
         mainPanel.add(createNucleiConfigPanel());
         mainPanel.add(Box.createVerticalStrut(10));
@@ -64,6 +68,9 @@ public class ConfigPanel extends JPanel {
         mainPanel.add(createDayDayMapConfigPanel());
     }
 
+    /**
+     * 创建带标题边框与内边距的配置区块容器。
+     */
     private JPanel createConfigPanel(String title) {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createTitledBorder(
@@ -81,6 +88,12 @@ public class ConfigPanel extends JPanel {
         return panel;
     }
 
+    /**
+     * 向区块追加一行「右对齐标签 + 输入框」，两者分别占据第 0、1 列。
+     * 输入框首选宽度置 0，避免固定宽度限制横向拉伸。
+     *
+     * @return 传入的 field 本身
+     */
     private Component addConfigField(JPanel panel, String labelText, Component field, GridBagConstraints gbc) {
         gbc.insets = new Insets(5, 10, 5, 10);
 
@@ -111,19 +124,20 @@ public class ConfigPanel extends JPanel {
         return field;
     }
 
+    /**
+     * 构建 Nuclei 区块：模板路径、运行参数输入框与保存按钮。
+     */
     private JPanel createNucleiConfigPanel() {
         JPanel panel = createConfigPanel("Nuclei 配置");
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // 使用GridBagLayout添加配置项
         JPanel inputPanel = new JPanel(new GridBagLayout());
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // 模板路径
         JLabel pathLabel = new JLabel("模板路径:");
         pathLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         pathLabel.setPreferredSize(new Dimension(100, 25));
@@ -139,7 +153,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(templatePathField, gbc);
         textFields.put("nucleipath", templatePathField);
 
-        // Nuclei参数
         JLabel argLabel = new JLabel("Nuclei参数:");
         argLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         argLabel.setPreferredSize(new Dimension(100, 25));
@@ -155,7 +168,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(templateArgField, gbc);
         textFields.put("nucleiarg", templateArgField);
 
-        // 保存按钮
         JButton saveButton = new JButton("保存Nuclei配置");
         saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         saveButton.setPreferredSize(new Dimension(120, 30));
@@ -173,19 +185,20 @@ public class ConfigPanel extends JPanel {
         return panel;
     }
 
+    /**
+     * 构建 FOFA 区块：API 地址、Key 与保存按钮。
+     */
     private JPanel createFofaConfigPanel() {
         JPanel panel = createConfigPanel("Fofa 配置");
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // 使用GridBagLayout添加配置项
         JPanel inputPanel = new JPanel(new GridBagLayout());
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // API URL
         JLabel urlLabel = new JLabel("API URL:");
         urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         urlLabel.setPreferredSize(new Dimension(100, 25));
@@ -201,7 +214,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(fofaUrlField, gbc);
         textFields.put("fofaurl", fofaUrlField);
 
-        // API Key
         JLabel keyLabel = new JLabel("API Key:");
         keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         keyLabel.setPreferredSize(new Dimension(100, 25));
@@ -217,7 +229,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(fofaKeyField, gbc);
         textFields.put("fofakey", fofaKeyField);
 
-        // 保存按钮
         JButton saveButton = new JButton("保存FOFA配置");
         saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         saveButton.setPreferredSize(new Dimension(120, 30));
@@ -235,19 +246,20 @@ public class ConfigPanel extends JPanel {
         return panel;
     }
 
+    /**
+     * 构建 Hunter 区块：API 地址、Key 与保存按钮。
+     */
     private JPanel createHunterConfigPanel() {
         JPanel panel = createConfigPanel("Hunter 配置");
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // 使用GridBagLayout添加配置项
         JPanel inputPanel = new JPanel(new GridBagLayout());
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // API URL
         JLabel urlLabel = new JLabel("API URL:");
         urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         urlLabel.setPreferredSize(new Dimension(100, 25));
@@ -263,7 +275,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(hunterUrlField, gbc);
         textFields.put("hunterurl", hunterUrlField);
 
-        // API Key
         JLabel keyLabel = new JLabel("API Key:");
         keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         keyLabel.setPreferredSize(new Dimension(100, 25));
@@ -279,7 +290,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(hunterKeyField, gbc);
         textFields.put("hunterkey", hunterKeyField);
 
-        // 保存按钮
         JButton saveButton = new JButton("保存Hunter配置");
         saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         saveButton.setPreferredSize(new Dimension(120, 30));
@@ -297,19 +307,20 @@ public class ConfigPanel extends JPanel {
         return panel;
     }
 
+    /**
+     * 构建 Zone 区块：API 地址、Key 与保存按钮。
+     */
     private JPanel createZoneConfigPanel() {
         JPanel panel = createConfigPanel("Zone 配置");
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // 使用GridBagLayout添加配置项
         JPanel inputPanel = new JPanel(new GridBagLayout());
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // API URL
         JLabel urlLabel = new JLabel("API URL:");
         urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         urlLabel.setPreferredSize(new Dimension(100, 25));
@@ -325,7 +336,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(zoneUrlField, gbc);
         textFields.put("zoneurl", zoneUrlField);
 
-        // API Key
         JLabel keyLabel = new JLabel("API Key:");
         keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         keyLabel.setPreferredSize(new Dimension(100, 25));
@@ -341,7 +351,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(zoneKeyField, gbc);
         textFields.put("zonekey", zoneKeyField);
 
-        // 保存按钮
         JButton saveButton = new JButton("保存Zone配置");
         saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         saveButton.setPreferredSize(new Dimension(120, 30));
@@ -359,19 +368,20 @@ public class ConfigPanel extends JPanel {
         return panel;
     }
 
+    /**
+     * 构建 DayDayMap 区块：API 地址、Key 与保存按钮。
+     */
     private JPanel createDayDayMapConfigPanel() {
         JPanel panel = createConfigPanel("DayDayMap 配置");
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // 使用GridBagLayout添加配置项
         JPanel inputPanel = new JPanel(new GridBagLayout());
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // API URL
         JLabel urlLabel = new JLabel("API URL:");
         urlLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         urlLabel.setPreferredSize(new Dimension(100, 25));
@@ -387,7 +397,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(daydaymapUrlField, gbc);
         textFields.put("daydaymapurl", daydaymapUrlField);
 
-        // API Key
         JLabel keyLabel = new JLabel("API Key:");
         keyLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         keyLabel.setPreferredSize(new Dimension(100, 25));
@@ -403,7 +412,6 @@ public class ConfigPanel extends JPanel {
         inputPanel.add(daydaymapKeyField, gbc);
         textFields.put("daydaymapkey", daydaymapKeyField);
 
-        // 保存按钮
         JButton saveButton = new JButton("保存DayDayMap配置");
         saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         saveButton.setPreferredSize(new Dimension(120, 30));
@@ -421,6 +429,9 @@ public class ConfigPanel extends JPanel {
         return panel;
     }
 
+    /**
+     * 在事件分发线程上把 Utils 中当前的配置值回填到各输入框。
+     */
     private void loadSavedConfig() {
         SwingUtilities.invokeLater(() -> {
             templatePathField.setText(Utils.templatePath);
@@ -440,6 +451,9 @@ public class ConfigPanel extends JPanel {
         });
     }
 
+    /**
+     * 写入 Nuclei 路径与参数（去除首尾空白），同步到 Utils 后刷新模板列表。
+     */
     private void saveNucleiConfig() {
         String path = templatePathField.getText().trim();
         String arg = templateArgField.getText().trim();
@@ -453,6 +467,9 @@ public class ConfigPanel extends JPanel {
         refreshTemplates();
     }
 
+    /**
+     * 写入 FOFA 地址与 Key 并同步到 Utils，随后弹出保存成功提示。
+     */
     private void saveFofaConfig() {
         String url = fofaUrlField.getText().trim();
         String key = new String(fofaKeyField.getPassword());
@@ -466,6 +483,9 @@ public class ConfigPanel extends JPanel {
         showSaveSuccess();
     }
 
+    /**
+     * 写入 Hunter 地址与 Key 并同步到 Utils，随后弹出保存成功提示。
+     */
     private void saveHunterConfig() {
         String url = hunterUrlField.getText().trim();
         String key = new String(hunterKeyField.getPassword());
@@ -479,6 +499,9 @@ public class ConfigPanel extends JPanel {
         showSaveSuccess();
     }
 
+    /**
+     * 写入 Zone 地址与 Key 并同步到 Utils，随后弹出保存成功提示。
+     */
     private void saveZoneConfig() {
         String url = zoneUrlField.getText().trim();
         String key = new String(zoneKeyField.getPassword());
@@ -492,6 +515,9 @@ public class ConfigPanel extends JPanel {
         showSaveSuccess();
     }
 
+    /**
+     * 写入 DayDayMap 地址与 Key 并同步到 Utils，随后弹出保存成功提示。
+     */
     private void saveDayDayMapConfig() {
         String url = daydaymapUrlField.getText().trim();
         String key = new String(daydaymapKeyField.getPassword());
@@ -505,6 +531,11 @@ public class ConfigPanel extends JPanel {
         showSaveSuccess();
     }
 
+    /**
+     * 把单个配置项写入 YAML 文件，异常时弹窗报错且不向上抛出。
+     *
+     * @param key YAML 中的配置键，如 fofaurl、nucleipath
+     */
     private void saveConfig(String key, String value) {
         try {
             YamlUtils.modifyYaml(key, value);
@@ -513,6 +544,9 @@ public class ConfigPanel extends JPanel {
         }
     }
 
+    /**
+     * 在事件分发线程上刷新模板面板，成功后提示保存成功，异常时弹窗报错。
+     */
     private void refreshTemplates() {
         SwingUtilities.invokeLater(() -> {
             try {

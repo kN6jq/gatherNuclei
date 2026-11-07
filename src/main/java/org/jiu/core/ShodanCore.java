@@ -6,15 +6,13 @@ import cn.hutool.json.JSONUtil;
 import org.jiu.utils.HttpProxyUtil;
 
 /**
- * Shodan InternetDB 查询结果
+ * Shodan InternetDB 查询核心：查询 IP 的开放端口、指纹与漏洞信息，并格式化为展示文本。
  */
 public class ShodanCore {
 
     /**
-     * 获取Shodan数据
-     *
-     * @param ip IP地址
-     * @return ShodanResult对象
+     * 查询指定 IP 的 Shodan InternetDB 数据，超时 20 秒。
+     * 请求或解析失败时不抛异常，返回仅填充 ip 的空结果（各列表为空、rawJson 为 null）。
      */
     public static ShodanResult getData(String ip) {
         String url = "https://internetdb.shodan.io/";
@@ -47,18 +45,17 @@ public class ShodanCore {
     }
 
     /**
-     * Format Shodan result for display
+     * 将结果格式化为展示文本（不带序号信息）。
      */
     public static String formatResult(ShodanResult result) {
         return formatResult(result, 0, 0);
     }
 
     /**
-     * Format Shodan result with index info
+     * 将结果格式化为带边框的展示文本，无数据时输出 [No Data] 占位。
      *
-     * @param result  Shodan result
-     * @param current Current index
-     * @param total   Total count
+     * @param current 当前条目序号，total 大于 0 时显示在头部
+     * @param total   条目总数，传 0 表示不显示序号
      */
     public static String formatResult(ShodanResult result, int current, int total) {
         if (result == null || !result.hasData()) {
@@ -68,7 +65,6 @@ public class ShodanCore {
 
         StringBuilder sb = new StringBuilder();
 
-        // Header with index
         if (total > 0) {
             sb.append("\n");
             sb.append("╔════════════════════════════════════════════════════════════╗\n");
@@ -80,19 +76,16 @@ public class ShodanCore {
         sb.append("╠════════════════════════════════════════════════════════════╣\n");
         sb.append("║  IP: ").append(result.ip).append("\n");
 
-        // Hostnames
         if (result.hostnames != null && !result.hostnames.isEmpty()) {
             sb.append("║  Hostnames: ").append(String.join(", ", result.hostnames)).append("\n");
         }
 
-        // Tags
         if (result.tags != null && !result.tags.isEmpty()) {
             sb.append("║  Tags: ").append(String.join(", ", result.tags)).append("\n");
         }
 
         sb.append("╠════════════════════════════════════════════════════════════╣\n");
 
-        // IP:Port list
         if (result.ports != null && !result.ports.isEmpty()) {
             sb.append("║  Open Ports (").append(result.ports.size()).append("):\n");
             for (Integer port : result.ports) {
@@ -100,7 +93,6 @@ public class ShodanCore {
             }
         }
 
-        // CPE info
         if (result.cpes != null && !result.cpes.isEmpty()) {
             sb.append("║\n");
             sb.append("║  Products (").append(result.cpes.size()).append("):\n");
@@ -110,7 +102,6 @@ public class ShodanCore {
             }
         }
 
-        // Vulnerabilities (show all)
         if (result.vulns != null && !result.vulns.isEmpty()) {
             sb.append("║\n");
             sb.append("║  Vulnerabilities (").append(result.vulns.size()).append("):\n");
@@ -124,10 +115,10 @@ public class ShodanCore {
     }
 
     /**
-     * Simplify CPE display
+     * 将 CPE 字符串简化为"厂商 产品 版本"，段数不足时原样返回。
      */
     private static String simplifyCpe(String cpe) {
-        // cpe:/a:oracle:mysql:5.7.44
+        // 形如 cpe:/a:oracle:mysql:5.7.44，冒号分段后依次取厂商、产品、版本
         String[] parts = cpe.split(":");
         if (parts.length >= 5) {
             String vendor = parts[2];
@@ -150,6 +141,9 @@ public class ShodanCore {
         public java.util.List<String> vulns;
         public String rawJson;
 
+        /**
+         * 以开放端口列表非空作为"有数据"的判据。
+         */
         public boolean hasData() {
             return ports != null && !ports.isEmpty();
         }

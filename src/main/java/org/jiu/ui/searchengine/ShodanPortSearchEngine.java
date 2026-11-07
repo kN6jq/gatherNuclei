@@ -11,6 +11,9 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Shodan 端口扫描面板：批量输入 IP，异步查询各 IP 的端口等信息并按输入顺序汇总展示。
+ */
 public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
     public static JTextArea inputArea = new JTextArea();
     public static JButton searchBtn = new JButton("Scan");
@@ -22,26 +25,21 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
     public ShodanPortSearchEngine() {
         this.setLayout(new BorderLayout());
 
-        // 创建左侧面板（输入区域）
         JPanel leftPanel = createLeftPanel();
 
-        // 创建右侧面板（输出区域）
         JPanel rightPanel = createRightPanel();
 
-        // 使用JSplitPane实现对半分布局
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
-        splitPane.setResizeWeight(0.5); // 左右各占50%
+        splitPane.setResizeWeight(0.5);
         splitPane.setDividerSize(5);
         splitPane.setContinuousLayout(true);
 
-        // 创建底部状态栏
         JPanel bottomPanel = createBottomPanel();
 
-        // 组装主面板
         this.add(splitPane, BorderLayout.CENTER);
         this.add(bottomPanel, BorderLayout.SOUTH);
 
-        // 添加组件监听器，确保分割线在正中间
+        // 监听尺寸变化与显示事件，保持分割线始终居中
         this.addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
@@ -65,13 +63,11 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Input IPs"));
 
-        // 输入区域
         inputArea.setFont(new Font("Consolas", Font.PLAIN, 12));
         inputArea.setLineWrap(true);
         JScrollPane scrollPane = new JScrollPane(inputArea);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // 按钮面板
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
         searchBtn.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
@@ -90,7 +86,6 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
         buttonPanel.add(clearBtn);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // 绑定事件
         searchBtn.addActionListener(e -> performScan());
         clearBtn.addActionListener(e -> {
             inputArea.setText("");
@@ -105,7 +100,6 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Scan Results"));
 
-        // 输出区域
         outputArea.setFont(new Font("Consolas", Font.PLAIN, 12));
         outputArea.setEditable(false);
         outputArea.setLineWrap(false);
@@ -127,6 +121,10 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
         return panel;
     }
 
+    /**
+     * 解析输入框中的 IP（按行去重），为每个 IP 异步调用 Shodan 查询，全部完成后按输入顺序汇总到输出区。
+     * 扫描期间禁用搜索按钮并刷新状态栏；单个 IP 查询异常时以 [Error] 行占位，不中断其余任务。
+     */
     private void performScan() {
         String input = inputArea.getText().trim();
         if (input.isEmpty()) {
@@ -149,7 +147,6 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
             return;
         }
 
-        // 清空输出区域
         outputArea.setText("");
         searchBtn.setEnabled(false);
         searchBtn.setText("Scanning...");
@@ -157,16 +154,15 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
         int total = ips.size();
         statusLabel.setText("Scanning: 0/" + total);
 
-        // 使用List保持顺序，使用Map存储结果
+        // 异步完成顺序不定：用 List 固定 IP 顺序，Map 按序号暂存结果，最后按序拼接
         java.util.List<String> ipList = new java.util.ArrayList<>(ips);
         java.util.Map<Integer, String> resultsMap = new java.util.concurrent.ConcurrentHashMap<>();
         java.util.concurrent.atomic.AtomicInteger completed = new AtomicInteger(0);
 
-        // 创建所有异步任务
         java.util.List<CompletableFuture<Void>> futures = new java.util.ArrayList<>();
 
         for (int i = 0; i < ipList.size(); i++) {
-            final int index = i + 1; // 1-based index
+            final int index = i + 1; // 序号从 1 开始
             final String ip = ipList.get(i);
 
             CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> ShodanCore.getData(ip))

@@ -18,10 +18,8 @@ import java.util.regex.Pattern;
 public class RapidDnsCore {
 
     /**
-     * 获取 RapidDNS 子域名数据
-     *
-     * @param domain 域名
-     * @return RapidDnsResult 对象
+     * 爬取 RapidDNS 页面并解析子域名记录；请求或解析异常时不抛出，
+     * 错误信息写入结果的 error 字段。
      */
     public static RapidDnsResult getSubdomains(String domain) {
         RapidDnsResult result = new RapidDnsResult();
@@ -37,14 +35,13 @@ public class RapidDnsCore {
                     .timeout(20000)
                     .execute().body();
 
-            // 解析总数
+            // 从 "Total: <span>数量</span>" 结构中提取页面标注的总数
             String totalPattern = "Total:\\s*<span[^>]*>\\s*(\\d+)\\s*</span>";
             Matcher totalMatcher = Pattern.compile(totalPattern).matcher(html);
             if (totalMatcher.find()) {
                 result.total = Integer.parseInt(totalMatcher.group(1).trim());
             }
 
-            // 解析表格数据
             // 匹配模式：<tr><th scope="row">1</th><td>domain</td><td><a...>address</a></td><td>type</td><td>date</td></tr>
             String rowPattern = "<tr>\\s*<th[^>]*>\\s*(\\d+)\\s*</th>\\s*<td>([^<]+)</td>\\s*<td>.*?<a[^>]*>([^<]+)</a>.*?</td>\\s*<td>([A-Z]+)</td>\\s*<td>([^<]+)</td>\\s*</tr>";
             Matcher rowMatcher = Pattern.compile(rowPattern, Pattern.DOTALL).matcher(html);
@@ -59,9 +56,8 @@ public class RapidDnsCore {
                 result.records.add(new SubdomainRecord(index, subdomain, address, type, date));
             }
 
-            // 如果没找到数据，尝试备用解析方式
+            // 页面结构变化导致表格解析无结果时，退化为逐单元格提取，把域名与其后出现的 IP 配对
             if (result.records.isEmpty() && !html.contains("No results found")) {
-                // 使用简单的正则提取
                 String simplePattern = "<td>([^<]+)</td>";
                 Matcher simpleMatcher = Pattern.compile(simplePattern).matcher(html);
 
@@ -73,7 +69,6 @@ public class RapidDnsCore {
                         lastDomain = value;
                     } else if (value.matches("\\d+\\.\\d+\\.\\d+\\.\\d+") || value.matches("[0-9a-f:]+")) {
                         if (lastDomain != null) {
-                            // 找到域名和IP
                             result.records.add(new SubdomainRecord(
                                     String.valueOf(index++),
                                     lastDomain,
@@ -86,6 +81,7 @@ public class RapidDnsCore {
                 }
             }
 
+            // 以实际解析出的记录数为准，覆盖页面标注的总数
             result.total = result.records.size();
 
         } catch (Exception e) {
@@ -96,7 +92,7 @@ public class RapidDnsCore {
     }
 
     /**
-     * 转换为 JSON 字符串
+     * 将查询结果序列化为格式化 JSON 字符串。
      */
     public static String toJson(RapidDnsResult result) {
         JSONObject json = new JSONObject();

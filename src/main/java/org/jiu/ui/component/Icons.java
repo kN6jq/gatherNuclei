@@ -39,9 +39,9 @@ public final class Icons {
     }
 
     /**
-     * 应用图标（多色，不做单色着色）
+     * 应用图标（多色，不做单色着色）。
      *
-     * @param size 尺寸
+     * @param size 边长，单位像素
      */
     public static FlatSVGIcon appLogo(int size) {
         return new FlatSVGIcon("icons/app.svg", size, size);
@@ -62,10 +62,10 @@ public final class Icons {
     }
 
     /**
-     * 创建图标
+     * 创建图标。
      *
      * @param name  资源名（不含扩展名），位于 icons 目录下
-     * @param size  尺寸
+     * @param size  边长，单位像素
      * @param color 指定颜色，为 null 时使用主题前景色
      */
     public static FlatSVGIcon create(String name, int size, Color color) {
@@ -75,10 +75,10 @@ public final class Icons {
     }
 
     /**
-     * 为选项卡批量设置图标，并让选中项与未选中项用不同颜色区分
+     * 为选项卡批量设置图标，选中项与未选中项用不同颜色区分，
+     * 并注册切换监听在选中变化时自动刷新颜色。
      *
-     * @param tabbedPane 选项卡容器
-     * @param iconNames  与选项卡顺序对应的图标名
+     * @param iconNames 与选项卡顺序对应的图标名
      */
     public static void applyTabIcons(JTabbedPane tabbedPane, String[] iconNames) {
         for (int i = 0; i < iconNames.length && i < tabbedPane.getTabCount(); i++) {
@@ -101,7 +101,7 @@ public final class Icons {
     }
 
     /**
-     * 把 SVG 中的黑色替换为目标颜色
+     * 把 SVG 中的纯黑色替换为目标颜色，其余颜色保持不变。
      */
     private static FlatSVGIcon.ColorFilter colorFilter(Color target) {
         return new FlatSVGIcon.ColorFilter(color -> {
@@ -116,7 +116,7 @@ public final class Icons {
     }
 
     /**
-     * 获取主题前景色
+     * 获取主题前景色，取不到时回退为深灰色。
      */
     private static Color themeForeground() {
         Color color = UIManager.getColor("Label.foreground");

@@ -7,47 +7,42 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Nuclei模板生成器面板
+ * Nuclei 模板生成器面板：通过表单填写基础信息、匹配条件与 HTTP 请求，拼装生成 nuclei YAML 模板。
  */
 public class NucleiTemplatePanel extends JPanel {
-    // 基础信息部分的组件
     private JTextField idField, nameField, authorField, tagsField;
     private JTextArea descriptionArea, referenceArea;
     private JComboBox<String> severityCombo;
     private JButton confirmBasicInfoBtn;
 
-    // 匹配条件部分的组件
     private JComboBox<String> matcherConditionCombo;
     private JComboBox<String> matchTypeCombo;
     private JTextField matchValue1, matchValue2, matchValue3;
     private JButton addMatcherBtn;
     private JTextArea matchersResultArea;
 
-    // HTTP请求和结果显示部分的组件
     private JTextArea httpRequestArea;
     private JButton generateBtn;
-    private JButton resetBtn; // 移动到这里作为结果面板的按钮
+    private JButton resetBtn;
     private JTextArea resultArea;
 
-    // 存储所有添加的匹配器
     private List<Map<String, Object>> matchers = new ArrayList<>();
 
+    /**
+     * 构建左右分栏界面：左侧输入基础信息、匹配条件与 HTTP 请求，右侧预览生成结果。
+     */
     public NucleiTemplatePanel() {
-        // 使用边界布局
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // 分割面板：左边是输入区域，右边是结果区域
         JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        mainSplitPane.setResizeWeight(0.6); // 设置分割比例
+        mainSplitPane.setResizeWeight(0.6); // 调整大小时左侧分得 60% 的额外空间
 
-        // 左侧面板包含基础信息和匹配条件
         JPanel leftPanel = new JPanel(new BorderLayout(10, 10));
         leftPanel.add(createBasicInfoPanel(), BorderLayout.NORTH);
         leftPanel.add(createMatchersPanel(), BorderLayout.CENTER);
         leftPanel.add(createHttpRequestPanel(), BorderLayout.SOUTH);
 
-        // 右侧面板显示生成的结果
         JPanel rightPanel = createResultPanel();
 
         mainSplitPane.setLeftComponent(new JScrollPane(leftPanel));
@@ -55,16 +50,15 @@ public class NucleiTemplatePanel extends JPanel {
 
         add(mainSplitPane, BorderLayout.CENTER);
 
-        // 初始化事件监听器
         initializeListeners();
     }
 
 
     /**
-     * 创建基础信息面板
+     * 创建基础信息表单：ID、名称、作者、标签、严重程度、描述、参考链接及确认按钮。
      */
     private JPanel createBasicInfoPanel() {
-        // 使用表格布局使字段对齐
+        // 用 GridBagLayout 使标签与输入框对齐
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200)),
@@ -84,7 +78,6 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // 初始化组件
         idField = new JTextField(20);
         idField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         idField.setPreferredSize(new Dimension(0, 25));
@@ -124,7 +117,6 @@ public class NucleiTemplatePanel extends JPanel {
         confirmBasicInfoBtn.setForeground(Color.WHITE);
         confirmBasicInfoBtn.setFocusPainted(false);
 
-        // 添加组件到面板
         addFieldToPanel(panel, "ID:", idField, gbc, 0);
         addFieldToPanel(panel, "名称:", nameField, gbc, 1);
         addFieldToPanel(panel, "作者:", authorField, gbc, 2);
@@ -153,7 +145,6 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.weightx = 1.0;
         panel.add(refScrollPane, gbc);
 
-        // 确认按钮
         gbc.gridx = 0;
         gbc.gridy = 7;
         gbc.gridwidth = 2;
@@ -164,7 +155,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 创建匹配条件面板
+     * 创建匹配条件输入表单与已添加匹配器的 YAML 预览区。
      */
     private JPanel createMatchersPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -181,14 +172,12 @@ public class NucleiTemplatePanel extends JPanel {
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        // 匹配条件输入区域
         JPanel inputPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // 初始化组件
-        matcherConditionCombo = new JComboBox<>(new String[]{"", "and", "or"}); // 添加空选项
+        matcherConditionCombo = new JComboBox<>(new String[]{"", "and", "or"}); // 空选项表示不指定多值匹配条件
         matcherConditionCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         matcherConditionCombo.setPreferredSize(new Dimension(0, 25));
 
@@ -218,12 +207,10 @@ public class NucleiTemplatePanel extends JPanel {
         addMatcherBtn.setForeground(Color.WHITE);
         addMatcherBtn.setFocusPainted(false);
 
-        // 输入框提示文本
         matchValue1.setToolTipText("必填项");
         matchValue2.setToolTipText("选填项");
         matchValue3.setToolTipText("选填项");
 
-        // 添加组件
         gbc.gridx = 0;
         gbc.gridy = 0;
         JLabel conditionLabel = new JLabel("多个结果匹配条件类型:");
@@ -245,7 +232,6 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.weightx = 1.0;
         inputPanel.add(matchTypeCombo, gbc);
 
-        // 匹配值输入框面板
         JPanel valuePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         valuePanel.add(new JLabel("匹配值:"));
         valuePanel.add(matchValue1);
@@ -261,7 +247,6 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         inputPanel.add(addMatcherBtn, gbc);
 
-        // 匹配结果显示区域
         matchersResultArea = new JTextArea(8, 40);
         matchersResultArea.setFont(new Font("Consolas", Font.PLAIN, 12));
         matchersResultArea.setEditable(false);
@@ -273,7 +258,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 创建HTTP请求面板
+     * 创建原始 HTTP 请求报文输入区。
      */
     private JPanel createHttpRequestPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -298,7 +283,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 创建结果显示面板
+     * 创建生成结果预览区及生成、重置按钮。
      */
     private JPanel createResultPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
@@ -315,8 +300,7 @@ public class NucleiTemplatePanel extends JPanel {
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        // 创建按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5)); // 使用流布局，居中对齐
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         resetBtn = new JButton("重新填写");
         resetBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         resetBtn.setPreferredSize(new Dimension(100, 30));
@@ -331,7 +315,6 @@ public class NucleiTemplatePanel extends JPanel {
         generateBtn.setForeground(Color.WHITE);
         generateBtn.setFocusPainted(false);
 
-        // 按顺序添加按钮
         buttonPanel.add(generateBtn);
         buttonPanel.add(resetBtn);
 
@@ -347,7 +330,7 @@ public class NucleiTemplatePanel extends JPanel {
 
 
     /**
-     * 添加字段到面板的辅助方法
+     * 以标签在左、输入框在右的两列布局添加一行字段。
      */
     private void addFieldToPanel(JPanel panel, String label, JComponent field,
                                  GridBagConstraints gbc, int row) {
@@ -363,7 +346,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 初始化所有事件监听器
+     * 绑定各按钮动作，并在切换匹配类型时刷新输入框提示。
      */
     private void initializeListeners() {
         confirmBasicInfoBtn.addActionListener(e -> validateAndConfirmBasicInfo());
@@ -371,19 +354,16 @@ public class NucleiTemplatePanel extends JPanel {
         generateBtn.addActionListener(e -> generateTemplate());
         resetBtn.addActionListener(e -> resetAllFields());
 
-        // 移除对可选输入框的限制
+        // 所有匹配类型均不禁用输入框，仅刷新提示文本
         matchTypeCombo.addActionListener(e -> {
-            // 所有输入框都保持启用状态
             matchValue1.setEnabled(true);
             matchValue2.setEnabled(true);
             matchValue3.setEnabled(true);
 
-            // 所有输入框背景都保持为白色
             matchValue1.setBackground(Color.WHITE);
             matchValue2.setBackground(Color.WHITE);
             matchValue3.setBackground(Color.WHITE);
 
-            // 更新提示文本
             matchValue1.setToolTipText("主要匹配值");
             matchValue2.setToolTipText("附加匹配值（可选）");
             matchValue3.setToolTipText("附加匹配值（可选）");
@@ -391,7 +371,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 重置所有字段的方法
+     * 经用户确认后清空全部输入、匹配器列表与生成结果。
      */
     private void resetAllFields() {
         int result = JOptionPane.showConfirmDialog(this,
@@ -400,7 +380,6 @@ public class NucleiTemplatePanel extends JPanel {
                 JOptionPane.YES_NO_OPTION);
 
         if (result == JOptionPane.YES_OPTION) {
-            // 清空基础信息
             idField.setText("");
             nameField.setText("");
             authorField.setText("");
@@ -409,7 +388,6 @@ public class NucleiTemplatePanel extends JPanel {
             referenceArea.setText("");
             severityCombo.setSelectedIndex(0);
 
-            // 清空其他字段...
             matcherConditionCombo.setSelectedIndex(0);
             matchTypeCombo.setSelectedIndex(0);
             matchValue1.setText("");
@@ -425,7 +403,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 验证并确认基础信息
+     * 校验基础信息全部非空，仅弹窗提示结果，不保存任何状态。
      */
     private void validateAndConfirmBasicInfo() {
         if (idField.getText().trim().isEmpty() ||
@@ -441,7 +419,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 添加新的匹配条件
+     * 按所选匹配类型构建匹配器追加到列表，刷新预览后清空输入框；首个匹配值必填。
      */
     private void addMatcher() {
         if (matchValue1.getText().trim().isEmpty()) {
@@ -453,7 +431,6 @@ public class NucleiTemplatePanel extends JPanel {
         String matchType = matchTypeCombo.getSelectedItem().toString();
         String condition = matcherConditionCombo.getSelectedItem().toString();
 
-        // 获取所有非空的匹配值
         List<String> values = new ArrayList<>();
         if (!matchValue1.getText().trim().isEmpty()) {
             values.add(matchValue1.getText().trim());
@@ -465,10 +442,8 @@ public class NucleiTemplatePanel extends JPanel {
             values.add(matchValue3.getText().trim());
         }
 
-        // 根据不同的匹配类型构建不同的匹配器配置
         switch (matchType) {
             case "status":
-                // 状态码匹配
                 matcher.put("type", "status");
                 matcher.put("status", values);
                 if (!condition.isEmpty() && values.size() > 1) {
@@ -478,7 +453,6 @@ public class NucleiTemplatePanel extends JPanel {
 
             case "body":
             case "header":
-                // 关键字匹配
                 matcher.put("type", "word");
                 matcher.put("part", matchType);
                 matcher.put("words", values);
@@ -489,7 +463,7 @@ public class NucleiTemplatePanel extends JPanel {
 
             case "regex_body":
             case "regex_header":
-                // 正则表达式匹配
+                // regex_ 前缀仅用于区分 UI 选项，part 取 body/header
                 matcher.put("type", "regex");
                 matcher.put("part", matchType.replace("regex_", ""));
                 matcher.put("regex", values);
@@ -499,20 +473,19 @@ public class NucleiTemplatePanel extends JPanel {
                 break;
 
             case "time_check":
-                // 延时判断
+                // 延时判断转为 dsl 表达式，仅取首个匹配值作为秒数阈值
                 matcher.put("type", "dsl");
                 matcher.put("dsl", Arrays.asList("duration>=" + values.get(0)));
                 break;
 
             case "http_interaction":
-                // HTTP外带
+                // 外带检测固定匹配 interactsh_protocol，忽略用户输入的匹配值
                 matcher.put("type", "word");
                 matcher.put("part", "interactsh_protocol");
                 matcher.put("words", Arrays.asList("http"));
                 break;
 
             case "dns_interaction":
-                // DNS外带
                 matcher.put("type", "word");
                 matcher.put("part", "interactsh_protocol");
                 matcher.put("words", Arrays.asList("dns"));
@@ -522,14 +495,13 @@ public class NucleiTemplatePanel extends JPanel {
         matchers.add(matcher);
         updateMatchersResult();
 
-        // 清除输入框
         matchValue1.setText("");
         matchValue2.setText("");
         matchValue3.setText("");
     }
 
     /**
-     * 更新匹配结果显示区域
+     * 将匹配器列表拼成 YAML 片段显示，缩进与最终模板的 matchers 层级对齐。
      */
     private void updateMatchersResult() {
         StringBuilder sb = new StringBuilder();
@@ -572,7 +544,7 @@ public class NucleiTemplatePanel extends JPanel {
     }
 
     /**
-     * 生成最终的模板
+     * 拼接生成 nuclei YAML 模板并显示在结果区；仅要求 HTTP 请求非空，Host 头统一替换为 {{Hostname}} 占位符。
      */
     private void generateTemplate() {
         if (httpRequestArea.getText().trim().isEmpty()) {
@@ -590,14 +562,14 @@ public class NucleiTemplatePanel extends JPanel {
         template.append("  author: ").append(authorField.getText()).append("\n");
         template.append("  severity: ").append(severityCombo.getSelectedItem()).append("\n");
 
-        // 添加description
+        // 描述用 YAML 块标量，每行固定缩进 4 空格
         template.append("  description: |\n");
         String[] descLines = descriptionArea.getText().split("\n");
         for (String line : descLines) {
             template.append("    ").append(line).append("\n");
         }
 
-        // 添加reference
+        // 参考链接按行拆成 YAML 列表，跳过空行
         template.append("  reference:\n");
         String[] refLines = referenceArea.getText().split("\n");
         for (String line : refLines) {

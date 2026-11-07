@@ -8,16 +8,16 @@ import java.net.Proxy;
 import java.util.Properties;
 
 /**
- * HTTP代理工具类
- * 用于统一处理HttpRequest的代理设置
+ * HTTP 代理工具类，为 Hutool HttpRequest 统一应用代理配置。
+ * 对外提供 get/post 请求创建与 applyProxy 代理应用。
  */
 public class HttpProxyUtil {
 
     /**
-     * 为HttpRequest应用代理配置
+     * 为请求应用代理配置：代理未启用或主机/端口为空时原样返回；
+     * 端口格式非法时仅打印错误，返回未设置代理的请求。
      *
-     * @param request HttpRequest对象
-     * @return 应用代理后的HttpRequest对象
+     * @return 传入的请求对象本身（便于链式调用）
      */
     public static HttpRequest applyProxy(HttpRequest request) {
         if (!ProxyConfigDialog.isProxyEnabled()) {
@@ -45,10 +45,8 @@ public class HttpProxyUtil {
                 proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
             }
 
-            // 设置代理
             request.setProxy(proxy);
 
-            // 如果有认证信息，设置代理认证
             if (!username.isEmpty()) {
                 request.basicProxyAuth(username, password);
             }
@@ -61,10 +59,7 @@ public class HttpProxyUtil {
     }
 
     /**
-     * 创建并配置代理的HttpRequest GET请求
-     *
-     * @param url 请求URL
-     * @return 配置好代理的HttpRequest对象
+     * 创建已应用代理配置的 GET 请求。
      */
     public static HttpRequest get(String url) {
         HttpRequest request = HttpRequest.get(url);
@@ -72,10 +67,7 @@ public class HttpProxyUtil {
     }
 
     /**
-     * 创建并配置代理的HttpRequest POST请求
-     *
-     * @param url 请求URL
-     * @return 配置好代理的HttpRequest对象
+     * 创建已应用代理配置的 POST 请求。
      */
     public static HttpRequest post(String url) {
         HttpRequest request = HttpRequest.post(url);
