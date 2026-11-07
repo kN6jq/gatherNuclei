@@ -1,29 +1,19 @@
 package org.jiu.ui.searchengine;
 
-import org.jiu.ui.InitUI;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
-import org.jiu.ui.component.Icons;
-import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.RapidDnsCore;
-import org.jiu.ui.SearchPanel;
+import org.jiu.ui.InitUI;
+import org.jiu.ui.component.Icons;
 import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,7 +95,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        
+
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JTextField.CENTER);
         table.getColumn("#").setCellRenderer(centerRenderer);
@@ -157,7 +147,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         toolBar.add(Box.createHorizontalStrut(5));
         toolBar.add(searchBtn);
         toolBar.addSeparator();
-        
+
         JLabel hintLabel = new JLabel("无需配置，直接查询");
         hintLabel.setFont(UIUtils.TEXT_FONT);
         toolBar.add(hintLabel);
@@ -197,7 +187,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         totalLabel.setName("totalLabel");
         totalLabel.setFont(new Font("微软雅黑", Font.BOLD, 12));
         statsPanel.add(totalLabel);
-        
+
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(statsPanel, BorderLayout.SOUTH);
 
@@ -261,11 +251,11 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
                     // 添加数据
                     for (RapidDnsCore.SubdomainRecord record : result.records) {
                         Object[] rowData = {
-                            record.index,
-                            record.domain,
-                            record.address,
-                            record.type,
-                            record.date
+                                record.index,
+                                record.domain,
+                                record.address,
+                                record.type,
+                                record.date
                         };
                         tableModel.addRow(rowData);
                     }
@@ -381,7 +371,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         popupMenu.add(copyIpItem);
         popupMenu.addSeparator();
         popupMenu.add(exportItem);
-        
+
         return popupMenu;
     }
 

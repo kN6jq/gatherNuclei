@@ -11,7 +11,7 @@ public class UIUtils {
     // 统一字体设置
     public static final Font TEXT_FONT = new Font("微软雅黑", Font.PLAIN, 13);
     public static final Font LABEL_FONT = new Font("微软雅黑", Font.PLAIN, 12);
-    
+
     // 统一组件尺寸
     public static final int INPUT_HEIGHT = 30;
     public static final int BUTTON_HEIGHT = 30;
@@ -22,7 +22,7 @@ public class UIUtils {
     public static final Color SUCCESS_COLOR = new Color(40, 167, 69);
     public static final Color WARNING_COLOR = new Color(255, 193, 7);
     public static final Color DANGER_COLOR = new Color(220, 53, 69);
-    
+
     /**
      * 设置统一的文本框样式
      */
@@ -65,21 +65,21 @@ public class UIUtils {
         statusBtn.setBackground(DANGER_COLOR);
         statusBtn.setToolTipText("API连接状态");
     }
-    
+
     // 显示标准对话框
     public static void showStandardDialog(Component parent, String title, String message, int messageType) {
         JOptionPane.showMessageDialog(
-            parent,
-            message,
-            title,
-            messageType
+                parent,
+                message,
+                title,
+                messageType
         );
     }
-    
+
     public static String showInputDialog(Component parent, String title, String message) {
         return JOptionPane.showInputDialog(parent, message, title, JOptionPane.QUESTION_MESSAGE);
     }
-    
+
     // 创建进度条
     public static JProgressBar createProgressBar() {
         JProgressBar progressBar = new JProgressBar();
@@ -87,7 +87,7 @@ public class UIUtils {
         progressBar.setVisible(false);
         return progressBar;
     }
-    
+
     // 复制到剪贴板的改进方法
     public static void copyToClipboard(String text) {
         Toolkit.getDefaultToolkit()

@@ -1,28 +1,20 @@
 package org.jiu.ui;
 
-import cn.hutool.core.io.FileUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.DumperOptions;
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
 import org.jiu.utils.Utils;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,9 +32,13 @@ public class WorkflowPanel extends JPanel {
     private final DefaultTableModel tableModel;
     private final TableRowSorter<DefaultTableModel> sorter;
     private final JTextField searchField = new JTextField(20);
-    /** 后台线程写入、事件分发线程读取 */
+    /**
+     * 后台线程写入、事件分发线程读取
+     */
     private final Map<String, List<LinkedHashMap<String, String>>> workflows = new ConcurrentHashMap<>();
-    /** 加载中标记，避免重复提交加载任务 */
+    /**
+     * 加载中标记，避免重复提交加载任务
+     */
     private final AtomicBoolean loading = new AtomicBoolean(false);
 
     private final String[] columnNames = {
@@ -75,6 +71,100 @@ public class WorkflowPanel extends JPanel {
         loadWorkflows();
     }
 
+    /**
+     * 解析计数单元格的值，非数字时按 0 处理
+     */
+    private static int parseCount(Object value) {
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(value.toString().trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    public static LinkedHashMap<String, String> getTemplateInfo(String templatePath) {
+        try {
+            File templateFile = new File(templatePath);
+            if (!templateFile.exists()) {
+                return null;
+            }
+
+            Yaml yaml = new Yaml();
+            Map<String, Object> templateData;
+            try (FileReader reader = new FileReader(templateFile)) {
+                templateData = yaml.load(reader);
+            }
+            if (templateData == null) {
+                return null;
+            }
+
+            LinkedHashMap<String, String> templateInfo = new LinkedHashMap<>();
+            templateInfo.put("path", templatePath);
+            templateInfo.put("id", (String) templateData.get("id")); // 修改：正确设置id字段
+
+            // 处理嵌套的info字段
+            Map<String, Object> info = (Map<String, Object>) templateData.get("info");
+            if (info != null) {
+                // 设置name字段
+                templateInfo.put("name", (String) info.get("name")); // 修改：从info中获取name
+
+                // 设置severity字段
+                Object severity = info.get("severity");
+                templateInfo.put("severity", severity != null ? severity.toString().toLowerCase() : "unknown");
+
+                // 设置description字段
+                Object description = info.get("description");
+                templateInfo.put("description", description != null ? description.toString() : ""); // 添加：设置description
+
+                // 设置reference字段
+                Object reference = info.get("reference");
+                if (reference instanceof List) {
+                    templateInfo.put("reference", String.join(",", (List<String>) reference));
+                } else if (reference instanceof String) {
+                    templateInfo.put("reference", (String) reference);
+                } else {
+                    templateInfo.put("reference", "");
+                }
+
+                // 处理tags字段
+                Object tags = info.get("tags");
+                if (tags instanceof List) {
+                    templateInfo.put("tags", String.join(",", (List<String>) tags));
+                } else if (tags instanceof String) {
+                    templateInfo.put("tags", (String) tags);
+                } else {
+                    templateInfo.put("tags", "");
+                }
+
+                // 处理author字段
+                Object author = info.get("author");
+                if (author instanceof List) {
+                    templateInfo.put("author", String.join(",", (List<String>) author));
+                } else if (author instanceof String) {
+                    templateInfo.put("author", (String) author);
+                } else {
+                    templateInfo.put("author", "");
+                }
+            } else {
+                // 如果info为空，设置默认值
+                templateInfo.put("name", "未知");
+                templateInfo.put("severity", "unknown");
+                templateInfo.put("description", "");
+                templateInfo.put("reference", "");
+                templateInfo.put("tags", "");
+                templateInfo.put("author", "");
+            }
+
+            return templateInfo;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private void initUI() {
         add(createToolBar(), BorderLayout.NORTH);
         JScrollPane scrollPane = new JScrollPane(workflowTable);
@@ -89,15 +179,15 @@ public class WorkflowPanel extends JPanel {
 
         // 创建主面板
         JPanel mainPanel = new JPanel(new BorderLayout());
-        
+
         // 左侧控件：状态标签
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         leftPanel.add(statusLabel);
-        
+
         // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
-        
+
         // 刷新按钮
         JButton refreshBtn = new JButton("刷新");
         refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
@@ -107,10 +197,10 @@ public class WorkflowPanel extends JPanel {
         refreshBtn.setForeground(Color.WHITE);
         refreshBtn.addActionListener(e -> loadWorkflows());
         leftPanel.add(refreshBtn);
-        
+
         // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
-        
+
         // 右侧控件：搜索框
         JPanel rightPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -123,11 +213,11 @@ public class WorkflowPanel extends JPanel {
         searchField.putClientProperty("JTextField.placeholderText", "搜索工作流...");
         searchField.addActionListener(e -> performSearch());
         rightPanel.add(searchField, gbc);
-        
+
         // 将左右面板添加到主面板
         mainPanel.add(leftPanel, BorderLayout.WEST);
         mainPanel.add(rightPanel, BorderLayout.EAST);
-        
+
         toolBar.add(mainPanel);
         return toolBar;
     }
@@ -145,11 +235,11 @@ public class WorkflowPanel extends JPanel {
 
     private JTable createTable() {
         JTable table = new JTable(tableModel);
-        
+
         // 设置表格属性
         table.setRowHeight(25);
         table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        
+
         // 设置表格渲染器
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -169,7 +259,7 @@ public class WorkflowPanel extends JPanel {
         table.addMouseListener(new PopupListener(table));
         return table;
     }
-    
+
     /**
      * 创建严重程度渲染器
      */
@@ -221,20 +311,6 @@ public class WorkflowPanel extends JPanel {
                 return label;
             }
         };
-    }
-
-    /**
-     * 解析计数单元格的值，非数字时按 0 处理
-     */
-    private static int parseCount(Object value) {
-        if (value == null) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(value.toString().trim());
-        } catch (NumberFormatException e) {
-            return 0;
-        }
     }
 
     // 在WorkflowPanel类的loadWorkflows方法中
@@ -305,11 +381,21 @@ public class WorkflowPanel extends JPanel {
                 if (templateInfo != null) {
                     templateInfoList.add(templateInfo);
                     switch (templateInfo.get("severity").toLowerCase()) {
-                        case "info": counts[0]++; break;
-                        case "low": counts[1]++; break;
-                        case "medium": counts[2]++; break;
-                        case "high": counts[3]++; break;
-                        case "critical": counts[4]++; break;
+                        case "info":
+                            counts[0]++;
+                            break;
+                        case "low":
+                            counts[1]++;
+                            break;
+                        case "medium":
+                            counts[2]++;
+                            break;
+                        case "high":
+                            counts[3]++;
+                            break;
+                        case "critical":
+                            counts[4]++;
+                            break;
                     }
                 }
             }
@@ -331,43 +417,6 @@ public class WorkflowPanel extends JPanel {
             });
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    private class PopupListener extends MouseAdapter {
-        private final JTable table;
-
-        PopupListener(JTable table) {
-            this.table = table;
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount() == 2) {
-                showTemplateDetails();
-            } else if (e.isPopupTrigger()) {
-                showPopup(e);
-            }
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                showPopup(e);
-            }
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                showPopup(e);
-            }
-        }
-
-        private void showPopup(MouseEvent e) {
-            if (table.getSelectedRow() != -1) {
-                createPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-            }
         }
     }
 
@@ -495,6 +544,7 @@ public class WorkflowPanel extends JPanel {
             Utils.copyToClipboard(command);
         }
     }
+
     private void deleteWorkflow() {
         int row = workflowTable.getSelectedRow();
         if (row != -1) {
@@ -586,83 +636,40 @@ public class WorkflowPanel extends JPanel {
         executor.shutdown();
     }
 
-    public static LinkedHashMap<String, String> getTemplateInfo(String templatePath) {
-        try {
-            File templateFile = new File(templatePath);
-            if (!templateFile.exists()) {
-                return null;
+    private class PopupListener extends MouseAdapter {
+        private final JTable table;
+
+        PopupListener(JTable table) {
+            this.table = table;
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                showTemplateDetails();
+            } else if (e.isPopupTrigger()) {
+                showPopup(e);
             }
+        }
 
-            Yaml yaml = new Yaml();
-            Map<String, Object> templateData;
-            try (FileReader reader = new FileReader(templateFile)) {
-                templateData = yaml.load(reader);
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                showPopup(e);
             }
-            if (templateData == null) {
-                return null;
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                showPopup(e);
             }
+        }
 
-            LinkedHashMap<String, String> templateInfo = new LinkedHashMap<>();
-            templateInfo.put("path", templatePath);
-            templateInfo.put("id", (String) templateData.get("id")); // 修改：正确设置id字段
-
-            // 处理嵌套的info字段
-            Map<String, Object> info = (Map<String, Object>) templateData.get("info");
-            if (info != null) {
-                // 设置name字段
-                templateInfo.put("name", (String) info.get("name")); // 修改：从info中获取name
-
-                // 设置severity字段
-                Object severity = info.get("severity");
-                templateInfo.put("severity", severity != null ? severity.toString().toLowerCase() : "unknown");
-
-                // 设置description字段
-                Object description = info.get("description");
-                templateInfo.put("description", description != null ? description.toString() : ""); // 添加：设置description
-
-                // 设置reference字段
-                Object reference = info.get("reference");
-                if (reference instanceof List) {
-                    templateInfo.put("reference", String.join(",", (List<String>) reference));
-                } else if (reference instanceof String) {
-                    templateInfo.put("reference", (String) reference);
-                } else {
-                    templateInfo.put("reference", "");
-                }
-
-                // 处理tags字段
-                Object tags = info.get("tags");
-                if (tags instanceof List) {
-                    templateInfo.put("tags", String.join(",", (List<String>) tags));
-                } else if (tags instanceof String) {
-                    templateInfo.put("tags", (String) tags);
-                } else {
-                    templateInfo.put("tags", "");
-                }
-
-                // 处理author字段
-                Object author = info.get("author");
-                if (author instanceof List) {
-                    templateInfo.put("author", String.join(",", (List<String>) author));
-                } else if (author instanceof String) {
-                    templateInfo.put("author", (String) author);
-                } else {
-                    templateInfo.put("author", "");
-                }
-            } else {
-                // 如果info为空，设置默认值
-                templateInfo.put("name", "未知");
-                templateInfo.put("severity", "unknown");
-                templateInfo.put("description", "");
-                templateInfo.put("reference", "");
-                templateInfo.put("tags", "");
-                templateInfo.put("author", "");
+        private void showPopup(MouseEvent e) {
+            if (table.getSelectedRow() != -1) {
+                createPopupMenu().show(e.getComponent(), e.getX(), e.getY());
             }
-
-            return templateInfo;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
     }
 

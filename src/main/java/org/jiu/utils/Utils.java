@@ -1,8 +1,7 @@
 package org.jiu.utils;
 
 import javax.swing.*;
-import java.awt.*;
-import java.io.*;
+import java.io.File;
 
 public class Utils {
     public static String templatePath = "";
@@ -16,13 +15,12 @@ public class Utils {
     public static String zoneKey = "";
     public static String daydaymapUrl = "";
     public static String daydaymapKey = "";
+    public static String workflowPath = getRootPath() + File.separator + "workflows";  // 在程序运行目录下创建workflows文件夹
 
     // 获取程序运行目录
     public static String getRootPath() {
         return System.getProperty("user.dir");
     }
-
-    public static String workflowPath = getRootPath() + File.separator + "workflows";  // 在程序运行目录下创建workflows文件夹
 
     public static void copyToClipboard(String text) {
         UIUtils.copyToClipboard(text);

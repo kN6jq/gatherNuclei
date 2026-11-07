@@ -11,28 +11,12 @@ import org.jiu.utils.HttpProxyUtil;
 public class ShodanCore {
 
     /**
-     * Shodan查询结果对象
-     */
-    public static class ShodanResult {
-        public String ip;
-        public java.util.List<String> hostnames;
-        public java.util.List<Integer> ports;
-        public java.util.List<String> cpes;
-        public java.util.List<String> tags;
-        public java.util.List<String> vulns;
-        public String rawJson;
-
-        public boolean hasData() {
-            return ports != null && !ports.isEmpty();
-        }
-    }
-
-    /**
      * 获取Shodan数据
+     *
      * @param ip IP地址
      * @return ShodanResult对象
      */
-    public static ShodanResult getData(String ip){
+    public static ShodanResult getData(String ip) {
         String url = "https://internetdb.shodan.io/";
         try {
             String response = HttpProxyUtil.get(url + ip)
@@ -71,9 +55,10 @@ public class ShodanCore {
 
     /**
      * Format Shodan result with index info
-     * @param result Shodan result
+     *
+     * @param result  Shodan result
      * @param current Current index
-     * @param total Total count
+     * @param total   Total count
      */
     public static String formatResult(ShodanResult result, int current, int total) {
         if (result == null || !result.hasData()) {
@@ -151,5 +136,22 @@ public class ShodanCore {
             return vendor + " " + product + " " + version;
         }
         return cpe;
+    }
+
+    /**
+     * Shodan查询结果对象
+     */
+    public static class ShodanResult {
+        public String ip;
+        public java.util.List<String> hostnames;
+        public java.util.List<Integer> ports;
+        public java.util.List<String> cpes;
+        public java.util.List<String> tags;
+        public java.util.List<String> vulns;
+        public String rawJson;
+
+        public boolean hasData() {
+            return ports != null && !ports.isEmpty();
+        }
     }
 }

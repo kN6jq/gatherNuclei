@@ -1,15 +1,12 @@
 package org.jiu.ui.searchengine;
 
-import org.jiu.ui.InitUI;
 import cn.hutool.core.codec.Base64;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.FofaCore;
-import org.jiu.core.ShodanCore;
+import org.jiu.ui.InitUI;
 import org.jiu.ui.SearchPanel;
 import org.jiu.ui.component.Icons;
 import org.jiu.ui.component.MultiComboBox;
@@ -21,7 +18,6 @@ import org.jiu.utils.YamlUtils;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
@@ -30,7 +26,6 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class PageStateHolder {
     PageState state;
+
     PageStateHolder(PageState state) {
         this.state = state;
     }
@@ -157,29 +153,29 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
-        
+
         // 初始化多选框 - 扩展FOFA API支持的所有字段
         String[] values = new String[]{
-            "全选",
-            // 基础信息
-            "title", "domain", "icp", "city",
-            // 网络信息
-            "protocol", "country_name", "region", "asn", "org",
-            // 技术信息
-            "os", "server", "product", "product_category",
-            // 证书信息
-            "cert", "cert.subject.cn", "cert.issuer.cn", "cert.domain", "cert.not_after",
-            // 响应信息
-            "banner", "header", "jarm"
+                "全选",
+                // 基础信息
+                "title", "domain", "icp", "city",
+                // 网络信息
+                "protocol", "country_name", "region", "asn", "org",
+                // 技术信息
+                "os", "server", "product", "product_category",
+                // 证书信息
+                "cert", "cert.subject.cn", "cert.issuer.cn", "cert.domain", "cert.not_after",
+                // 响应信息
+                "banner", "header", "jarm"
         };
         comboxstatus = new MultiComboBox(values);
-        
+
         // 输入框样式
         UIUtils.setupSearchField(inputField, "输入FOFA搜索语法...");
-        
+
         // 状态指示灯样式
         UIUtils.setupStatusLabel(statusBtn);
-        
+
         // 搜索类型下拉框样式
         searchTypeComboBox.setModel(new DefaultComboBoxModel(new String[]{"custom", "domain", "ip"}));
         UIUtils.setupComboBox(searchTypeComboBox, 100);
@@ -196,11 +192,11 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             Utils.fofaTimeRange = value;
             YamlUtils.modifyYaml("fofatimerange", value);
         });
-        
+
         // 多选框样式
         comboxstatus.setFont(UIUtils.TEXT_FONT);
         comboxstatus.setPreferredSize(new Dimension(140, UIUtils.COMBO_HEIGHT));
-        
+
         // 搜索按钮样式
         UIUtils.setupSearchButton(searchBtn, "搜索");
 
@@ -210,7 +206,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         // 回车搜索事件（仅输入框聚焦时触发，避免影响其他面板）
         inputField.registerKeyboardAction(e -> search(1),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, false), JComponent.WHEN_FOCUSED);
-        
+
         // 组装工具栏
         toolBar.add(inputField);
         toolBar.add(Box.createHorizontalStrut(5));
@@ -223,7 +219,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         toolBar.add(statusBtn);
         toolBar.addSeparator();
         toolBar.add(comboxstatus);
-        
+
         this.add(toolBar, BorderLayout.NORTH);
     }
 
@@ -272,21 +268,21 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
 
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(pagingPanel, BorderLayout.SOUTH);
-        
+
         // 添加到标签页
         resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先添加标签页
-        
+
         // 添加自定义标签
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
         closeButton.setPreferredSize(new Dimension(20, 20));
         closeButton.setBorderPainted(false);
         closeButton.setContentAreaFilled(false);
-        
+
         final JPanel tabWithCloseButton = new JPanel(new BorderLayout());
         tabWithCloseButton.add(new JLabel(tabTitle), BorderLayout.CENTER);
         tabWithCloseButton.add(closeButton, BorderLayout.EAST);
-        
+
         closeButton.addActionListener(e -> {
             // 动态获取当前tab的索引
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
@@ -296,10 +292,10 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         });
-        
+
         // 为标签页添加右键菜单
         addTabPopupMenu(tabWithCloseButton);
-        
+
         resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
         resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
 
@@ -372,7 +368,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
     private JPanel createPagingPanel(JTable table, String searchData, String tabTitle, PageState pageState) {
         JPanel pagingPanel = new JPanel();
         pagingPanel.setLayout(new FlowLayout());
-        
+
         JButton predBtn = new JButton("上一页");
         JButton nextBtn = new JButton("下一页");
         JButton pageCurrentLabel = new JButton("1");
@@ -395,7 +391,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         sizeLabel.setEnabled(false);
         sizeLabel.setSelected(true);
         nextBtn.setSelected(true);
-        
+
         pagingPanel.add(predBtn);
         pagingPanel.add(pageCurrentLabel);
         pagingPanel.add(pageTotalLabel);
@@ -469,7 +465,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             }
         }).start();
     }
-    
+
     /**
      * 为分页搜索重置表格行
      */
@@ -501,8 +497,8 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             JSONArray array = (JSONArray) obj;
             array.add(0, String.valueOf(num));
             String url = (String) array.get(2);
-            if (!url.startsWith("http")){
-                array.set(2,"http://"+url);
+            if (!url.startsWith("http")) {
+                array.set(2, "http://" + url);
             }
             tableModel.addRow(array.toArray());
             num++;
@@ -563,7 +559,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
     private void resetTableRows(JSONArray jsonArray, DefaultTableModel tableModel, JPanel pagingPanel, int currentPage, int totalPage, int sizePage, PageState pageState) {
         // 清空现有数据
         tableModel.setRowCount(0);
-        
+
         Object[] selectedValues = comboxstatus.getSelectedValues();
         Object[] originalArray = new Object[]{"ip", "url", "port"};
         Object[] result = new Object[]{};
@@ -590,13 +586,13 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             JSONArray array = (JSONArray) obj;
             array.add(0, String.valueOf(num));
             String url = (String) array.get(2);
-            if (!url.startsWith("http")){
-                array.set(2,"http://"+url);
+            if (!url.startsWith("http")) {
+                array.set(2, "http://" + url);
             }
             tableModel.addRow(array.toArray());
             num++;
         }
-        
+
         // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
@@ -618,7 +614,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         }
-        
+
         if (pageCurrentLabel != null) {
             pageCurrentLabel.setText(String.valueOf(currentPage)); // 当前页
             pageCurrentLabel.setToolTipText("当前页 " + currentPage);
@@ -631,11 +627,11 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage)); // 总数量
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-        // 更新分页状态
-        if (pageState != null) {
-            pageState.currentPage[0] = currentPage;
-            pageState.totalPages[0] = totalPage;
-        }
+            // 更新分页状态
+            if (pageState != null) {
+                pageState.currentPage[0] = currentPage;
+                pageState.totalPages[0] = totalPage;
+            }
         }
 
         // 更新分页状态数组
@@ -810,7 +806,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
      */
     private void addTabPopupMenu(JPanel tabComponent) {
         JPopupMenu popupMenu = new JPopupMenu();
-        
+
         // 关闭当前
         JMenuItem closeCurrentItem = new JMenuItem("关闭当前");
         closeCurrentItem.addActionListener(e -> {
@@ -821,7 +817,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         });
-        
+
         // 关闭其他
         JMenuItem closeOthersItem = new JMenuItem("关闭其他");
         closeOthersItem.addActionListener(e -> {
@@ -832,18 +828,18 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         });
-        
+
         // 关闭所有
         JMenuItem closeAllItem = new JMenuItem("关闭所有");
         closeAllItem.addActionListener(e -> {
             resultsTabbedPane.removeAll();
         });
-        
+
         popupMenu.add(closeCurrentItem);
         popupMenu.add(closeOthersItem);
         popupMenu.addSeparator();
         popupMenu.add(closeAllItem);
-        
+
         // 为标签页组件添加鼠标监听器
         tabComponent.addMouseListener(new MouseAdapter() {
             @Override
@@ -860,7 +856,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
                     }
                 }
             }
-            
+
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.isPopupTrigger()) {

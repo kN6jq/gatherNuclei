@@ -1,20 +1,17 @@
 package org.jiu.ui.searchengine;
 
-import org.jiu.ui.InitUI;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import org.jiu.ui.component.Icons;
-import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
 import org.jiu.core.OtxCore;
+import org.jiu.ui.InitUI;
+import org.jiu.ui.component.Icons;
 import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
@@ -211,21 +208,21 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
 
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.add(pagingPanel, BorderLayout.SOUTH);
-        
+
         // 添加到标签页
         resultsTabbedPane.addTab(null, new JScrollPane(contentPanel)); // 先添加标签页
-        
+
         // 添加自定义标签
         JButton closeButton = new JButton("×");
         closeButton.setFont(new Font("Dialog", Font.BOLD, 12));
         closeButton.setPreferredSize(new Dimension(20, 20));
         closeButton.setBorderPainted(false);
         closeButton.setContentAreaFilled(false);
-        
+
         final JPanel tabWithCloseButton = new JPanel(new BorderLayout());
         tabWithCloseButton.add(new JLabel(tabTitle), BorderLayout.CENTER);
         tabWithCloseButton.add(closeButton, BorderLayout.EAST);
-        
+
         closeButton.addActionListener(e -> {
             // 动态获取当前tab的索引
             for (int i = 0; i < resultsTabbedPane.getTabCount(); i++) {
@@ -235,10 +232,10 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         });
-        
+
         // 为标签页添加右键菜单
         addTabPopupMenu(tabWithCloseButton);
-        
+
         resultsTabbedPane.setTabComponentAt(resultsTabbedPane.getTabCount() - 1, tabWithCloseButton); // 然后设置自定义组件
         resultsTabbedPane.setSelectedIndex(resultsTabbedPane.getTabCount() - 1); // 选择新标签页
 
@@ -267,7 +264,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
     private JPanel createPagingPanel(JTable table, String searchData, String tabTitle, PageState pageState) {
         JPanel pagingPanel = new JPanel();
         pagingPanel.setLayout(new FlowLayout());
-        
+
         JButton predBtn = new JButton("上一页");
         JButton nextBtn = new JButton("下一页");
         JButton pageCurrentLabel = new JButton("1");
@@ -290,7 +287,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
         sizeLabel.setEnabled(false);
         sizeLabel.setSelected(true);
         nextBtn.setSelected(true);
-        
+
         pagingPanel.add(predBtn);
         pagingPanel.add(pageCurrentLabel);
         pagingPanel.add(pageTotalLabel);
@@ -336,7 +333,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             });
         }).start();
     }
-    
+
     /**
      * 为分页搜索重置表格行
      */
@@ -387,11 +384,11 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-        // 更新分页状态
-        if (pageState != null) {
-            pageState.currentPage[0] = currentPage;
-            pageState.totalPages[0] = totalPage;
-        }
+            // 更新分页状态
+            if (pageState != null) {
+                pageState.currentPage[0] = currentPage;
+                pageState.totalPages[0] = totalPage;
+            }
         }
 
         // 滚动到顶部
@@ -415,13 +412,13 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             String date = jsonObject.getStr("date");
             tableModel.addRow(new Object[]{i + 1, domain, url, hostname, ip, http_code, date});
         }
-        
+
         // 更新分页组件
         Component[] components = pagingPanel.getComponents();
         JButton pageCurrentLabel = null;
         JButton pageTotalLabel = null;
         JButton sizeLabel = null;
-        
+
         for (Component comp : components) {
             if (comp instanceof JButton) {
                 JButton btn = (JButton) comp;
@@ -437,7 +434,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         }
-        
+
         if (pageCurrentLabel != null) {
             pageCurrentLabel.setText(String.valueOf(currentPage));
             pageCurrentLabel.setToolTipText("当前页 " + currentPage);
@@ -450,11 +447,11 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
             sizeLabel.setText(String.valueOf(sizePage));
             sizeLabel.setToolTipText("总数 " + sizePage);
 
-        // 更新分页状态
-        if (pageState != null) {
-            pageState.currentPage[0] = currentPage;
-            pageState.totalPages[0] = totalPage;
-        }
+            // 更新分页状态
+            if (pageState != null) {
+                pageState.currentPage[0] = currentPage;
+                pageState.totalPages[0] = totalPage;
+            }
         }
 
         // 更新分页状态
@@ -484,7 +481,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
      */
     private void addTabPopupMenu(JPanel tabComponent) {
         JPopupMenu popupMenu = new JPopupMenu();
-        
+
         // 关闭当前
         JMenuItem closeCurrentItem = new JMenuItem("关闭当前");
         closeCurrentItem.addActionListener(e -> {
@@ -495,7 +492,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         });
-        
+
         // 关闭其他
         JMenuItem closeOthersItem = new JMenuItem("关闭其他");
         closeOthersItem.addActionListener(e -> {
@@ -506,18 +503,18 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
                 }
             }
         });
-        
+
         // 关闭所有
         JMenuItem closeAllItem = new JMenuItem("关闭所有");
         closeAllItem.addActionListener(e -> {
             resultsTabbedPane.removeAll();
         });
-        
+
         popupMenu.add(closeCurrentItem);
         popupMenu.add(closeOthersItem);
         popupMenu.addSeparator();
         popupMenu.add(closeAllItem);
-        
+
         // 为标签页组件添加鼠标监听器
         tabComponent.addMouseListener(new MouseAdapter() {
             @Override
@@ -534,7 +531,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
                     }
                 }
             }
-            
+
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.isPopupTrigger()) {

@@ -1,5 +1,13 @@
 package org.jiu.ui;
 
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.Theme;
+import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jiu.utils.Utils;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
@@ -19,14 +27,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rsyntaxtextarea.Theme;
-import org.fife.ui.rtextarea.RTextScrollPane;
-import org.jiu.utils.Utils;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.DumperOptions;
 
 /**
  * 模板管理面板
@@ -70,6 +70,7 @@ public class TemplatesPanel extends JPanel {
     private final Set<String> activeFilters;
     private final Map<Integer, String> templatePathMap = new HashMap<>();
     private Map<Path, Exception> failedFiles = Collections.synchronizedMap(new HashMap<>());
+
     /**
      * 构造函数
      */
@@ -144,7 +145,7 @@ public class TemplatesPanel extends JPanel {
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
-        
+
         // 为严重程度列设置特殊渲染器
         table.getColumnModel().getColumn(3).setCellRenderer(createSeverityRenderer());
 
@@ -176,7 +177,7 @@ public class TemplatesPanel extends JPanel {
             }
         };
     }
-    
+
     /**
      * 创建严重程度渲染器
      */
@@ -185,7 +186,7 @@ public class TemplatesPanel extends JPanel {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                
+
                 if (!isSelected) {
                     String severity = (String) value;
                     if (severity != null) {
@@ -216,12 +217,12 @@ public class TemplatesPanel extends JPanel {
                         }
                     }
                 }
-                
+
                 label.setHorizontalAlignment(JLabel.CENTER);
                 if (value != null) {
                     label.setToolTipText(value.toString());
                 }
-                
+
                 return label;
             }
         };
@@ -234,7 +235,7 @@ public class TemplatesPanel extends JPanel {
         // 设置表格行高和字体
         table.setRowHeight(25);
         table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        
+
         // 设置列宽
         table.getColumnModel().getColumn(0).setPreferredWidth(40);   // #
         table.getColumnModel().getColumn(1).setPreferredWidth(120);  // ID
@@ -302,6 +303,7 @@ public class TemplatesPanel extends JPanel {
         button.setFocusPainted(false);
         return button;
     }
+
     /**
      * 初始化UI组件
      */
@@ -330,22 +332,22 @@ public class TemplatesPanel extends JPanel {
 
         // 创建主面板
         JPanel mainPanel = new JPanel(new BorderLayout());
-        
+
         // 左侧控件：状态和过滤器
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        
+
         // 状态标签
         statusLabel.setPreferredSize(new Dimension(200, 25));
         statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         leftPanel.add(statusLabel);
-        
+
         // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
-        
+
         // 过滤器按钮
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
         filterPanel.add(new JLabel("过滤:"));
-        
+
         // 统一按钮样式
         Dimension buttonSize = new Dimension(50, 25);
         for (JToggleButton btn : new JToggleButton[]{infoBtn, lowBtn, mediumBtn, highBtn, criticalBtn}) {
@@ -354,18 +356,18 @@ public class TemplatesPanel extends JPanel {
             btn.setFocusPainted(false);
             filterPanel.add(btn);
         }
-        
+
         leftPanel.add(filterPanel);
-        
+
         // 刷新按钮
         refreshBtn.setPreferredSize(new Dimension(60, 25));
         refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
         refreshBtn.setFocusPainted(false);
         leftPanel.add(refreshBtn);
-        
+
         // 分隔符
         leftPanel.add(Box.createHorizontalStrut(10));
-        
+
         // 右侧控件：搜索框
         JPanel rightPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -377,11 +379,11 @@ public class TemplatesPanel extends JPanel {
         searchField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
         searchField.putClientProperty("JTextField.placeholderText", "搜索模板 (Ctrl+F)...");
         rightPanel.add(searchField, gbc);
-        
+
         // 将左右面板添加到主面板
         mainPanel.add(leftPanel, BorderLayout.WEST);
         mainPanel.add(rightPanel, BorderLayout.EAST);
-        
+
         toolBar.add(mainPanel);
         return toolBar;
     }
@@ -523,7 +525,6 @@ public class TemplatesPanel extends JPanel {
 
         updateStatus(String.format("显示 %d 个模板（共 %d 个）", visibleTemplates.size(), templates.size()));
     }
-
 
 
     /**
@@ -716,6 +717,7 @@ public class TemplatesPanel extends JPanel {
         // 清除错误记录
         failedFiles.clear();
     }
+
     /**
      * 更新表格数据
      */
@@ -872,36 +874,6 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 搜索文档监听器
-     */
-    private class SearchDocumentListener implements DocumentListener {
-        private final Timer timer = new Timer(300, e -> {
-            synchronized (templates) {
-                updateTableDataWithMapping();
-            }
-        });
-
-        public SearchDocumentListener() {
-            timer.setRepeats(false);
-        }
-
-        @Override
-        public void insertUpdate(DocumentEvent e) {
-            timer.restart();
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent e) {
-            timer.restart();
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent e) {
-            timer.restart();
-        }
-    }
-
-    /**
      * 错误对话框显示
      */
     private void showErrorDialog(String title, String message, Exception e) {
@@ -921,6 +893,7 @@ public class TemplatesPanel extends JPanel {
                 title,
                 JOptionPane.ERROR_MESSAGE);
     }
+
     /**
      * 创建右键菜单
      */
@@ -953,7 +926,6 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     *
      * @param menu
      */
     private void addAddToWorkflowMenuItem(JPopupMenu menu) {
@@ -1330,7 +1302,7 @@ public class TemplatesPanel extends JPanel {
      */
     private String generateRunCommand(List<String> templatePaths) {
         // 这里根据你的需求生成具体的命令
-        return "nuclei -t " + String.join(",", templatePaths)+ " " + Utils.templateArg + " -u ";
+        return "nuclei -t " + String.join(",", templatePaths) + " " + Utils.templateArg + " -u ";
     }
 
     /**
@@ -1368,33 +1340,6 @@ public class TemplatesPanel extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             showErrorDialog("保存失败", "无法保存工作流", e);
-        }
-    }
-
-    /**
-     * 弹出监听器类
-     */
-    private class PopupListener extends MouseAdapter {
-        private final JTable table;
-
-        PopupListener(JTable table) {
-            this.table = table;
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            showPopupIfTriggered(e);
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            showPopupIfTriggered(e);
-        }
-
-        private void showPopupIfTriggered(MouseEvent e) {
-            if (e.isPopupTrigger() && table.getSelectedRow() != -1) {
-                createPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-            }
         }
     }
 
@@ -1503,6 +1448,63 @@ public class TemplatesPanel extends JPanel {
         } catch (InterruptedException e) {
             executor.shutdownNow();
             Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * 搜索文档监听器
+     */
+    private class SearchDocumentListener implements DocumentListener {
+        private final Timer timer = new Timer(300, e -> {
+            synchronized (templates) {
+                updateTableDataWithMapping();
+            }
+        });
+
+        public SearchDocumentListener() {
+            timer.setRepeats(false);
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            timer.restart();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            timer.restart();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            timer.restart();
+        }
+    }
+
+    /**
+     * 弹出监听器类
+     */
+    private class PopupListener extends MouseAdapter {
+        private final JTable table;
+
+        PopupListener(JTable table) {
+            this.table = table;
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            showPopupIfTriggered(e);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            showPopupIfTriggered(e);
+        }
+
+        private void showPopupIfTriggered(MouseEvent e) {
+            if (e.isPopupTrigger() && table.getSelectedRow() != -1) {
+                createPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+            }
         }
     }
 

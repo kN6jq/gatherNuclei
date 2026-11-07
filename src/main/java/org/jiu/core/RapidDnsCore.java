@@ -1,6 +1,5 @@
 package org.jiu.core;
 
-import cn.hutool.core.util.ReUtil;
 import cn.hutool.http.Header;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -19,48 +18,8 @@ import java.util.regex.Pattern;
 public class RapidDnsCore {
 
     /**
-     * 子域名查询结果对象
-     */
-    public static class RapidDnsResult {
-        public int total;
-        public List<SubdomainRecord> records;
-        public String error;
-        public String domain;
-
-        public RapidDnsResult() {
-            this.records = new ArrayList<>();
-        }
-
-        public boolean hasError() {
-            return error != null && !error.isEmpty();
-        }
-
-        public boolean hasData() {
-            return records != null && !records.isEmpty();
-        }
-    }
-
-    /**
-     * 子域名记录
-     */
-    public static class SubdomainRecord {
-        public String index;
-        public String domain;
-        public String address;
-        public String type;
-        public String date;
-
-        public SubdomainRecord(String index, String domain, String address, String type, String date) {
-            this.index = index;
-            this.domain = domain;
-            this.address = address;
-            this.type = type;
-            this.date = date;
-        }
-    }
-
-    /**
      * 获取 RapidDNS 子域名数据
+     *
      * @param domain 域名
      * @return RapidDnsResult 对象
      */
@@ -105,7 +64,7 @@ public class RapidDnsCore {
                 // 使用简单的正则提取
                 String simplePattern = "<td>([^<]+)</td>";
                 Matcher simpleMatcher = Pattern.compile(simplePattern).matcher(html);
-                
+
                 int index = 1;
                 String lastDomain = null;
                 while (simpleMatcher.find()) {
@@ -116,11 +75,11 @@ public class RapidDnsCore {
                         if (lastDomain != null) {
                             // 找到域名和IP
                             result.records.add(new SubdomainRecord(
-                                String.valueOf(index++),
-                                lastDomain,
-                                value,
-                                value.contains(":") ? "AAAA" : "A",
-                                ""
+                                    String.valueOf(index++),
+                                    lastDomain,
+                                    value,
+                                    value.contains(":") ? "AAAA" : "A",
+                                    ""
                             ));
                         }
                     }
@@ -158,5 +117,46 @@ public class RapidDnsCore {
         json.set("records", recordsArray);
 
         return JSONUtil.toJsonPrettyStr(json);
+    }
+
+    /**
+     * 子域名查询结果对象
+     */
+    public static class RapidDnsResult {
+        public int total;
+        public List<SubdomainRecord> records;
+        public String error;
+        public String domain;
+
+        public RapidDnsResult() {
+            this.records = new ArrayList<>();
+        }
+
+        public boolean hasError() {
+            return error != null && !error.isEmpty();
+        }
+
+        public boolean hasData() {
+            return records != null && !records.isEmpty();
+        }
+    }
+
+    /**
+     * 子域名记录
+     */
+    public static class SubdomainRecord {
+        public String index;
+        public String domain;
+        public String address;
+        public String type;
+        public String date;
+
+        public SubdomainRecord(String index, String domain, String address, String type, String date) {
+            this.index = index;
+            this.domain = domain;
+            this.address = address;
+            this.type = type;
+            this.date = date;
+        }
     }
 }

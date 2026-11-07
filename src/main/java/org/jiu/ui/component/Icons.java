@@ -2,9 +2,8 @@ package org.jiu.ui.component;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import javax.swing.JTabbedPane;
-import javax.swing.UIManager;
-import java.awt.Color;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * SVG 图标工具类
@@ -12,13 +11,19 @@ import java.awt.Color;
  */
 public final class Icons {
 
-    /** 标签页图标尺寸 */
+    /**
+     * 标签页图标尺寸
+     */
     public static final int TAB_ICON_SIZE = 16;
 
-    /** 选中标签的强调色 */
+    /**
+     * 选中标签的强调色
+     */
     public static final Color SELECTED_COLOR = new Color(0, 123, 255);
 
-    /** 未选中标签的图标色 */
+    /**
+     * 未选中标签的图标色
+     */
     public static final Color UNSELECTED_COLOR = new Color(140, 140, 140);
 
     private Icons() {
@@ -59,9 +64,9 @@ public final class Icons {
     /**
      * 创建图标
      *
-     * @param name   资源名（不含扩展名），位于 icons 目录下
-     * @param size   尺寸
-     * @param color  指定颜色，为 null 时使用主题前景色
+     * @param name  资源名（不含扩展名），位于 icons 目录下
+     * @param size  尺寸
+     * @param color 指定颜色，为 null 时使用主题前景色
      */
     public static FlatSVGIcon create(String name, int size, Color color) {
         FlatSVGIcon icon = new FlatSVGIcon("icons/" + name + ".svg", size, size);

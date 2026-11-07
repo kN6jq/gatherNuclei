@@ -7,6 +7,12 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SearchPanel extends JTabbedPane {
+    /**
+     * 各搜索引擎标签页的图标名，顺序与标签页一致
+     */
+    private static final String[] ENGINE_ICONS = {
+            "fofa", "hunter", "daydaymap", "rapiddns", "otx", "zone0", "shodan"
+    };
     private RapidDnsSearchEngine rapidDns = new RapidDnsSearchEngine();
     private FofaSearchEngine fofa = new FofaSearchEngine();
     private HunterSearchEngine hunter = new HunterSearchEngine();
@@ -14,11 +20,6 @@ public class SearchPanel extends JTabbedPane {
     private OtxSearchEngine otx = new OtxSearchEngine();
     private Zone0SearchEngine zone0 = new Zone0SearchEngine();
     private ShodanPortSearchEngine shodanPort = new ShodanPortSearchEngine();
-
-    /** 各搜索引擎标签页的图标名，顺序与标签页一致 */
-    private static final String[] ENGINE_ICONS = {
-            "fofa", "hunter", "daydaymap", "rapiddns", "otx", "zone0", "shodan"
-    };
 
     public SearchPanel() {
         this.addTab(fofa.getTitle(), fofa.getIcon(), fofa, fofa.getTips());

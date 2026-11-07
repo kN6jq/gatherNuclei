@@ -11,20 +11,20 @@ import org.jiu.utils.Utils;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
 
 public class YamlPanel extends JPanel {
+    private final Font editorFont = new Font("Consolas", Font.PLAIN, 14);
+    private final Color statusBarBackground = new Color(235, 235, 235);
     private RSyntaxTextArea textArea;
     private String absolutePath;
     private JButton addTemplateButton;
     private JButton saveTemplateButton;
     private JTextField statusField;
-    private final Font editorFont = new Font("Consolas", Font.PLAIN, 14);
-    private final Color statusBarBackground = new Color(235, 235, 235);
 
     public YamlPanel() {
         setLayout(new BorderLayout());
@@ -123,9 +123,11 @@ public class YamlPanel extends JPanel {
             public void insertUpdate(javax.swing.event.DocumentEvent e) {
                 updateStatus();
             }
+
             public void removeUpdate(javax.swing.event.DocumentEvent e) {
                 updateStatus();
             }
+
             public void changedUpdate(javax.swing.event.DocumentEvent e) {
                 updateStatus();
             }
@@ -279,12 +281,6 @@ public class YamlPanel extends JPanel {
         updateStatus();
     }
 
-
-    public void setEditorContent(String content) {
-        textArea.setText(content);
-        updateStatus("正在编辑: " + (absolutePath != null ? absolutePath : "新文件"));
-    }
-
     public void setFilePath(String path) {
         this.absolutePath = path;
         updateStatus("正在编辑: " + path);
@@ -299,6 +295,11 @@ public class YamlPanel extends JPanel {
     // 如果需要获取内容
     public String getEditorContent() {
         return textArea.getText();
+    }
+
+    public void setEditorContent(String content) {
+        textArea.setText(content);
+        updateStatus("正在编辑: " + (absolutePath != null ? absolutePath : "新文件"));
     }
 
     // 如果需要获取当前文件路径

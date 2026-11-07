@@ -5,8 +5,8 @@ import org.jiu.utils.HttpProxyUtil;
 import org.jiu.utils.Utils;
 
 public class ZoneCore {
-    public static String getData(String data,String query_type, int page, int pagesize) {
-        String url = Utils.zoneUrl+"/api/data/";
+    public static String getData(String data, String query_type, int page, int pagesize) {
+        String url = Utils.zoneUrl + "/api/data/";
         String key = Utils.zoneKey;
         return HttpProxyUtil.post(url)
                 .header(Header.USER_AGENT, "Hutool http")//头信息，多个头信息多次调用此方法即可

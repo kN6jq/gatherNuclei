@@ -13,13 +13,19 @@ import java.util.regex.Pattern;
 
 public class FofaCore {
 
-    /** 时间范围下拉框展示文案 -> 配置值 */
+    /**
+     * 时间范围下拉框展示文案 -> 配置值
+     */
     public static final LinkedHashMap<String, String> TIME_RANGES = new LinkedHashMap<>();
 
-    /** 默认时间范围（全部） */
+    /**
+     * 默认时间范围（全部）
+     */
     public static final String TIME_RANGE_ALL = "all";
 
-    /** 匹配语句中自带的 after="..." / before="..." */
+    /**
+     * 匹配语句中自带的 after="..." / before="..."
+     */
     private static final Pattern TIME_CONDITION_PATTERN =
             Pattern.compile("(?i)(after|before)\\s*=\\s*\"");
 

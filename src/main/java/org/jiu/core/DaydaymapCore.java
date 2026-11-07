@@ -16,7 +16,7 @@ public class DaydaymapCore {
         return HttpProxyUtil.post(apiUrl)
                 .header(Header.USER_AGENT, "Hutool http")
                 .header("api-key", key)
-                .body("{\"keyword\":\""+qbase64+"\",\"page\":"+page+",\"page_size\":"+size+"}")
+                .body("{\"keyword\":\"" + qbase64 + "\",\"page\":" + page + ",\"page_size\":" + size + "}")
                 .timeout(20000)//超时，毫秒
                 .execute().body();
 

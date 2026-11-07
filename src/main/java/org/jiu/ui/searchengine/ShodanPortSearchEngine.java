@@ -1,8 +1,8 @@
 package org.jiu.ui.searchengine;
 
-import org.jiu.ui.component.Icons;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import org.jiu.core.ShodanCore;
+import org.jiu.ui.component.Icons;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
     public static JTextArea inputArea = new JTextArea();
-    public JTextArea outputArea = new JTextArea();
     public static JButton searchBtn = new JButton("Scan");
+    public JTextArea outputArea = new JTextArea();
     public JButton clearBtn = new JButton("Clear");
     private JLabel statusLabel;
     private JSplitPane splitPane;
@@ -170,41 +170,41 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
             final String ip = ipList.get(i);
 
             CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> ShodanCore.getData(ip))
-                .thenAccept(result -> {
-                    String formatted = ShodanCore.formatResult(result, index, total);
-                    resultsMap.put(index, formatted);
-                })
-                .exceptionally(ex -> {
-                    resultsMap.put(index, "\n#[" + index + "/" + total + "] [Error] " + ip + ": " + ex.getMessage() + "\n");
-                    return null;
-                })
-                .thenRun(() -> {
-                    int done = completed.incrementAndGet();
-                    SwingUtilities.invokeLater(() -> {
-                        statusLabel.setText("Scanning: " + done + "/" + total);
+                    .thenAccept(result -> {
+                        String formatted = ShodanCore.formatResult(result, index, total);
+                        resultsMap.put(index, formatted);
+                    })
+                    .exceptionally(ex -> {
+                        resultsMap.put(index, "\n#[" + index + "/" + total + "] [Error] " + ip + ": " + ex.getMessage() + "\n");
+                        return null;
+                    })
+                    .thenRun(() -> {
+                        int done = completed.incrementAndGet();
+                        SwingUtilities.invokeLater(() -> {
+                            statusLabel.setText("Scanning: " + done + "/" + total);
+                        });
                     });
-                });
 
             futures.add(future);
         }
 
         // 等待所有任务完成后，按顺序显示结果
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-            .thenRun(() -> {
-                SwingUtilities.invokeLater(() -> {
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 1; i <= total; i++) {
-                        String result = resultsMap.get(i);
-                        if (result != null) {
-                            sb.append(result);
+                .thenRun(() -> {
+                    SwingUtilities.invokeLater(() -> {
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 1; i <= total; i++) {
+                            String result = resultsMap.get(i);
+                            if (result != null) {
+                                sb.append(result);
+                            }
                         }
-                    }
-                    outputArea.setText(sb.toString());
-                    searchBtn.setEnabled(true);
-                    searchBtn.setText("Scan");
-                    statusLabel.setText("Done: " + total + " IP(s)");
+                        outputArea.setText(sb.toString());
+                        searchBtn.setEnabled(true);
+                        searchBtn.setText("Scan");
+                        statusLabel.setText("Done: " + total + " IP(s)");
+                    });
                 });
-            });
     }
 
 

@@ -11,7 +11,16 @@ import java.io.IOException;
 public class InitUI {
     private static final String VERSION = "v1.0.0";
     private static final String AUTHOR = "Xm17";
-
+    /**
+     * 主标签页图标名，顺序与标签页一致
+     */
+    private static final String[] MAIN_TAB_ICONS = {
+            "template", "workflow", "search", "settings", "newtemplate", "generator"
+    };
+    /**
+     * 工作流标签页在主标签页中的索引
+     */
+    private static final int WORKFLOW_TAB_INDEX = 1;
     // UI组件
     private static JTabbedPane mainTabbedPane;
     private static TemplatesPanel templatesPanel;
@@ -21,14 +30,6 @@ public class InitUI {
     private static NucleiTemplatePanel nucleiTemplatePanel;
     private static WorkflowPanel workflowPanel;
 
-    /** 主标签页图标名，顺序与标签页一致 */
-    private static final String[] MAIN_TAB_ICONS = {
-            "template", "workflow", "search", "settings", "newtemplate", "generator"
-    };
-
-    /** 工作流标签页在主标签页中的索引 */
-    private static final int WORKFLOW_TAB_INDEX = 1;
-
     // 私有构造函数，防止实例化
     private InitUI() {
         throw new AssertionError("InitUI类不应该被实例化");
@@ -36,6 +37,7 @@ public class InitUI {
 
     /**
      * 初始化所有UI组件
+     *
      * @param frame 主窗口
      */
     public static void initializeUI(JFrame frame) {
@@ -98,7 +100,7 @@ public class InitUI {
      */
     private static JMenu createSettingsMenu(JFrame frame) {
         JMenu settingsMenu = new JMenu("设置");
-        
+
         // 代理配置
         JMenuItem proxyItem = new JMenuItem("代理配置");
         proxyItem.setToolTipText("配置 HTTP/SOCKS5 代理");
@@ -107,7 +109,7 @@ public class InitUI {
             dialog.setVisible(true);
         });
         settingsMenu.add(proxyItem);
-        
+
         return settingsMenu;
     }
 
@@ -294,6 +296,7 @@ public class InitUI {
     public static NucleiTemplatePanel getNucleiTemplatePanel() {
         return nucleiTemplatePanel;
     }
+
     public static WorkflowPanel getWorkflowPanel() {
         return workflowPanel;
     }

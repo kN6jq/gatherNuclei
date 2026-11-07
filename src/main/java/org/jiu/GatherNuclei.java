@@ -5,7 +5,6 @@ import org.jiu.ui.InitUI;
 import org.jiu.ui.component.Icons;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 import static org.jiu.utils.YamlUtils.parseConfig;
@@ -61,37 +60,23 @@ public class GatherNuclei extends JFrame {
         }
     }
 
-    private void initFrame() {
-        setTitle(TITLE);
-        setLayout(new BorderLayout());
-
-        // 设置窗口图标（标题栏与任务栏）
-        setIconImage(Icons.appLogo().getImage());
-
-        // 设置窗口大小
-        setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-        setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-    }
-
     private static JPanel createStatusBar() {
         JPanel statusBar = new JPanel(new BorderLayout());
         statusBar.setBorder(BorderFactory.createLoweredSoftBevelBorder());
-        
+
         // 左侧信息
         JLabel leftLabel = new JLabel("就绪");
         leftLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         leftLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        
+
         // 右侧信息
         JLabel rightLabel = new JLabel("gatherNuclei v1.0.0");
         rightLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         rightLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        
+
         statusBar.add(leftLabel, BorderLayout.WEST);
         statusBar.add(rightLabel, BorderLayout.EAST);
-        
+
         return statusBar;
     }
 
@@ -106,5 +91,19 @@ public class GatherNuclei extends JFrame {
                 "错误",
                 JOptionPane.ERROR_MESSAGE
         );
+    }
+
+    private void initFrame() {
+        setTitle(TITLE);
+        setLayout(new BorderLayout());
+
+        // 设置窗口图标（标题栏与任务栏）
+        setIconImage(Icons.appLogo().getImage());
+
+        // 设置窗口大小
+        setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 }
