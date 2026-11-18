@@ -3,6 +3,7 @@ package org.jiu;
 import com.formdev.flatlaf.FlatLightLaf;
 import org.jiu.ui.InitUI;
 import org.jiu.ui.component.Icons;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -76,11 +77,11 @@ public class GatherNuclei extends JFrame {
 
         JLabel leftLabel = new JLabel("就绪");
         leftLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-        leftLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        leftLabel.setFont(UIUtils.LABEL_FONT);
 
         JLabel rightLabel = new JLabel("gatherNuclei v1.0.0");
         rightLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
-        rightLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        rightLabel.setFont(UIUtils.LABEL_FONT);
 
         statusBar.add(leftLabel, BorderLayout.WEST);
         statusBar.add(rightLabel, BorderLayout.EAST);

@@ -1,17 +1,37 @@
 package org.jiu.utils;
 
 import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * YAML 配置工具类：读写运行目录下的 gatherConfig.yaml，并把配置同步到 Utils 全局变量。
  * 对外提供配置解析、单项修改与默认配置生成。
+ * 读写统一使用 UTF-8：SnakeYAML 按 UTF-8 解码，若用平台默认编码（如中文 Windows 的 GBK）
+ * 写入含中文的配置，下次读取会抛出 MalformedInputException 导致启动失败。
  */
 public class YamlUtils {
+    /**
+     * 单个 YAML 文档的字符上限：SnakeYAML 默认 3MB，会让体积较大的指纹模板解析失败，
+     * 这里放宽到 128MB。
+     */
+    private static final int YAML_CODE_POINT_LIMIT = 128 * 1024 * 1024;
+
+    /**
+     * 创建用于读取的 Yaml 实例：放宽文档长度上限，并使用 SafeConstructor 避免构造任意对象。
+     */
+    public static Yaml newYamlReader() {
+        LoaderOptions loaderOptions = new LoaderOptions();
+        loaderOptions.setCodePointLimit(YAML_CODE_POINT_LIMIT);
+        return new Yaml(new SafeConstructor(loaderOptions));
+    }
+
     /**
      * 读取运行目录下的 gatherConfig.yaml，文件不存在时先生成默认配置；
      * 读取失败仅打印堆栈并返回 null。
@@ -25,9 +45,10 @@ public class YamlUtils {
         }
 
         Map<String, Map<String, String>> yamlMap = null;
-        try (InputStream inputStream = new FileInputStream(yamlFilePath)) {
+        try (Reader reader = new InputStreamReader(new FileInputStream(yamlFilePath), StandardCharsets.UTF_8)) {
+            // 配置读取用默认 Constructor：loadAs 会带 LinkedHashMap 类型标签，SafeConstructor 无法构造该类型
             Yaml yaml = new Yaml();
-            yamlMap = yaml.loadAs(inputStream, LinkedHashMap.class);
+            yamlMap = yaml.loadAs(reader, LinkedHashMap.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -132,7 +153,7 @@ public class YamlUtils {
             String currentPath = System.getProperty("user.dir");
             String yamlFilePath = currentPath + File.separator + "gatherConfig.yaml";
 
-            try (FileWriter fileWriter = new FileWriter(yamlFilePath)) {
+            try (Writer fileWriter = new OutputStreamWriter(new FileOutputStream(yamlFilePath), StandardCharsets.UTF_8)) {
                 DumperOptions dumperOptions = new DumperOptions();
                 dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
                 Yaml yaml = new Yaml(dumperOptions);
@@ -152,7 +173,7 @@ public class YamlUtils {
         File file = new File(yamlFilePath);
 
         if (!file.exists()) {
-            try (FileWriter fileWriter = new FileWriter(yamlFilePath)) {
+            try (Writer fileWriter = new OutputStreamWriter(new FileOutputStream(yamlFilePath), StandardCharsets.UTF_8)) {
                 DumperOptions dumperOptions = new DumperOptions();
                 dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
                 Yaml yaml = new Yaml(dumperOptions);

@@ -34,7 +34,7 @@ public class OtxSearchEngine extends JPanel implements SearchEngine {
     };
     private JTextField inputField = new JTextField();
     private JButton searchBtn = new JButton();
-    private JButton statusBtn = new JButton();
+    private JLabel statusBtn = new JLabel();
     private JTabbedPane resultsTabbedPane;
     private AtomicInteger tabCounter = new AtomicInteger(0);
 

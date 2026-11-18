@@ -6,6 +6,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jiu.utils.UIUtils;
 import org.jiu.utils.Utils;
 
 import javax.swing.*;
@@ -21,7 +22,7 @@ import java.io.IOException;
  * YAML 模板编辑面板：提供语法高亮编辑器、新建与保存工具栏、快捷键及状态栏。
  */
 public class YamlPanel extends JPanel {
-    private final Font editorFont = new Font("Consolas", Font.PLAIN, 14);
+    private final Font editorFont = new Font("Consolas", Font.PLAIN, 12);
     private final Color statusBarBackground = new Color(235, 235, 235);
     private RSyntaxTextArea textArea;
     private String absolutePath;
@@ -47,16 +48,18 @@ public class YamlPanel extends JPanel {
 
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
+        UIUtils.styleToolBar(toolBar);
         toolBar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
-                new EmptyBorder(3, 5, 3, 5)
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(222, 226, 230)),
+                new EmptyBorder(6, 12, 6, 12)
         ));
 
         addTemplateButton = createToolBarButton("新建模板", "/icons/new.png");
         addTemplateButton.addActionListener(e -> newTemplate());
 
         saveTemplateButton = createToolBarButton("保存", "/icons/save.png");
+        UIUtils.stylePrimaryButton(saveTemplateButton, "保存");
+        saveTemplateButton.setPreferredSize(new Dimension(80, UIUtils.SEARCH_INPUT_HEIGHT));
         saveTemplateButton.addActionListener(e -> saveFile());
 
         toolBar.add(addTemplateButton);
@@ -81,6 +84,9 @@ public class YamlPanel extends JPanel {
         } catch (Exception e) {
             button.setText(text);
         }
+        UIUtils.styleButton(button, text, null);
+        button.setPreferredSize(new Dimension(Math.max(button.getPreferredSize().width, 80),
+                UIUtils.SEARCH_INPUT_HEIGHT));
         return button;
     }
 
@@ -92,7 +98,7 @@ public class YamlPanel extends JPanel {
         configureTextArea();
 
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
-        scrollPane.setBorder(null);
+        scrollPane.setBorder(new EmptyBorder(0, 10, 10, 10));
         scrollPane.setLineNumbersEnabled(true);
         scrollPane.getGutter().setBackground(new Color(245, 245, 245));
         scrollPane.getGutter().setBorderColor(new Color(220, 220, 220));
@@ -101,7 +107,7 @@ public class YamlPanel extends JPanel {
     }
 
     /**
-     * 配置 YAML 语法高亮、缩进与括号匹配等编辑特性，应用 monokai 主题，
+     * 配置 YAML 语法高亮、缩进与括号匹配等编辑特性，应用浅色 idea 主题与整体界面保持一致，
      * 并监听文档变化以刷新状态栏；主题加载失败时仅打印堆栈，保留默认外观。
      */
     private void configureTextArea() {
@@ -115,10 +121,11 @@ public class YamlPanel extends JPanel {
         textArea.setCloseCurlyBraces(true);
         textArea.setPaintTabLines(true);
         textArea.setMarkOccurrences(true);
+        textArea.setHighlightCurrentLine(false);
 
         try {
             Theme theme = Theme.load(getClass().getResourceAsStream(
-                    "/org/fife/ui/rsyntaxtextarea/themes/monokai.xml"));
+                    "/org/fife/ui/rsyntaxtextarea/themes/idea.xml"));
             theme.apply(textArea);
         } catch (IOException e) {
             e.printStackTrace();
@@ -154,10 +161,10 @@ public class YamlPanel extends JPanel {
         statusField.setEditable(false);
         statusField.setBorder(null);
         statusField.setBackground(statusBarBackground);
-        statusField.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        statusField.setFont(UIUtils.LABEL_FONT);
 
         JLabel positionLabel = new JLabel("行 1, 列 1");
-        positionLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        positionLabel.setFont(UIUtils.LABEL_FONT);
         textArea.addCaretListener(e -> {
             int lineNum = textArea.getCaretLineNumber() + 1;
             int columnNum = textArea.getCaretOffsetFromLineStart() + 1;

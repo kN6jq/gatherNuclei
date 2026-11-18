@@ -38,7 +38,7 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
     private static JComboBox searchTypeComboBox = new JComboBox();
     private static MultiComboBox comboxstatus;
     private final JTextField inputField = new JTextField();
-    private final JButton statusBtn = new JButton();
+    private final JLabel statusBtn = new JLabel();
     private final String[] columnNames = {
             "#",
             "IP",
@@ -271,7 +271,7 @@ public class DaydaymapEngine extends JPanel implements SearchEngine {
         String[] values = new String[]{"全选", "icp_reg_name", "isp", "server", "service", "product", "tags", "city", "province", "country", "banner", "header", "cert", "asn", "asn_org"};
         comboxstatus = new MultiComboBox(values);
         comboxstatus.setFont(UIUtils.TEXT_FONT);
-        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.COMBO_HEIGHT));
+        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.SEARCH_INPUT_HEIGHT));
 
         inputField.registerKeyboardAction(e -> {
             search(1);

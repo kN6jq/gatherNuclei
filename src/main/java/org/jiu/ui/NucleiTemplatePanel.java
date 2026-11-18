@@ -1,7 +1,8 @@
 package org.jiu.ui;
 
+import org.jiu.utils.UIUtils;
+
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
@@ -27,6 +28,15 @@ public class NucleiTemplatePanel extends JPanel {
     private JTextArea resultArea;
 
     private List<Map<String, Object>> matchers = new ArrayList<>();
+
+    /**
+     * 表单标签列统一宽度，右对齐后与输入列衔接
+     */
+    private static final int FORM_LABEL_WIDTH = 110;
+    /**
+     * 表单输入列统一宽度，基础信息与匹配条件的输入框共用同一列宽
+     */
+    private static final int FORM_FIELD_WIDTH = 480;
 
     /**
      * 构建左右分栏界面：左侧输入基础信息、匹配条件与 HTTP 请求，右侧预览生成结果。
@@ -58,100 +68,96 @@ public class NucleiTemplatePanel extends JPanel {
      * 创建基础信息表单：ID、名称、作者、标签、严重程度、描述、参考链接及确认按钮。
      */
     private JPanel createBasicInfoPanel() {
-        // 用 GridBagLayout 使标签与输入框对齐
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                "基础信息",
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("微软雅黑", Font.BOLD, 14),
-                new Color(50, 50, 50)
-        ));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                panel.getBorder(),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(UIUtils.createTitledBorder("基础信息"));
 
+        // 固定宽度的表单列，整体在分组框内居中，宽窗口下不再拉伸
+        JPanel form = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
 
-        idField = new JTextField(20);
-        idField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        idField.setPreferredSize(new Dimension(0, 25));
+        // 注意：JTextField 带列数时 getPreferredSize 会用列宽覆盖 setPreferredSize 的宽度，
+        // 固定宽度场景一律不传列数
+        idField = new JTextField();
+        UIUtils.styleTextField(idField, FORM_FIELD_WIDTH);
 
-        nameField = new JTextField(20);
-        nameField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        nameField.setPreferredSize(new Dimension(0, 25));
+        nameField = new JTextField();
+        UIUtils.styleTextField(nameField, FORM_FIELD_WIDTH);
 
-        authorField = new JTextField(20);
-        authorField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        authorField.setPreferredSize(new Dimension(0, 25));
+        authorField = new JTextField();
+        UIUtils.styleTextField(authorField, FORM_FIELD_WIDTH);
 
-        tagsField = new JTextField(20);
-        tagsField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        tagsField.setPreferredSize(new Dimension(0, 25));
+        tagsField = new JTextField();
+        UIUtils.styleTextField(tagsField, FORM_FIELD_WIDTH);
 
         severityCombo = new JComboBox<>(new String[]{"critical", "high", "medium", "low"});
-        severityCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        severityCombo.setPreferredSize(new Dimension(0, 25));
+        UIUtils.setupComboBox(severityCombo, FORM_FIELD_WIDTH, UIUtils.INPUT_HEIGHT);
 
         descriptionArea = new JTextArea(4, 20);
-        descriptionArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        descriptionArea.setFont(UIUtils.LABEL_FONT);
         descriptionArea.setLineWrap(true);
         descriptionArea.setWrapStyleWord(true);
         JScrollPane descScrollPane = new JScrollPane(descriptionArea);
+        descScrollPane.setPreferredSize(new Dimension(FORM_FIELD_WIDTH, 92));
 
         referenceArea = new JTextArea(3, 20);
-        referenceArea.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        referenceArea.setFont(UIUtils.LABEL_FONT);
         referenceArea.setLineWrap(true);
         referenceArea.setWrapStyleWord(true);
         JScrollPane refScrollPane = new JScrollPane(referenceArea);
+        refScrollPane.setPreferredSize(new Dimension(FORM_FIELD_WIDTH, 72));
 
-        confirmBasicInfoBtn = new JButton("确认基础信息");
-        confirmBasicInfoBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        confirmBasicInfoBtn.setPreferredSize(new Dimension(120, 30));
-        confirmBasicInfoBtn.setBackground(new Color(0, 123, 255));
-        confirmBasicInfoBtn.setForeground(Color.WHITE);
-        confirmBasicInfoBtn.setFocusPainted(false);
+        confirmBasicInfoBtn = new JButton();
+        UIUtils.stylePrimaryButton(confirmBasicInfoBtn, "确认基础信息");
 
-        addFieldToPanel(panel, "ID:", idField, gbc, 0);
-        addFieldToPanel(panel, "名称:", nameField, gbc, 1);
-        addFieldToPanel(panel, "作者:", authorField, gbc, 2);
-        addFieldToPanel(panel, "标签:", tagsField, gbc, 3);
-        addFieldToPanel(panel, "严重程度:", severityCombo, gbc, 4);
+        addFieldToPanel(form, "ID:", idField, gbc, 0);
+        addFieldToPanel(form, "名称:", nameField, gbc, 1);
+        addFieldToPanel(form, "作者:", authorField, gbc, 2);
+        addFieldToPanel(form, "标签:", tagsField, gbc, 3);
+        addFieldToPanel(form, "严重程度:", severityCombo, gbc, 4);
 
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 1;
         JLabel descLabel = new JLabel("描述:");
-        descLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        panel.add(descLabel, gbc);
+        UIUtils.styleLabel(descLabel);
+        descLabel.setPreferredSize(new Dimension(FORM_LABEL_WIDTH, UIUtils.INPUT_HEIGHT));
+        descLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        form.add(descLabel, gbc);
 
         gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        panel.add(descScrollPane, gbc);
+        form.add(descScrollPane, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 6;
-        gbc.gridwidth = 1;
         JLabel refLabel = new JLabel("参考链接:");
-        refLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        panel.add(refLabel, gbc);
+        UIUtils.styleLabel(refLabel);
+        refLabel.setPreferredSize(new Dimension(FORM_LABEL_WIDTH, UIUtils.INPUT_HEIGHT));
+        refLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        form.add(refLabel, gbc);
 
         gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        panel.add(refScrollPane, gbc);
+        form.add(refScrollPane, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 7;
         gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        panel.add(confirmBasicInfoBtn, gbc);
+        gbc.anchor = GridBagConstraints.EAST;
+        form.add(confirmBasicInfoBtn, gbc);
 
+        panel.add(centerForm(form), BorderLayout.CENTER);
         return panel;
+    }
+
+    /**
+     * 将固定宽度的表单在分组框内水平居中，避免宽窗口下输入列拉伸、左侧留出大片空洞。
+     */
+    private JPanel centerForm(JPanel form) {
+        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        wrapper.add(form);
+        return wrapper;
     }
 
     /**
@@ -159,18 +165,7 @@ public class NucleiTemplatePanel extends JPanel {
      */
     private JPanel createMatchersPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                "匹配条件",
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("微软雅黑", Font.BOLD, 14),
-                new Color(50, 50, 50)
-        ));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                panel.getBorder(),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        panel.setBorder(UIUtils.createTitledBorder("匹配条件"));
 
         JPanel inputPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -178,34 +173,29 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         matcherConditionCombo = new JComboBox<>(new String[]{"", "and", "or"}); // 空选项表示不指定多值匹配条件
-        matcherConditionCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        matcherConditionCombo.setPreferredSize(new Dimension(0, 25));
+        matcherConditionCombo.setToolTipText("存在多个匹配结果时的组合方式");
+        UIUtils.setupComboBox(matcherConditionCombo, FORM_FIELD_WIDTH, UIUtils.INPUT_HEIGHT);
 
         matchTypeCombo = new JComboBox<>(new String[]{
                 "body", "header", "status", "regex_body", "regex_header",
                 "time_check", "http_interaction", "dns_interaction"
         });
-        matchTypeCombo.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        matchTypeCombo.setPreferredSize(new Dimension(0, 25));
+        UIUtils.setupComboBox(matchTypeCombo, FORM_FIELD_WIDTH, UIUtils.INPUT_HEIGHT);
 
-        matchValue1 = new JTextField(15);
-        matchValue1.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        matchValue1.setPreferredSize(new Dimension(0, 25));
+        matchValue1 = new JTextField();
+        matchValue1.setFont(UIUtils.LABEL_FONT);
+        matchValue1.setPreferredSize(new Dimension(150, UIUtils.INPUT_HEIGHT));
 
-        matchValue2 = new JTextField(15);
-        matchValue2.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        matchValue2.setPreferredSize(new Dimension(0, 25));
+        matchValue2 = new JTextField();
+        matchValue2.setFont(UIUtils.LABEL_FONT);
+        matchValue2.setPreferredSize(new Dimension(150, UIUtils.INPUT_HEIGHT));
 
-        matchValue3 = new JTextField(15);
-        matchValue3.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        matchValue3.setPreferredSize(new Dimension(0, 25));
+        matchValue3 = new JTextField();
+        matchValue3.setFont(UIUtils.LABEL_FONT);
+        matchValue3.setPreferredSize(new Dimension(150, UIUtils.INPUT_HEIGHT));
 
-        addMatcherBtn = new JButton("添加匹配条件");
-        addMatcherBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        addMatcherBtn.setPreferredSize(new Dimension(120, 30));
-        addMatcherBtn.setBackground(new Color(40, 167, 69));
-        addMatcherBtn.setForeground(Color.WHITE);
-        addMatcherBtn.setFocusPainted(false);
+        addMatcherBtn = new JButton();
+        UIUtils.styleSuccessButton(addMatcherBtn, "添加匹配条件");
 
         matchValue1.setToolTipText("必填项");
         matchValue2.setToolTipText("选填项");
@@ -213,45 +203,60 @@ public class NucleiTemplatePanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        JLabel conditionLabel = new JLabel("多个结果匹配条件类型:");
-        conditionLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        JLabel conditionLabel = new JLabel("多值匹配条件:");
+        UIUtils.styleLabel(conditionLabel);
+        conditionLabel.setPreferredSize(new Dimension(FORM_LABEL_WIDTH, UIUtils.INPUT_HEIGHT));
+        conditionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         inputPanel.add(conditionLabel, gbc);
 
         gbc.gridx = 1;
-        gbc.weightx = 1.0;
         inputPanel.add(matcherConditionCombo, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.weightx = 0.0;
         JLabel typeLabel = new JLabel("匹配类型:");
-        typeLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.styleLabel(typeLabel);
+        typeLabel.setPreferredSize(new Dimension(FORM_LABEL_WIDTH, UIUtils.INPUT_HEIGHT));
+        typeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         inputPanel.add(typeLabel, gbc);
 
         gbc.gridx = 1;
-        gbc.weightx = 1.0;
         inputPanel.add(matchTypeCombo, gbc);
 
-        JPanel valuePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        valuePanel.add(new JLabel("匹配值:"));
+        JPanel valuePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         valuePanel.add(matchValue1);
         valuePanel.add(matchValue2);
         valuePanel.add(matchValue3);
 
+        JLabel valueLabel = new JLabel("匹配值:");
+        UIUtils.styleLabel(valueLabel);
+        valueLabel.setPreferredSize(new Dimension(FORM_LABEL_WIDTH, UIUtils.INPUT_HEIGHT));
+        valueLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
         gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.gridwidth = 2;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
+        inputPanel.add(valueLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
         inputPanel.add(valuePanel, gbc);
 
         gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
         inputPanel.add(addMatcherBtn, gbc);
 
         matchersResultArea = new JTextArea(8, 40);
-        matchersResultArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+        matchersResultArea.setFont(UIUtils.CODE_FONT);
         matchersResultArea.setEditable(false);
 
-        panel.add(inputPanel, BorderLayout.NORTH);
+        panel.add(centerForm(inputPanel), BorderLayout.NORTH);
         panel.add(new JScrollPane(matchersResultArea), BorderLayout.CENTER);
 
         return panel;
@@ -262,21 +267,10 @@ public class NucleiTemplatePanel extends JPanel {
      */
     private JPanel createHttpRequestPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                "HTTP请求",
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("微软雅黑", Font.BOLD, 14),
-                new Color(50, 50, 50)
-        ));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                panel.getBorder(),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        panel.setBorder(UIUtils.createTitledBorder("HTTP请求"));
 
         httpRequestArea = new JTextArea(10, 40);
-        httpRequestArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+        httpRequestArea.setFont(UIUtils.CODE_FONT);
         panel.add(new JScrollPane(httpRequestArea), BorderLayout.CENTER);
 
         return panel;
@@ -287,33 +281,14 @@ public class NucleiTemplatePanel extends JPanel {
      */
     private JPanel createResultPanel() {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                "生成结果",
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("微软雅黑", Font.BOLD, 14),
-                new Color(50, 50, 50)
-        ));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                panel.getBorder(),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        panel.setBorder(UIUtils.createTitledBorder("生成结果"));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        resetBtn = new JButton("重新填写");
-        resetBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        resetBtn.setPreferredSize(new Dimension(100, 30));
-        resetBtn.setBackground(new Color(220, 53, 69));
-        resetBtn.setForeground(Color.WHITE);
-        resetBtn.setFocusPainted(false);
+        resetBtn = new JButton();
+        UIUtils.styleDangerButton(resetBtn, "重新填写");
 
-        generateBtn = new JButton("生成模板");
-        generateBtn.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        generateBtn.setPreferredSize(new Dimension(100, 30));
-        generateBtn.setBackground(new Color(0, 123, 255));
-        generateBtn.setForeground(Color.WHITE);
-        generateBtn.setFocusPainted(false);
+        generateBtn = new JButton();
+        UIUtils.stylePrimaryButton(generateBtn, "生成模板");
 
         buttonPanel.add(generateBtn);
         buttonPanel.add(resetBtn);
@@ -321,7 +296,7 @@ public class NucleiTemplatePanel extends JPanel {
         panel.add(buttonPanel, BorderLayout.NORTH);
 
         resultArea = new JTextArea(30, 40);
-        resultArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+        resultArea.setFont(UIUtils.CODE_FONT);
         resultArea.setEditable(false);
         panel.add(new JScrollPane(resultArea), BorderLayout.CENTER);
 
@@ -330,7 +305,7 @@ public class NucleiTemplatePanel extends JPanel {
 
 
     /**
-     * 以标签在左、输入框在右的两列布局添加一行字段。
+     * 以固定几何添加一行表单字段：标签列 110 右对齐，输入列固定 480 宽，与匹配条件分组共用同一参数。
      */
     private void addFieldToPanel(JPanel panel, String label, JComponent field,
                                  GridBagConstraints gbc, int row) {
@@ -338,10 +313,17 @@ public class NucleiTemplatePanel extends JPanel {
         gbc.gridy = row;
         gbc.gridwidth = 1;
         gbc.weightx = 0.0;
-        panel.add(new JLabel(label), gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.EAST;
+
+        JLabel fieldLabel = new JLabel(label);
+        UIUtils.styleLabel(fieldLabel);
+        fieldLabel.setPreferredSize(new Dimension(FORM_LABEL_WIDTH, UIUtils.INPUT_HEIGHT));
+        fieldLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        panel.add(fieldLabel, gbc);
 
         gbc.gridx = 1;
-        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.CENTER;
         panel.add(field, gbc);
     }
 

@@ -3,6 +3,7 @@ package org.jiu.ui.searchengine;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import org.jiu.core.ShodanCore;
 import org.jiu.ui.component.Icons;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -70,17 +71,9 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
-        searchBtn.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
-        searchBtn.setPreferredSize(new Dimension(80, 28));
-        searchBtn.setBackground(new Color(0, 123, 255));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
+        UIUtils.stylePrimaryButton(searchBtn, "Scan");
 
-        clearBtn.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
-        clearBtn.setPreferredSize(new Dimension(80, 28));
-        clearBtn.setBackground(new Color(220, 53, 69));
-        clearBtn.setForeground(Color.WHITE);
-        clearBtn.setFocusPainted(false);
+        UIUtils.styleDangerButton(clearBtn, "Clear");
 
         buttonPanel.add(searchBtn);
         buttonPanel.add(clearBtn);
@@ -114,7 +107,7 @@ public class ShodanPortSearchEngine extends JPanel implements SearchEngine {
         panel.setBorder(BorderFactory.createLoweredBevelBorder());
 
         statusLabel = new JLabel("Ready");
-        statusLabel.setFont(new Font("Microsoft YaHei", Font.PLAIN, 11));
+        statusLabel.setFont(UIUtils.LABEL_FONT);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
         panel.add(statusLabel, BorderLayout.WEST);
 

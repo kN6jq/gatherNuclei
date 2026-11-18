@@ -1,6 +1,8 @@
 package org.jiu.ui.component;
 
 
+import org.jiu.utils.UIUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -33,21 +35,18 @@ public class MultiComboBox extends JComponent implements ActionListener {
         popup = new MultiPopup(values);
         editor = new JTextField();
         // 编辑框尺寸固定，不随内容变化
-        editor.setPreferredSize(new Dimension(100, 20));
+        editor.setPreferredSize(new Dimension(100, UIUtils.SEARCH_INPUT_HEIGHT));
         editor.setEditable(false);
         editor.addActionListener(this);
-        arrowButton = new JButton("字段▼");
-        arrowButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        arrowButton.setBackground(new Color(0, 123, 255));
-        arrowButton.setForeground(Color.WHITE);
-        arrowButton.setFocusPainted(false);
+        arrowButton = new JButton();
+        UIUtils.stylePrimaryButton(arrowButton, "字段▼");
         arrowButton.setMargin(new Insets(0, 6, 0, 6));
         arrowButton.addActionListener(this);
         this.add(editor);
         this.add(arrowButton);
 
         // 组件在工具栏中空间不足时不应被压扁，否则按钮文字会被截断
-        Dimension preferred = new Dimension(140, 30);
+        Dimension preferred = new Dimension(140, UIUtils.SEARCH_INPUT_HEIGHT);
         setPreferredSize(preferred);
         setMinimumSize(preferred);
     }
@@ -140,18 +139,12 @@ public class MultiComboBox extends JComponent implements ActionListener {
                 checkboxPane.add(box);
             }
 
-            commitButton = new JButton("确定");
-            commitButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-            commitButton.setBackground(new Color(0, 123, 255));
-            commitButton.setForeground(Color.WHITE);
-            commitButton.setFocusPainted(false);
+            commitButton = new JButton();
+            UIUtils.stylePrimaryButton(commitButton, "确定");
             commitButton.addActionListener(this);
 
-            cancelButton = new JButton("取消");
-            cancelButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-            cancelButton.setBackground(new Color(108, 117, 125));
-            cancelButton.setForeground(Color.WHITE);
-            cancelButton.setFocusPainted(false);
+            cancelButton = new JButton();
+            UIUtils.styleSecondaryButton(cancelButton, "取消");
             cancelButton.addActionListener(this);
 
             buttonPane.add(commitButton);

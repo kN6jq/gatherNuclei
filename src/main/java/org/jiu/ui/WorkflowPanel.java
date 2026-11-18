@@ -1,11 +1,12 @@
 package org.jiu.ui;
 
-import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
+import org.jiu.utils.UIUtils;
 import org.jiu.utils.Utils;
+import org.jiu.utils.YamlUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -13,8 +14,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -101,9 +103,9 @@ public class WorkflowPanel extends JPanel {
                 return null;
             }
 
-            Yaml yaml = new Yaml();
+            Yaml yaml = YamlUtils.newYamlReader();
             Map<String, Object> templateData;
-            try (FileReader reader = new FileReader(templateFile)) {
+            try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(templateFile.toPath()), StandardCharsets.UTF_8)) {
                 templateData = yaml.load(reader);
             }
             if (templateData == null) {
@@ -177,6 +179,7 @@ public class WorkflowPanel extends JPanel {
         add(createToolBar(), BorderLayout.NORTH);
         JScrollPane scrollPane = new JScrollPane(workflowTable);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(new EmptyBorder(0, 10, 10, 10));
         add(scrollPane, BorderLayout.CENTER);
     }
 
@@ -185,23 +188,20 @@ public class WorkflowPanel extends JPanel {
      */
     private JToolBar createToolBar() {
         JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
-        toolBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        UIUtils.styleToolBar(toolBar);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.styleLabel(statusLabel);
+        statusLabel.setPreferredSize(new Dimension(130, UIUtils.SEARCH_INPUT_HEIGHT));
         leftPanel.add(statusLabel);
 
         leftPanel.add(Box.createHorizontalStrut(10));
 
-        JButton refreshBtn = new JButton("刷新");
-        refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
-        refreshBtn.setFocusPainted(false);
-        refreshBtn.setPreferredSize(new Dimension(60, 25));
-        refreshBtn.setBackground(new Color(0, 123, 255));
-        refreshBtn.setForeground(Color.WHITE);
+        JButton refreshBtn = new JButton();
+        UIUtils.stylePrimaryButton(refreshBtn, "刷新");
+        refreshBtn.setPreferredSize(new Dimension(85, UIUtils.SEARCH_INPUT_HEIGHT));
         refreshBtn.addActionListener(e -> loadWorkflows());
         leftPanel.add(refreshBtn);
 
@@ -213,26 +213,17 @@ public class WorkflowPanel extends JPanel {
         gbc.gridy = 0;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        searchField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchField.putClientProperty("JTextField.placeholderText", "搜索工作流...");
+        gbc.insets = new Insets(0, 10, 0, 0);
+        UIUtils.setupSearchField(searchField, "搜索工作流...");
         searchField.addActionListener(e -> performSearch());
         rightPanel.add(searchField, gbc);
 
         mainPanel.add(leftPanel, BorderLayout.WEST);
-        mainPanel.add(rightPanel, BorderLayout.EAST);
+        // 搜索框放入 CENTER：横向填满左侧工具栏之后的剩余空间，随窗口变宽自动拉长
+        mainPanel.add(rightPanel, BorderLayout.CENTER);
 
         toolBar.add(mainPanel);
         return toolBar;
-    }
-
-    /**
-     * 为搜索框设置 FlatLaf 占位提示、尾部搜索图标并绑定回车搜索（当前无调用方）。
-     */
-    private void configureSearchField() {
-        searchField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search workflows, Enter");
-        searchField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_ICON, new FlatSearchIcon());
-        searchField.addActionListener(e -> performSearch());
     }
 
     /**
@@ -250,7 +241,8 @@ public class WorkflowPanel extends JPanel {
         JTable table = new JTable(tableModel);
 
         table.setRowHeight(25);
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        table.setFont(UIUtils.LABEL_FONT);
+        UIUtils.styleTable(table);
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -375,9 +367,9 @@ public class WorkflowPanel extends JPanel {
      */
     private void processWorkflowFile(Path path) {
         try {
-            Yaml yaml = new Yaml();
+            Yaml yaml = YamlUtils.newYamlReader();
             Map<String, List<String>> workflowData;
-            try (FileReader reader = new FileReader(path.toFile())) {
+            try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8)) {
                 workflowData = yaml.load(reader);
             }
             if (workflowData == null) {

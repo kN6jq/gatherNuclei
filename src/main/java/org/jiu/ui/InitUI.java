@@ -3,6 +3,7 @@ package org.jiu.ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import org.jiu.ui.component.Icons;
 import org.jiu.ui.dialog.ProxyConfigDialog;
+import org.jiu.utils.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -162,7 +163,7 @@ public class InitUI {
         SwingUtilities.invokeLater(() -> {
             try {
                 mainTabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
-                mainTabbedPane.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+                mainTabbedPane.setFont(UIUtils.LABEL_FONT);
                 styleTabbedPane(mainTabbedPane);
 
                 addTab("模板管理", "template", templatesPanel, "浏览、过滤并生成 Nuclei 模板的运行命令");

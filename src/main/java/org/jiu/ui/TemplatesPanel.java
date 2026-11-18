@@ -4,11 +4,14 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jiu.utils.UIUtils;
 import org.jiu.utils.Utils;
+import org.jiu.utils.YamlUtils;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -126,8 +129,7 @@ public class TemplatesPanel extends JPanel {
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
-        table.setRowHeight(25);
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.styleTable(table);
 
         DefaultTableCellRenderer centerRenderer = createCenterRenderer();
         for (int i = 0; i < table.getColumnCount(); i++) {
@@ -215,75 +217,109 @@ public class TemplatesPanel extends JPanel {
     }
 
     /**
-     * 配置各列首选宽度，并统一行高与字体。
+     * 配置各列首选宽度：总宽控制在常见窗口宽度内，表头完整显示且不出现横向滚动条。
      */
     private void configureColumnWidths(JTable table) {
-        table.setRowHeight(25);
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-
         table.getColumnModel().getColumn(0).setPreferredWidth(40);   // #
-        table.getColumnModel().getColumn(1).setPreferredWidth(120);  // ID
-        table.getColumnModel().getColumn(2).setPreferredWidth(200);  // Name
-        table.getColumnModel().getColumn(3).setPreferredWidth(60);   // Severity - 使用颜色标识
+        table.getColumnModel().getColumn(1).setPreferredWidth(130);  // ID
+        table.getColumnModel().getColumn(2).setPreferredWidth(180);  // Name
+        table.getColumnModel().getColumn(3).setPreferredWidth(132);  // Severity - 使用颜色标识
         table.getColumnModel().getColumn(4).setPreferredWidth(150);  // Tags
-        table.getColumnModel().getColumn(5).setPreferredWidth(80);   // Author
-        table.getColumnModel().getColumn(6).setPreferredWidth(250);  // Description
-        table.getColumnModel().getColumn(7).setPreferredWidth(180);  // Reference
+        table.getColumnModel().getColumn(5).setPreferredWidth(116);  // Author
+        table.getColumnModel().getColumn(6).setPreferredWidth(240);  // Description
+        table.getColumnModel().getColumn(7).setPreferredWidth(170);  // Reference
     }
 
     /**
      * 创建搜索框，文本变化经文档监听器防抖后触发过滤。
+     * 复用统一搜索框样式：300x30 尺寸、占位文案、尾部搜索图标与清空按钮。
      */
     private JTextField createSearchField() {
         JTextField field = new JTextField(20);
-        field.putClientProperty("JTextField.placeholderText", "输入关键词搜索...");
+        UIUtils.setupSearchField(field, "搜索模板 (Ctrl+F)...");
         field.getDocument().addDocumentListener(new SearchDocumentListener());
         return field;
     }
 
     /**
-     * 创建默认选中的严重程度过滤按钮，按级别着色，点击触发过滤。
+     * 创建默认选中的严重程度过滤按钮：选中时使用对应级别的浅色底与深色文字，
+     * 取消选中时恢复白底灰字，让过滤状态一眼可辨。
      */
     private JToggleButton createFilterButton(String text, String severity) {
         JToggleButton button = new JToggleButton(text);
         button.setSelected(true);
         button.setToolTipText(severity + "级别模板");
+        button.setFont(UIUtils.LABEL_FONT);
+        button.setFocusPainted(false);
+
+        Color selectedBackground = severityBackground(text);
+        Color selectedForeground = severityForeground(text);
+
+        Runnable applyStyle = () -> {
+            if (button.isSelected()) {
+                button.setBackground(selectedBackground);
+                button.setForeground(selectedForeground);
+            } else {
+                button.setBackground(Color.WHITE);
+                button.setForeground(new Color(73, 80, 87));
+            }
+        };
+        applyStyle.run();
+
+        button.addItemListener(e -> applyStyle.run());
         button.addActionListener(e -> filterTemplates());
-
-        Color selectedColor = new Color(0, 123, 255); // 默认蓝色
-        Color normalColor = Color.WHITE;
-
-        if ("信息".equals(text)) {
-            selectedColor = new Color(108, 117, 125); // 灰色
-        } else if ("低".equals(text)) {
-            selectedColor = new Color(40, 167, 69); // 绿色
-        } else if ("中".equals(text)) {
-            selectedColor = new Color(255, 193, 7); // 黄色
-        } else if ("高".equals(text)) {
-            selectedColor = new Color(255, 152, 0); // 橙色
-        } else if ("危".equals(text)) {
-            selectedColor = new Color(220, 53, 69); // 红色
-        }
-
-        button.setBackground(normalColor);
-        button.setForeground(Color.BLACK);
-        button.setSelected(true);
-        button.setBackground(selectedColor);
-        button.setForeground(Color.WHITE);
-
         return button;
+    }
+
+    /**
+     * 严重程度对应的选中底色（浅色系，避免饱和色块造成视觉噪音）。
+     */
+    private Color severityBackground(String text) {
+        switch (text) {
+            case "信息":
+                return new Color(233, 236, 239);
+            case "低":
+                return new Color(212, 237, 218);
+            case "中":
+                return new Color(255, 243, 205);
+            case "高":
+                return new Color(255, 232, 210);
+            case "危":
+                return new Color(248, 215, 218);
+            default:
+                return new Color(222, 235, 255);
+        }
+    }
+
+    /**
+     * 严重程度对应的选中文字色，与底色保持同色系且保证对比度。
+     */
+    private Color severityForeground(String text) {
+        switch (text) {
+            case "信息":
+                return new Color(73, 80, 87);
+            case "低":
+                return new Color(30, 126, 52);
+            case "中":
+                return new Color(138, 109, 0);
+            case "高":
+                return new Color(178, 89, 0);
+            case "危":
+                return new Color(176, 42, 55);
+            default:
+                return new Color(11, 94, 215);
+        }
     }
 
     /**
      * 创建刷新按钮，点击重新加载模板列表。
      */
     private JButton createRefreshButton() {
-        JButton button = new JButton("刷新");
+        JButton button = new JButton();
+        UIUtils.stylePrimaryButton(button, "刷新");
+        button.setPreferredSize(new Dimension(85, UIUtils.SEARCH_INPUT_HEIGHT));
         button.setToolTipText("刷新模板列表");
         button.addActionListener(e -> refreshTemplates());
-        button.setBackground(new Color(0, 123, 255));
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
         return button;
     }
 
@@ -297,6 +333,7 @@ public class TemplatesPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(templateTable);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(new EmptyBorder(0, 10, 10, 10));
         add(scrollPane, BorderLayout.CENTER);
 
         initializeFilters();
@@ -307,35 +344,34 @@ public class TemplatesPanel extends JPanel {
      */
     private JToolBar createToolBar() {
         JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
-        toolBar.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        UIUtils.styleToolBar(toolBar);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
 
-        statusLabel.setPreferredSize(new Dimension(200, 25));
-        statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        statusLabel.setPreferredSize(new Dimension(200, UIUtils.SEARCH_INPUT_HEIGHT));
+        UIUtils.styleLabel(statusLabel);
         leftPanel.add(statusLabel);
 
         leftPanel.add(Box.createHorizontalStrut(10));
 
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-        filterPanel.add(new JLabel("过滤:"));
+        JLabel filterLabel = new JLabel("过滤:");
+        UIUtils.styleLabel(filterLabel);
+        filterLabel.setPreferredSize(new Dimension(44, UIUtils.SEARCH_INPUT_HEIGHT));
+        filterPanel.add(filterLabel);
 
-        Dimension buttonSize = new Dimension(50, 25);
+        Dimension buttonSize = new Dimension(52, UIUtils.SEARCH_INPUT_HEIGHT);
         for (JToggleButton btn : new JToggleButton[]{infoBtn, lowBtn, mediumBtn, highBtn, criticalBtn}) {
             btn.setPreferredSize(buttonSize);
-            btn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
+            btn.setFont(UIUtils.LABEL_FONT);
             btn.setFocusPainted(false);
             filterPanel.add(btn);
         }
 
         leftPanel.add(filterPanel);
 
-        refreshBtn.setPreferredSize(new Dimension(60, 25));
-        refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 11));
-        refreshBtn.setFocusPainted(false);
         leftPanel.add(refreshBtn);
 
         leftPanel.add(Box.createHorizontalStrut(10));
@@ -346,13 +382,12 @@ public class TemplatesPanel extends JPanel {
         gbc.gridy = 0;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        searchField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        searchField.putClientProperty("JTextField.placeholderText", "搜索模板 (Ctrl+F)...");
+        gbc.insets = new Insets(0, 10, 0, 0);
         rightPanel.add(searchField, gbc);
 
         mainPanel.add(leftPanel, BorderLayout.WEST);
-        mainPanel.add(rightPanel, BorderLayout.EAST);
+        // 搜索框放入 CENTER：由 GridBag 横向填满左侧工具栏之后的剩余空间，随窗口变宽自动拉长
+        mainPanel.add(rightPanel, BorderLayout.CENTER);
 
         toolBar.add(mainPanel);
         return toolBar;
@@ -496,7 +531,8 @@ public class TemplatesPanel extends JPanel {
      */
     private Map<String, Object> loadYamlFile(Path file) throws IOException {
         try (InputStream is = Files.newInputStream(file)) {
-            Yaml yaml = new Yaml();
+            // 放宽 SnakeYAML 默认 3MB 文档上限，体积大的指纹模板（如 WordPress 插件检测）才能解析
+            Yaml yaml = YamlUtils.newYamlReader();
             Map<String, Object> template = yaml.load(is);
             if (template != null) {
                 template.put("path", file.toString());
@@ -600,7 +636,7 @@ public class TemplatesPanel extends JPanel {
         JTextArea textArea = new JTextArea(message.toString());
         textArea.setEditable(false);
         textArea.setCaretPosition(0);
-        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        textArea.setFont(UIUtils.CODE_FONT);
 
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(800, 400));
@@ -932,7 +968,7 @@ public class TemplatesPanel extends JPanel {
                 return;
             }
 
-            Yaml yaml = new Yaml();
+            Yaml yaml = YamlUtils.newYamlReader();
             Map<String, List<String>> workflowData;
             try (FileReader reader = new FileReader(workflowFile)) {
                 workflowData = yaml.load(reader);
@@ -1257,7 +1293,7 @@ public class TemplatesPanel extends JPanel {
         textArea.setCodeFoldingEnabled(true);
         textArea.setAntiAliasingEnabled(true);
         textArea.setText(content);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setFont(UIUtils.CODE_FONT);
 
         try {
             Theme theme = Theme.load(getClass().getResourceAsStream(

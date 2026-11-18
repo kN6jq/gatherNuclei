@@ -47,7 +47,7 @@ class PageStateHolder {
 public class FofaSearchEngine extends JPanel implements SearchEngine {
     private static JComboBox searchTypeComboBox = new JComboBox();
     private final JTextField inputField = new JTextField();
-    private final JButton statusBtn = new JButton();
+    private final JLabel statusBtn = new JLabel();
     private final String[] columnNames = {
             "#",
             "IP",
@@ -153,7 +153,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
      */
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
+        UIUtils.styleToolBar(toolBar);
 
         // 字段多选项，取值为 FOFA API 支持的返回字段
         String[] values = new String[]{
@@ -182,7 +182,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         timeRangeComboBox = new JComboBox<>(FofaCore.TIME_RANGES.keySet().toArray(new String[0]));
         timeRangeComboBox.setSelectedItem(FofaCore.getTimeRangeLabel(Utils.fofaTimeRange));
         timeRangeComboBox.setToolTipText("限定数据的更新时间范围，语句中已写 after/before 时以语句为准");
-        UIUtils.setupComboBox(timeRangeComboBox, 95);
+        UIUtils.setupComboBox(timeRangeComboBox, 108);
         // 选中项持久化到配置；监听器在初始 setSelectedItem 之后注册，避免初始化即写文件
         timeRangeComboBox.addActionListener(e -> {
             Object selected = timeRangeComboBox.getSelectedItem();
@@ -192,7 +192,7 @@ public class FofaSearchEngine extends JPanel implements SearchEngine {
         });
 
         comboxstatus.setFont(UIUtils.TEXT_FONT);
-        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.COMBO_HEIGHT));
+        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.SEARCH_INPUT_HEIGHT));
 
         UIUtils.setupSearchButton(searchBtn, "搜索");
 

@@ -111,7 +111,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
 
     private void initToolBar() {
         JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
+        UIUtils.styleToolBar(toolBar);
 
         UIUtils.setupSearchField(inputField, "输入域名，例如: baidu.com");
 
@@ -167,7 +167,7 @@ public class RapidDnsSearchEngine extends JPanel implements SearchEngine {
         JPanel statsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel totalLabel = new JLabel("总计: 0");
         totalLabel.setName("totalLabel");
-        totalLabel.setFont(new Font("微软雅黑", Font.BOLD, 12));
+        totalLabel.setFont(UIUtils.LABEL_FONT.deriveFont(Font.BOLD));
         statsPanel.add(totalLabel);
 
         contentPanel.add(scrollPane, BorderLayout.CENTER);

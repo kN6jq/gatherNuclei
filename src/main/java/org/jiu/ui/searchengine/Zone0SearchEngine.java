@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Zone0SearchEngine extends JPanel implements SearchEngine {
     private static JComboBox searchTypeComboBox = new JComboBox();
     private final JTextField inputField = new JTextField();
-    private final JButton statusBtn = new JButton();
+    private final JLabel statusBtn = new JLabel();
     // 信息系统(site)搜索结果列
     private final String[] sitecolumnNames = {"#", "IP", "Port", "URL", "Title", "Component", "Service", "Protocol", "City", "Operator", "Status", "Company", "Tags"};
     // 移动端应用(apk)结果列，ID 取自 wechat_id 或 app_id

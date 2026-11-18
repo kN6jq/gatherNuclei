@@ -1,5 +1,7 @@
 package org.jiu.ui.dialog;
 
+import org.jiu.utils.UIUtils;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
@@ -90,41 +92,44 @@ public class ProxyConfigDialog extends JDialog {
      */
     private void initComponents() {
         enableProxyCheckBox = new JCheckBox("启用代理");
-        enableProxyCheckBox.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        enableProxyCheckBox.setFont(UIUtils.LABEL_FONT);
 
         proxyTypeComboBox = new JComboBox<>(new String[]{"HTTP", "SOCKS5"});
-        proxyTypeComboBox.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.setupComboBox(proxyTypeComboBox, 90, UIUtils.INPUT_HEIGHT);
 
         hostField = new JTextField(15);
-        hostField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.styleTextField(hostField, 180);
         hostField.setToolTipText("代理服务器地址，如: 127.0.0.1");
 
         portField = new JTextField(6);
-        portField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.styleTextField(portField, 80);
         portField.setToolTipText("代理服务器端口，如: 1080");
 
         usernameField = new JTextField(15);
-        usernameField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.styleTextField(usernameField, 180);
         usernameField.setToolTipText("可选，代理认证用户名");
 
         passwordField = new JPasswordField(15);
-        passwordField.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        UIUtils.styleTextField(passwordField, 180);
         passwordField.setToolTipText("可选，代理认证密码");
 
-        testButton = new JButton("测试连接");
-        testButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        testButton.setPreferredSize(new Dimension(100, 28));
+        testButton = new JButton();
+        UIUtils.styleButton(testButton, "测试连接", null);
 
-        saveButton = new JButton("保存");
-        saveButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        saveButton.setPreferredSize(new Dimension(80, 28));
-        saveButton.setBackground(new Color(0, 123, 255));
-        saveButton.setForeground(Color.WHITE);
-        saveButton.setFocusPainted(false);
+        saveButton = new JButton();
+        UIUtils.stylePrimaryButton(saveButton, "保存");
 
-        cancelButton = new JButton("取消");
-        cancelButton.setFont(new Font("微软雅黑", Font.PLAIN, 12));
-        cancelButton.setPreferredSize(new Dimension(80, 28));
+        cancelButton = new JButton();
+        UIUtils.styleButton(cancelButton, "取消", null);
+    }
+
+    /**
+     * 创建统一字体的表单标签。
+     */
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        UIUtils.styleLabel(label);
+        return label;
     }
 
     /**
@@ -149,19 +154,19 @@ public class ProxyConfigDialog extends JDialog {
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        proxyPanel.add(new JLabel("代理类型:"), gbc);
+        proxyPanel.add(createLabel("代理类型:"), gbc);
         gbc.gridx = 1;
         proxyPanel.add(proxyTypeComboBox, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
-        proxyPanel.add(new JLabel("主机地址:"), gbc);
+        proxyPanel.add(createLabel("主机地址:"), gbc);
         gbc.gridx = 1;
         proxyPanel.add(hostField, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 3;
-        proxyPanel.add(new JLabel("端口:"), gbc);
+        proxyPanel.add(createLabel("端口:"), gbc);
         gbc.gridx = 1;
         proxyPanel.add(portField, gbc);
 
@@ -174,13 +179,13 @@ public class ProxyConfigDialog extends JDialog {
 
         authGbc.gridx = 0;
         authGbc.gridy = 0;
-        authPanel.add(new JLabel("用户名:"), authGbc);
+        authPanel.add(createLabel("用户名:"), authGbc);
         authGbc.gridx = 1;
         authPanel.add(usernameField, authGbc);
 
         authGbc.gridx = 0;
         authGbc.gridy = 1;
-        authPanel.add(new JLabel("密码:"), authGbc);
+        authPanel.add(createLabel("密码:"), authGbc);
         authGbc.gridx = 1;
         authPanel.add(passwordField, authGbc);
 

@@ -38,7 +38,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
     private static JComboBox timeComboBox = new JComboBox();
     private static MultiComboBox comboxstatus;
     private final JTextField inputField = new JTextField();
-    private final JButton statusBtn = new JButton();
+    private final JLabel statusBtn = new JLabel();
     private final String[] columnNames = {
             "#",
             "IP",
@@ -315,7 +315,7 @@ public class HunterSearchEngine extends JPanel implements SearchEngine {
         String[] values = new String[]{"全选", "status_code", "web_title", "domain", "protocol", "number", "company", "city", "province", "country", "updated_at", "isp", "header_server", "as_org"};
         comboxstatus = new MultiComboBox(values);
         comboxstatus.setFont(UIUtils.TEXT_FONT);
-        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.COMBO_HEIGHT));
+        comboxstatus.setPreferredSize(new Dimension(140, UIUtils.SEARCH_INPUT_HEIGHT));
 
         String today = DateUtil.today();
         end_time = today;
