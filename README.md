@@ -3,7 +3,7 @@
 > 集 Nuclei 模板管理与多空间测绘引擎搜索于一体的桌面工具
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v1.0.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v1.0.1-green.svg)]()
 [![Java](https://img.shields.io/badge/java-8%2B-orange.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 
@@ -122,12 +122,12 @@ cd gatherNuclei
 mvn clean package
 ```
 
-构建产物位于 `target/gatherNuclei-v1.0.0-jar-with-dependencies.jar`。
+构建产物位于 `target/gatherNuclei-v1.0.1-jar-with-dependencies.jar`。
 
 ### 运行
 
 ```bash
-java -jar target/gatherNuclei-v1.0.0-jar-with-dependencies.jar
+java -jar target/gatherNuclei-v1.0.1-jar-with-dependencies.jar
 ```
 
 Windows 用户亦可直接双击 jar 文件启动。

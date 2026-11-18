@@ -79,7 +79,7 @@ public class GatherNuclei extends JFrame {
         leftLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         leftLabel.setFont(UIUtils.LABEL_FONT);
 
-        JLabel rightLabel = new JLabel("gatherNuclei v1.0.0");
+        JLabel rightLabel = new JLabel("gatherNuclei v1.0.1");
         rightLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         rightLabel.setFont(UIUtils.LABEL_FONT);
 

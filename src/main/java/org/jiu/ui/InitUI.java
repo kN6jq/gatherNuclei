@@ -13,7 +13,7 @@ import java.io.IOException;
  * 主界面装配工具类：创建各功能面板、顶部菜单与主标签页，并对外提供面板实例访问。
  */
 public class InitUI {
-    private static final String VERSION = "v1.0.0";
+    private static final String VERSION = "v1.0.1";
     private static final String AUTHOR = "Xm17";
     /**
      * 主标签页图标名，顺序与标签页一致
